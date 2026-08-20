@@ -1,0 +1,44 @@
+{
+  "name": "sdd-flow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Spec-Driven Development workflow for AI coding agents (Claude Code and Codex): every request becomes an explicit contract with a gated Research -> Plan -> Execute lifecycle and a persistent FLOW document.",
+  "type": "module",
+  "bin": {
+    "sdd-flow": "./bin/sdd-flow.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "doctor": "node ./bin/sdd-flow.js doctor .",
+    "pack:check": "npm pack --dry-run"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "author": "Serhii Kharsun <zakyrion@gmail.com> (https://github.com/zakyrion)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zakyrion/sdd-flow.git"
+  },
+  "homepage": "https://github.com/zakyrion/sdd-flow#readme",
+  "bugs": {
+    "url": "https://github.com/zakyrion/sdd-flow/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "ai-agents",
+    "agent-skills",
+    "spec-driven-development",
+    "sdd",
+    "workflow",
+    "agent-workflow"
+  ]
+}

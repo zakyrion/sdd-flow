@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Clojure Flow"
+  short_description: "Run a Clojure-first engineering lifecycle"
+  default_prompt: "Use $sdd-clojure-flow to normalize this request and follow the engineering flow."

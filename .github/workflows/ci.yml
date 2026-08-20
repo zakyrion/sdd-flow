@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    name: Node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - name: Smoke-test the CLI lifecycle
+        run: |
+          SMOKE="$(mktemp -d)"
+          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" init "$SMOKE" --tools claude,codex
+          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" doctor "$SMOKE"
+          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" update "$SMOKE"
+          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" uninstall "$SMOKE"

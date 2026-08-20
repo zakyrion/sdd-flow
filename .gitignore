@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.tgz
+npm-debug.log*
+
+# Local workspace of this repo itself: FLOW documents and the self-installed
+# agent adapters (dogfooding). Users get these via `sdd-flow init`.
+Flows/
+.sdd-flow/
+.claude/
+.agents/
