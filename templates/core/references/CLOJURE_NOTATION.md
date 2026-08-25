@@ -171,3 +171,12 @@
             "replace the raw request with the normalized form"
             "hide an unresolved engineering decision"}})
 ```
+
+# Output language
+
+```clojure
+(def output-direction
+  {:this-notation "writes artifacts: task maps shown for confirmation, FLOW records, contract drafts"
+   :answers "prose belongs to answers — a form never replaces an explanation"
+   :authority "FLOW_CONTRACT.md (def agent-output) holds the full policy"})
+```

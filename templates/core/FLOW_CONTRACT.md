@@ -26,6 +26,17 @@
    :reason "the user knows their own intent better than the agent"})
 ```
 
+# Agent output
+
+```clojure
+(def agent-output
+  {:artifacts "Clojure only for artifacts: normalized task maps for confirmation, FLOW records, contract drafts — always framed by prose stating what the form means"
+   :answers "prose for everything else: explanations, diagnoses, statuses, answers to questions"
+   :forms "small: nesting ≤ 2, readable strings over invented keyword chains"
+   :never #{"answer a question with a Clojure form"
+            "reference a previously introduced label bare (:s2, :d-4) — restate its content in place"}})
+```
+
 # Gates
 
 ```clojure
@@ -63,6 +74,7 @@
                :confirmed-normalized-contract
                :plan
                :decisions
+               :disproven
                :progress
                :acceptance
                :resume-context}
@@ -73,6 +85,17 @@
             "mark complete before acceptance"}})
 ```
 
+```clojure
+(def disproven
+  {:home "the # Disproven section of the active FLOW"
+   :entry {:hypothesis "the refuted assumption, stated plainly"
+           :refuted-by "the observation or experiment that killed it"
+           :details "anchor to the diagnostic block holding the full story"}
+   :write "the moment a hypothesis is refuted — an index entry here, not only a line inside the diagnostic log"
+   :read "before formulating any new hypothesis, reread this section"
+   :why "a compacted or resumed session must not re-enter a dead end it already paid for"})
+```
+
 # Research and plan
 
 ```clojure
@@ -81,10 +104,20 @@
    :method (-> "project-native knowledge tools"
                "targeted source reads"
                "distilled findings")
+   :depth {:port "inventory is enough — a port preserves semantics by construction"
+           :replace "characterization + divergence hypotheses are mandatory"
+           :new "hypotheses at the integration points"}
+   :characterize {:only-when "the change deletes or replaces an existing mechanism"
+                  :what "behavioral contract of the original: observable behavior over time, all use sites, invariants"
+                  :source #{"git history" "live behavior"}
+                  :gate "a replacement decision cannot be confirmed while the original's contract is missing"}
+   :hypotheses "each contract clause → hypothesis 'the replacement may violate this' → a cheap check"
+   :observability "the irreducibly empirical residue gets self-diagnosing guards, not predictions"
    :record "write distilled findings into the active FLOW"
    :never #{"accumulate raw dumps"
             "treat stale docs as proof"
-            "edit implementation"}})
+            "edit implementation"
+            "confirm a replacement on an unverified 'the new thing already does what is needed'"}})
 ```
 
 ```clojure
@@ -146,7 +179,7 @@
 ```clojure
 (def resume-contract
   {:read-first "the active FLOW selected by the user or discovered from Flows/"
-   :reconstruct #{:confirmed-contract :decisions :progress :acceptance}
+   :reconstruct #{:confirmed-contract :decisions :disproven :progress :acceptance}
    :validate "check current project state against FLOW claims"
    :never "repeat completed work"
    :then (cond

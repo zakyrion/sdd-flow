@@ -20,7 +20,7 @@ Anyone who works with coding agents keeps hitting the same three failure modes:
 
 1. **Normalization.** Every request becomes an explicit task map. Anything unknown becomes a literal `?` — and a `?` must be *asked about*, never guessed.
 2. **Two gates.** A *research go* lets the agent read code and write a plan — nothing else. A separate *implementation go*, given on a written plan, is required before any change.
-3. **A persistent FLOW.** Every task lives in `Flows/FLOW_<TASK>.md`: raw request, confirmed contract, research findings, plan, decisions, progress, acceptance checks. Any future session resumes from that file instead of from memory.
+3. **A persistent FLOW.** Every task lives in `Flows/FLOW_<TASK>.md`: raw request, confirmed contract, research findings, plan, decisions, disproven hypotheses, progress, acceptance checks. Any future session resumes from that file instead of from memory.
 
 ## What a session looks like
 
@@ -170,7 +170,7 @@ cd sdd-flow
 npm test
 ```
 
-15 tests cover the Clojure reader, document validation, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
+16 tests cover the Clojure reader, document validation, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
 
 ## License
 

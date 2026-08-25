@@ -42,6 +42,14 @@
   :value ?}]
 ```
 
+# Disproven
+
+```clojure
+[{:hypothesis "the refuted assumption, stated plainly"
+  :refuted-by "the observation or experiment that killed it"
+  :details "anchor to the diagnostic block holding the full story"}]
+```
+
 # Progress
 
 ```clojure

@@ -187,6 +187,39 @@ test("uninstall fails atomically when a managed file was modified", async () => 
   });
 });
 
+test("installed contract carries the post-mortem hardening content", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      ":depth",
+      ":characterize",
+      ":hypotheses",
+      ":observability",
+      "(def agent-output",
+      "(def disproven",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    const template = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/FLOW.md"),
+      "utf8",
+    );
+    assert.ok(template.includes("# Disproven"), "FLOW.md missing # Disproven");
+    const notation = await fs.readFile(
+      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
+      "utf8",
+    );
+    assert.ok(
+      notation.includes("(def output-direction"),
+      "CLOJURE_NOTATION.md missing the output-direction mirror",
+    );
+  });
+});
+
 async function withFixture(callback) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "sdd-flow-test-"));
   try {
