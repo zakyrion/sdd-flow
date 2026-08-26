@@ -4,8 +4,13 @@
 (def entry-contract
   {:input #{:prose :clojure}
    :first-action "normalize the request into Clojure IR"
-   :engineering-task {:requires "show the complete normalized task statement"
-                      :then "stop and wait for explicit confirmation"}
+   :classify "read the deliverable kind from the user's words (def deliverable-kind)"
+   :answer-task {:kind :answer
+                 :show "classification inline, together with the answer"
+                 :then "answer within the asked scope (def answer-contract); no gate, no FLOW"}
+   :gated-task {:kind #{:plan :mutation}
+                :requires "show the complete normalized task statement"
+                :then "stop and wait for explicit confirmation"}
    :casual-request {:normalization :internal
                     :persistence :not-required}
    :missing-field "represent as ? and ask in one consolidated pass"
@@ -15,15 +20,30 @@
 
 ```clojure
 (def engineering-task?
-  {:true-when (or (creates-or-edits-files?)
+  {:true-when (or (asks-for-an-engineering-answer?)
+                  (creates-or-edits-files?)
                   (changes-architecture-or-docs?)
                   (requires-research-before-answer?))
-   :false-when (or (question-about-existing-state?)
+   :false-when (or (smalltalk?)
                    (question-about-the-flow-itself?)
-                   (answerable-without-mutation?))
+                   (status-or-progress-question?))
+   :note "engineering does not imply code: an engineering answer is a full engineering deliverable"
    :ambiguous (:then (state-classification!)
                      (ask-user!))
    :reason "the user knows their own intent better than the agent"})
+```
+
+```clojure
+(def deliverable-kind
+  {:axis [:answer :plan :mutation]
+   :answer "how something works or should be done — the answer itself is the artifact"
+   :plan "design or prepare future work — the plan document is the artifact, still no mutation"
+   :mutation "change the world: files, code, configuration, external state"
+   :source "the user's words in this request set the kind — nothing else"
+   :escalation {:never "the agent promotes the kind on its own"
+                :only "the user's explicit ask escalates answer → plan → mutation"}
+   :ambiguous (:then (state-classification!)
+                     (ask-user!))})
 ```
 
 # Agent output
@@ -37,11 +57,26 @@
             "reference a previously introduced label bare (:s2, :d-4) — restate its content in place"}})
 ```
 
+# Answer lane
+
+```clojure
+(def answer-contract
+  {:artifact "the answer itself — complete, direct, scoped to exactly what was asked"
+   :premise "when the question carries a premise, verify it first and say plainly when it is wrong"
+   :close "end by handing control back — the user decides what happens next, even when it looks obvious"
+   :follow-up "a possible task may be offered in one line — never developed, never started"
+   :never #{"unsolicited roadmaps, step plans, or migration guides"
+            "designing or executing changes the question did not request"
+            "silently escalating :answer into :plan or :mutation"
+            "burying the asked answer under adjacent advice"}})
+```
+
 # Gates
 
 ```clojure
 (def go-contract
   {:authorizes "only actions required by the :result of the current confirmed task map"
+   :kind-bound "a go inherits the deliverable kind of the confirmed map — a go on an answer or a plan never opens mutation"
    :research-go "opens research and planning, never implementation"
    :implementation-go "requires a new implementation task map and a fresh go"
    :expires (or (result-reached?)
@@ -145,10 +180,20 @@
               "diagnostic reread"
               "FLOW close")
    :scope "only the confirmed map"
+   :emergent "a choice absent from the confirmed map is a late-discovered ? (def emergent-decision)"
    :when (scope-materially-changes?)
    :then (:then (record-change!)
                 (stop!)
                 (request-new-confirmation!))})
+```
+
+```clojure
+(def emergent-decision
+  {:is "a choice that surfaces mid-execution and is absent from the confirmed task map"
+   :examples #{"a runtime or SDK version" "a name" "a format default" "deleting whatever stands in the way"}
+   :rule "a late-discovered ? — surface it and wait before acting, never resolve it silently"
+   :batch "when ordering allows, collect emergent decisions and ask in one pass"
+   :no-alternative "having no alternative is still a decision — state it before acting, not report it after"})
 ```
 
 # Done

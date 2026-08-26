@@ -18,6 +18,17 @@
  :normalized {:name :by-naming-policy}}
 ```
 
+# Answer-kind normalization
+
+```clojure
+{:input "Яка структура папок і solutions правильна для мікросервісів?"
+ :normalized {:task :ask-microservices-layout
+              :kind :answer
+              :goal "правило + канонічна розкладка мікросервісного монорепо"
+              :result "відповідь; жодних змін на диску"}
+ :rule "the deliverable is the answer itself — the agent may not escalate :kind to :plan or :mutation"}
+```
+
 # Batch and cross-reference
 
 ```clojure

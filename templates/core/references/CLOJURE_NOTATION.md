@@ -152,9 +152,11 @@
    :canonical-ir :clojure
    :prose-conversion :always
    :visibility (cond
+                 (answer-task?) :inline-with-answer
                  (engineering-task?) :show-for-confirmation
                  :else :internal)
    :persistence (cond
+                  (answer-task?) :not-required
                   (engineering-task?) "store raw request and confirmed normalized form in FLOW"
                   :else :not-required)
    :unknown ?

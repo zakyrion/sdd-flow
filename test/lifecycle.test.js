@@ -220,6 +220,38 @@ test("installed contract carries the post-mortem hardening content", async () =>
   });
 });
 
+test("installed contract separates deliverable kinds", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "(def deliverable-kind",
+      "(def answer-contract",
+      "(def emergent-decision",
+      ":kind-bound",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+      "utf8",
+    );
+    assert.ok(skill.includes("(answer-task?)"), "SKILL.md missing the answer lane");
+    assert.ok(
+      skill.indexOf("(answer-task?)") < skill.indexOf("(engineering-task?)"),
+      "SKILL.md must route answer-task? before engineering-task?",
+    );
+    const examples = await fs.readFile(
+      path.join(root, ".sdd-flow/references/EXAMPLES.md"),
+      "utf8",
+    );
+    assert.ok(examples.includes(":kind :answer"), "EXAMPLES.md missing the answer-kind example");
+  });
+});
+
 async function withFixture(callback) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "sdd-flow-test-"));
   try {

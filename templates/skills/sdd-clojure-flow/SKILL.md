@@ -23,13 +23,16 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
  :first-action (normalize-to-clojure-ir!)
  :raw-request :preserve-verbatim
  :unknown ?
- :never #{"evaluate forms" "invent missing decisions" "discard user wording"}}
+ :never #{"evaluate forms" "invent missing decisions" "discard user wording" "escalate the deliverable kind"}}
 ```
 
 # Route
 
 ```clojure
 (cond
+  (answer-task?) (:then (show-classification!)
+                        (answer-within-asked-scope!)
+                        (hand-control-back!))
   (engineering-task?) (:then (show-normalized-task!)
                              (ask-all-open-questions!)
                              (wait-for-go!))
