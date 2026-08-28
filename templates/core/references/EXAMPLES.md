@@ -116,6 +116,57 @@
   :result "build action містить location, а configured resources витрачені"}]
 ```
 
+# Rated options
+
+```clojure
+{:question "how should the district view be spawned?"
+ :options [{:option "a reactive system on the built event" :confidence 70}
+           {:option "spawn inside the build action itself" :confidence 30}]
+ :rule "the number rates the option as a decision — never the certainty of a fact"}
+```
+
+# Recorded with provenance
+
+```clojure
+{:finding :turns-decremented-in-one-place
+ :at "2026-08-28"
+ :fact "exactly one system decrements the turn counter"
+ :verified-by "ran the turn loop and watched the component change; not inferred from the code"
+ :consequence "a second decrement site would be a bug, not a design choice"}
+```
+
+```clojure
+{:approach "decrement the counter inside the UI confirmation handler"
+ :confidence 40
+ :dropped-because "the handler never runs on a loaded save"
+ :problems "two turns silently lost per reload; found only by replaying a save"
+ :at "2026-08-28"}
+```
+
+# Weighed against sources
+
+```clojure
+{:option "chunked streaming with a fixed LOD ring"
+ :applies-when "an open world larger than memory, single-player latency budget"
+ :known-uses "shipped in several open-world titles"
+ :evidence "a measured comparison in one paper, plus two practitioner reports of the same result"
+ :weakened-by "no source measured it on our platform"
+ :confidence 70
+ :grounded-in "read on the web, not run here"
+ :cost-to-build "weeks"
+ :cost-to-adopt "days, an engine plugin already does it"
+ :reversibility :two-way}
+```
+
+```clojure
+{:hunch "a quadtree will beat a fixed grid here"
+ :confidence 60
+ :grounded-in "agent knowledge only — nothing read yet"
+ :at "2026-08-28"
+ :outcome :killed
+ :deviation "the sources reframed the question as memory bandwidth, not lookup cost"}
+```
+
 # FLOW lifecycle
 
 ```clojure

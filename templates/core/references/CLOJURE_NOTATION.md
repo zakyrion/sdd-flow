@@ -29,6 +29,9 @@
  {:form "\"prose\""
   :name :string
   :read "abstract or prose leaf; all interpretive fuzziness belongs here"}
+ {:form "70"
+  :name :number
+  :read "a literal number; a confidence percentage is an integer from 0 to 100"}
  {:form ";; reason"
   :name :comment
   :read "non-executing explanation, usually why"}

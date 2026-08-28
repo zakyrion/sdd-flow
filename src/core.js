@@ -34,6 +34,7 @@ const CORE_FILES = [
   ],
   ["templates/core/FLOW_CONTRACT.md", ".sdd-flow/FLOW_CONTRACT.md"],
   ["templates/core/templates/FLOW.md", ".sdd-flow/templates/FLOW.md"],
+  ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
 ];
 const CODEX_FILES = [
   [
@@ -43,6 +44,14 @@ const CODEX_FILES = [
   [
     "templates/skills/sdd-clojure-flow/agents/openai.yaml",
     ".agents/skills/sdd-clojure-flow/agents/openai.yaml",
+  ],
+  [
+    "templates/skills/sdd-deep-research/SKILL.md",
+    ".agents/skills/sdd-deep-research/SKILL.md",
+  ],
+  [
+    "templates/skills/sdd-deep-research/agents/openai.yaml",
+    ".agents/skills/sdd-deep-research/agents/openai.yaml",
   ],
 ];
 const CLAUDE_FILES = [
@@ -61,6 +70,14 @@ const CLAUDE_FILES = [
   [
     "templates/claude/commands/sdd-flow/close.md",
     ".claude/commands/sdd-flow/close.md",
+  ],
+  [
+    "templates/skills/sdd-deep-research/SKILL.md",
+    ".claude/skills/sdd-deep-research/SKILL.md",
+  ],
+  [
+    "templates/claude/commands/sdd-research.md",
+    ".claude/commands/sdd-research.md",
   ],
 ];
 
@@ -503,11 +520,14 @@ async function removeEmptyManagedDirectories(root) {
   const directories = [
     ".agents/skills/sdd-clojure-flow/agents",
     ".agents/skills/sdd-clojure-flow",
+    ".agents/skills/sdd-deep-research/agents",
+    ".agents/skills/sdd-deep-research",
     ".agents/skills",
     ".agents",
     ".claude/commands/sdd-flow",
     ".claude/commands",
     ".claude/skills/sdd-clojure-flow",
+    ".claude/skills/sdd-deep-research",
     ".claude/skills",
     ".claude",
     ".sdd-flow/references",

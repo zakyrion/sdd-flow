@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Deep Research"
+  short_description: "Search real sources and weigh them before deciding"
+  default_prompt: "Use $sdd-deep-research to research this question against real sources and return a trade-off map."

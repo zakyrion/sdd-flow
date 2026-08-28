@@ -45,12 +45,41 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
                (answer-user!)))
 ```
 
+# Offer
+
+```clojure
+{:options {:carry "an integer 0-100 on every option — how likely it is the right decision, estimated before the set reaches the user"
+           :recurrence "an approach already in # Attempted or # Disproven is named as a return, never offered as a new idea"
+           :never "an unrated set of options"}
+ :questions {:batch "all known open decisions in one pass"
+             :follow-up "several iterations of discussion earn pointed questions, not silence"
+             :stop-rule "the user says enough → questions end and the task is carried out"}
+ :authority "FLOW_CONTRACT.md holds the full policy"}
+```
+
+# Hand over
+
+```clojure
+{:when (no-fast-right-answer? question)
+ :do (:then (say-so!)
+            (ask-permission-to-research!)
+            (wait-for-go!))
+ :skill "sdd-deep-research — the source-verified pass, also reachable as /sdd-research"
+ :rule "only the user switches it on; the agent asks the moment it sees the answer is not quick"
+ :returns "Flows/RESEARCH_<TOPIC>.md, linked from # Findings and archived with the FLOW"
+ :standalone "a bare research request needs no FLOW — the document is the whole deliverable"}
+```
+
 # Execute
 
 ```clojure
 {:research-go {:only "research and planning"
                :first-write "Flows/FLOW_<TASK>.md"
-               :record "research findings and the plan live in the active FLOW"
+               :passes "two — search, come back with findings and the questions they opened, wait; the second pass is what the answers open"
+               :findings-gate "no plan is written before the user has seen the findings and answered"
+               :prior-art "look outside this project too — how the same problem is already solved; framed by the task, never by a fixed list"
+               :outbound-gate "a web search or another repository is named and confirmed first; documentation and context7 are open"
+               :record "research findings and the plan live in the active FLOW, each finding carrying :verified-by and :at"
                :never "implementation"}
  :implementation-go {:requires #{:new-implementation-map :fresh-go :active-flow}
                      :then (execute-confirmed-scope!)}

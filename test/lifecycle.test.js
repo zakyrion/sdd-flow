@@ -252,6 +252,183 @@ test("installed contract separates deliverable kinds", async () => {
   });
 });
 
+test("installed contract carries prior-art research, rated options and provenance", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "(def prior-art",
+      "(def outbound-gate",
+      "(def option-confidence",
+      "(def provenance",
+      "(def attempted",
+      "(def recurrence-guard",
+      "(def decision-revisit",
+      ":follow-up",
+      ":stop-rule",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    assert.ok(
+      contract.includes(':batch "all known open decisions in one pass"'),
+      "the one-pass question batch must survive alongside :follow-up",
+    );
+    const template = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/FLOW.md"),
+      "utf8",
+    );
+    assert.ok(template.includes("# Findings"), "FLOW.md missing # Findings");
+    assert.ok(template.includes("# Attempted"), "FLOW.md missing # Attempted");
+    assert.ok(template.includes(":verified-by"), "FLOW.md missing :verified-by");
+    const notation = await fs.readFile(
+      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
+      "utf8",
+    );
+    assert.ok(notation.includes(":name :number"), "CLOJURE_NOTATION.md missing the number form");
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+      "utf8",
+    );
+    assert.ok(skill.includes(":prior-art"), "SKILL.md missing the prior-art leg");
+    assert.ok(skill.includes(":outbound-gate"), "SKILL.md missing the outbound gate");
+    const examples = await fs.readFile(
+      path.join(root, ".sdd-flow/references/EXAMPLES.md"),
+      "utf8",
+    );
+    assert.ok(examples.includes(":confidence 70"), "EXAMPLES.md missing a rated option");
+  });
+});
+
+test("installed deep research skill carries its procedure", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["codex", "claude"]);
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-deep-research/SKILL.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "name: sdd-deep-research",
+      "# Activate",
+      "# Conditions",
+      "# Believe",
+      "# Search",
+      "# Weigh",
+      "# Disconfirm",
+      "# Stop",
+      "# Deliver",
+      ":agent-knowledge :lowest-weight",
+      "(def outbound-gate)",
+      "cost to build against cost to adopt",
+    ]) {
+      assert.ok(skill.includes(marker), `deep research SKILL.md missing ${marker}`);
+    }
+    assert.equal(
+      skill,
+      await fs.readFile(
+        path.join(root, ".agents/skills/sdd-deep-research/SKILL.md"),
+        "utf8",
+      ),
+      "both adapters must install the same skill text",
+    );
+
+    const command = await fs.readFile(
+      path.join(root, ".claude/commands/sdd-research.md"),
+      "utf8",
+    );
+    assert.ok(command.includes(":command :sdd-research"));
+    assert.ok(command.includes(".claude/skills/sdd-deep-research/SKILL.md"));
+  });
+});
+
+test("installed research template carries every section", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const template = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/RESEARCH.md"),
+      "utf8",
+    );
+    for (const section of [
+      "# Question",
+      "# Our conditions",
+      "# Prior belief",
+      "# Options",
+      "# Disconfirmation",
+      "# Verdict",
+      "# Sources",
+      "# Search log",
+    ]) {
+      assert.ok(template.includes(section), `RESEARCH.md missing ${section}`);
+    }
+    for (const field of [
+      ":applies-when",
+      ":known-uses",
+      ":weakened-by",
+      ":cost-to-adopt",
+      ":reversibility",
+      ":no-verdict",
+    ]) {
+      assert.ok(template.includes(field), `RESEARCH.md missing ${field}`);
+    }
+  });
+});
+
+test("installed contract gates research in two passes", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "(def research-passes",
+      "(def deep-research",
+      "(def evidence-weight",
+      "(def disconfirmation",
+      ":findings-gate",
+      ":window",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    assert.ok(
+      contract.includes(':batch "all known open decisions in one pass"'),
+      "the one-pass question batch must survive the findings gate",
+    );
+    assert.ok(
+      contract.includes(":research-document"),
+      "a resumed session must reconstruct the research document too",
+    );
+
+    const flowTemplate = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/FLOW.md"),
+      "utf8",
+    );
+    assert.ok(flowTemplate.includes(":research-document"));
+  });
+});
+
+test("uninstall leaves no deep research directories behind", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["codex", "claude"]);
+    await fs.access(path.join(root, ".claude/skills/sdd-deep-research"));
+    await fs.access(path.join(root, ".agents/skills/sdd-deep-research/agents"));
+
+    await uninstallProject(root);
+
+    for (const stray of [
+      ".claude/skills/sdd-deep-research",
+      ".agents/skills/sdd-deep-research/agents",
+      ".agents/skills/sdd-deep-research",
+      ".claude",
+      ".agents",
+    ]) {
+      await assertMissing(path.join(root, stray));
+    }
+  });
+});
+
 async function withFixture(callback) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "sdd-flow-test-"));
   try {
