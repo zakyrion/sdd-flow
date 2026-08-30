@@ -5,9 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import {
   desiredFilePaths,
+  diffProject,
   doctorProject,
   initProject,
   uninstallProject,
+  unlinkProject,
   updateProject,
 } from "../src/core.js";
 
@@ -425,6 +427,177 @@ test("uninstall leaves no deep research directories behind", async () => {
       ".agents",
     ]) {
       await assertMissing(path.join(root, stray));
+    }
+  });
+});
+
+
+test("the project adapter is the project's own file and survives an update", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const adapter = path.join(root, ".sdd-flow/project.md");
+    await fs.writeFile(adapter, "```clojure\n{:project :mine}\n```\n");
+
+    const report = await doctorProject(root);
+    assert.equal(report.ok, true, report.issues.join("\n"));
+
+    await updateProject(root);
+    assert.equal(
+      await fs.readFile(adapter, "utf8"),
+      "```clojure\n{:project :mine}\n```\n",
+      "update must not touch a file it does not manage",
+    );
+
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(root, ".sdd-flow/manifest.json"), "utf8"),
+    );
+    assert.ok(
+      !Object.hasOwn(manifest.managedFiles, ".sdd-flow/project.md"),
+      "the adapter must stay out of the manifest",
+    );
+  });
+});
+
+test("without an adapter the skills read exactly what they always read", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+      "utf8",
+    );
+    assert.ok(
+      skill.includes("(project-adapter-present? \".sdd-flow/project.md\")"),
+      "SKILL.md must gate the adapter read on the adapter existing",
+    );
+    assert.ok(
+      skill.includes(":no-adapter"),
+      "SKILL.md must state what happens when there is no adapter",
+    );
+  });
+});
+
+test("diff reports drift, local-only rules, and what was never copied", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const canon = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    const original = canon
+      .slice(canon.indexOf("(def go-contract"))
+      .slice(0, canon.slice(canon.indexOf("(def go-contract")).indexOf("\n```"));
+
+    await fs.writeFile(
+      path.join(root, "PROCESS.md"),
+      [
+        "```clojure",
+        original.replace(":research-go", ":research-go-renamed"),
+        "```",
+        "```clojure",
+        "(def house-rule {:home \"here\"})",
+        "```",
+      ].join("\n"),
+    );
+
+    const result = await diffProject(root, { files: ["PROCESS.md"] });
+    const [entry] = result.files;
+    const byName = new Map(entry.definitions.map((d) => [d.name, d.status]));
+    assert.equal(byName.get("go-contract"), "differs");
+    assert.equal(byName.get("house-rule"), "local-only");
+    assert.ok(result.canonOnly.includes("hard-gate"));
+  });
+});
+
+test("diff without an adapter or --file says what it needs", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    await assert.rejects(diffProject(root), /pass --file/);
+  });
+});
+
+test("unlink removes marked blocks and leaves the document otherwise intact", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    await fs.writeFile(
+      path.join(root, "CLAUDE.md"),
+      [
+        "# House rules",
+        "<!-- BEGIN SDD-FLOW: pointer -->",
+        "sdd-flow lives in .sdd-flow; start with /sdd-flow:start",
+        "<!-- END SDD-FLOW: pointer -->",
+        "the rest is ours",
+        "",
+      ].join("\n"),
+    );
+    await fs.writeFile(
+      path.join(root, ".sdd-flow/project.md"),
+      "```clojure\n{:footprint #{\"CLAUDE.md\"}}\n```\n",
+    );
+
+    const result = await unlinkProject(root);
+    assert.deepEqual(result.changed, ["CLAUDE.md"]);
+    assert.deepEqual(result.blocks, ["pointer"]);
+    assert.equal(
+      await fs.readFile(path.join(root, "CLAUDE.md"), "utf8"),
+      "# House rules\nthe rest is ours\n",
+    );
+  });
+});
+
+test("installed project-init skill carries the survey procedure", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["codex", "claude"]);
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-project-init/SKILL.md"),
+      "utf8",
+    );
+    for (const marker of [
+      ":origin",
+      ":parallel",
+      ":base",
+      "# Survey",
+      "# Report",
+      "# Rollback",
+      "BEGIN SDD-FLOW",
+    ]) {
+      assert.ok(skill.includes(marker), `project-init SKILL.md missing ${marker}`);
+    }
+    await fs.access(path.join(root, ".claude/commands/sdd-project-init.md"));
+    await fs.access(path.join(root, ".claude/commands/sdd-flow/promote.md"));
+    await fs.access(path.join(root, ".agents/skills/sdd-project-init/SKILL.md"));
+  });
+});
+
+test("the contract carries the project seam and the path upward", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "(def project-adapter",
+      "(def coexistence",
+      "(def promotion",
+      "(def canon-copy",
+      ":temporal-not-simultaneous",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    const skeleton = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/PROJECT.md"),
+      "utf8",
+    );
+    for (const section of [
+      "# Entry",
+      "# Tools",
+      "# Meters",
+      "# Bans",
+      "# Ceremonies",
+      "# Shape",
+      "# Canon copy",
+    ]) {
+      assert.ok(skeleton.includes(section), `PROJECT.md missing ${section}`);
     }
   });
 });

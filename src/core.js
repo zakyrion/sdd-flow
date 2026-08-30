@@ -8,6 +8,13 @@ import {
   validateNotationCoverage,
 } from "./document-validator.js";
 
+import {
+  ADAPTER_PATH,
+  adapterFileSets,
+  diffCanonCopies,
+  stripBlocks,
+} from "./project-adapter.js";
+
 const PACKAGE_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -32,9 +39,14 @@ const CORE_FILES = [
     "templates/core/references/ADAPTERS.md",
     ".sdd-flow/references/ADAPTERS.md",
   ],
+  [
+    "templates/core/references/PROJECT_ADAPTER.md",
+    ".sdd-flow/references/PROJECT_ADAPTER.md",
+  ],
   ["templates/core/FLOW_CONTRACT.md", ".sdd-flow/FLOW_CONTRACT.md"],
   ["templates/core/templates/FLOW.md", ".sdd-flow/templates/FLOW.md"],
   ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
+  ["templates/core/templates/PROJECT.md", ".sdd-flow/templates/PROJECT.md"],
 ];
 const CODEX_FILES = [
   [
@@ -52,6 +64,14 @@ const CODEX_FILES = [
   [
     "templates/skills/sdd-deep-research/agents/openai.yaml",
     ".agents/skills/sdd-deep-research/agents/openai.yaml",
+  ],
+  [
+    "templates/skills/sdd-project-init/SKILL.md",
+    ".agents/skills/sdd-project-init/SKILL.md",
+  ],
+  [
+    "templates/skills/sdd-project-init/agents/openai.yaml",
+    ".agents/skills/sdd-project-init/agents/openai.yaml",
   ],
 ];
 const CLAUDE_FILES = [
@@ -78,6 +98,18 @@ const CLAUDE_FILES = [
   [
     "templates/claude/commands/sdd-research.md",
     ".claude/commands/sdd-research.md",
+  ],
+  [
+    "templates/skills/sdd-project-init/SKILL.md",
+    ".claude/skills/sdd-project-init/SKILL.md",
+  ],
+  [
+    "templates/claude/commands/sdd-project-init.md",
+    ".claude/commands/sdd-project-init.md",
+  ],
+  [
+    "templates/claude/commands/sdd-flow/promote.md",
+    ".claude/commands/sdd-flow/promote.md",
   ],
 ];
 
@@ -320,6 +352,80 @@ export async function uninstallProject(projectPath) {
   };
 }
 
+/**
+ * Report where a project's copy of the canon differs from the installed
+ * version. Comparison is by definition name, so a project that transcribed
+ * the canon into its own documents is still measurable.
+ */
+export async function diffProject(projectPath, { files = [] } = {}) {
+  const root = await existingDirectory(projectPath);
+  let targets = files;
+  if (targets.length === 0) {
+    const adapter = await readIfPresent(path.join(root, ADAPTER_PATH));
+    if (adapter === null) {
+      throw new Error(
+        `${ADAPTER_PATH} not found: pass --file to name what to compare`,
+      );
+    }
+    targets = adapterFileSets(adapter).canonCopy;
+    if (targets.length === 0) {
+      throw new Error(
+        `${ADAPTER_PATH} declares no canon copy: pass --file to name what to compare`,
+      );
+    }
+  }
+  for (const target of targets) {
+    resolveInside(root, target);
+  }
+  const report = await diffCanonCopies(root, targets);
+  return { action: "diffed", root, ...report };
+}
+
+/**
+ * Remove every marked sdd-flow block from documents the project owns. Nothing
+ * else is touched: an unmarked edit was never allowed, so there is none to undo.
+ */
+export async function unlinkProject(projectPath, { files = [] } = {}) {
+  const root = await existingDirectory(projectPath);
+  let targets = files;
+  if (targets.length === 0) {
+    const adapter = await readIfPresent(path.join(root, ADAPTER_PATH));
+    if (adapter === null) {
+      throw new Error(
+        `${ADAPTER_PATH} not found: pass --file to name what to unlink`,
+      );
+    }
+    targets = adapterFileSets(adapter).footprint;
+    if (targets.length === 0) {
+      return { action: "unlinked", root, changed: [], blocks: [] };
+    }
+  }
+
+  const changed = [];
+  const blocks = [];
+  for (const target of targets) {
+    await assertNoSymlinkPath(root, target);
+    const absolute = resolveInside(root, target);
+    const content = await readIfPresent(absolute);
+    if (content === null) {
+      continue;
+    }
+    const stripped = stripBlocks(content);
+    if (stripped.removed.length === 0) {
+      continue;
+    }
+    const trailing = content.endsWith("\n") ? "\n" : "";
+    await writeTextAtomic(
+      root,
+      target,
+      `${stripped.content.replace(/\n+$/u, "")}${trailing}`,
+    );
+    changed.push(target);
+    blocks.push(...stripped.removed);
+  }
+  return { action: "unlinked", root, changed, blocks };
+}
+
 export async function desiredFilePaths(tools) {
   return [...(await desiredFiles(normalizeTools(tools))).keys()].sort();
 }
@@ -522,12 +628,15 @@ async function removeEmptyManagedDirectories(root) {
     ".agents/skills/sdd-clojure-flow",
     ".agents/skills/sdd-deep-research/agents",
     ".agents/skills/sdd-deep-research",
+    ".agents/skills/sdd-project-init/agents",
+    ".agents/skills/sdd-project-init",
     ".agents/skills",
     ".agents",
     ".claude/commands/sdd-flow",
     ".claude/commands",
     ".claude/skills/sdd-clojure-flow",
     ".claude/skills/sdd-deep-research",
+    ".claude/skills/sdd-project-init",
     ".claude/skills",
     ".claude",
     ".sdd-flow/references",

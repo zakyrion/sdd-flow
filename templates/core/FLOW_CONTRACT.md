@@ -46,6 +46,37 @@
                      (ask-user!))})
 ```
 
+# Project
+
+```clojure
+(def project-adapter
+  {:is "the project's own declaration of what it already has — entry documents, knowledge tools, meters, bans, ceremonies, document shape"
+   :home ".sdd-flow/project.md"
+   :owner :project
+   :optional true
+   :read :last ;; after every canon file, so its declarations resolve the canon's abstract phrases
+   :missing "the lifecycle runs on its own defaults, unchanged"
+   :fills "the places this contract leaves deliberately abstract — never a gate, never a lane"
+   :pointing "it names where the project's truth lives; the agent reads that source rather than a paraphrase"
+   :conflict (:then (say-so!)
+                    (ask-user!))
+   :authority "PROJECT_ADAPTER.md holds the full contract"
+   :never #{"a second copy of this canon"
+            "a licence to switch a gate off"}})
+```
+
+```clojure
+(def coexistence
+  {:problem "two behavioral frameworks loaded at once do not give the user a choice — they blend, and the model arbitrates where nobody asked it to"
+   :rule :temporal-not-simultaneous
+   :selects "the user's explicit invocation decides which framework governs the turn"
+   :footprint {:allowed "one pointer, in a place the project already reads"
+               :requires "the owner sees where it lands and confirms it before it is written"
+               :form "a removable marked block"}
+   :never #{"a silent edit inside a document the project owns"
+            "auto-triggering beside another behavioral framework"}})
+```
+
 # Agent output
 
 ```clojure
@@ -381,4 +412,37 @@
            (implementation-go-still-valid?) (:then (continue-execution!))
            :else (:then (present-resume-state!)
                         (wait-for-go!)))})
+```
+
+# Promote
+
+```clojure
+(def promotion
+  {:is "the path upward — a rule that matured inside one project becomes canon for every project"
+   :why "the canon came from project work in the first place; without a way up, every project pays for its own copy and every release costs a backport per project"
+   :trigger (or (rule-proved-itself-in-a-project? rule)
+                (user-asks-to-lift-it? rule))
+   :do (:then (name-the-rule!)
+              (strip-project-context!)
+              (propose-canon-wording!)
+              (show-the-delta!)
+              (wait-for-go!))
+   :lands-in "the canon file whose subject the rule belongs to"
+   :leaves "whatever stays project-specific in that project's adapter"
+   :direction "general rules travel up once and down by version — never sideways by hand into each project"
+   :never #{"promoting a rule that only makes sense in one project"
+            "editing canon without showing the delta first"}})
+```
+
+```clojure
+(def canon-copy
+  {:is "a project document carrying a copy of this canon rather than a reference to it"
+   :cost "every release must then be re-specialized into that copy by hand, once per project"
+   :detect "sdd-flow diff — compares the copy against the installed version by definition name"
+   :resolve (-> (:step-1 "run the diff and read what actually differs")
+                (:step-2 "separate the project's own residue woven into the copied text")
+                (:step-3 "move the residue into the adapter")
+                (:step-4 "replace the copy with a reference")
+                (:step-5 "keep a deliberate local patch only while working to remove it"))
+   :never "treating a hand-maintained copy as a stable arrangement"})
 ```

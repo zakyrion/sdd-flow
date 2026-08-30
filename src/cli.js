@@ -1,7 +1,9 @@
 import {
+  diffProject,
   doctorProject,
   initProject,
   uninstallProject,
+  unlinkProject,
   updateProject,
 } from "./core.js";
 
@@ -9,13 +11,22 @@ const HELP = `Usage:
   sdd-flow init [project] --tools codex,claude [--force]
   sdd-flow update [project] [--force]
   sdd-flow doctor [project]
+  sdd-flow diff [project] [--file path]...
+  sdd-flow unlink [project] [--file path]...
   sdd-flow uninstall [project]
 
 Commands:
   init       Install the shared contract and selected native adapters.
   update     Regenerate managed files from the installed package.
   doctor     Report missing, modified, stale, or invalid managed artifacts.
+  diff       Compare a project's copy of the canon against the installed version.
+  unlink     Strip sdd-flow marked blocks from documents the project owns.
   uninstall  Remove only unmodified managed artifacts; preserve config and FLOWs.
+
+Notes:
+  init never touches AGENTS.md or CLAUDE.md. Writing into a document the project
+  owns is the sdd-project-init skill's job, under the owner's confirmation, and
+  only ever inside a marked block that unlink can remove.
 `;
 
 export async function main(argv) {
@@ -46,6 +57,16 @@ export async function main(argv) {
       }
       throw new Error(`doctor found ${result.issues.length} issue(s)`);
     }
+  } else if (parsed.command === "diff") {
+    if (parsed.force || parsed.tools) {
+      throw new Error("diff does not accept --force or --tools");
+    }
+    result = await diffProject(parsed.project, { files: parsed.files });
+  } else if (parsed.command === "unlink") {
+    if (parsed.force || parsed.tools) {
+      throw new Error("unlink does not accept --force or --tools");
+    }
+    result = await unlinkProject(parsed.project, { files: parsed.files });
   } else if (parsed.command === "uninstall") {
     if (parsed.force || parsed.tools) {
       throw new Error("uninstall does not accept --force or --tools");
@@ -67,6 +88,7 @@ export function parseArguments(argv) {
   let tools = null;
   let force = false;
   let projectSet = false;
+  const files = [];
 
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -80,6 +102,14 @@ export function parseArguments(argv) {
       tools = argv[index];
     } else if (argument.startsWith("--tools=")) {
       tools = argument.slice("--tools=".length);
+    } else if (argument === "--file") {
+      index += 1;
+      if (index >= argv.length) {
+        throw new Error("--file requires a value");
+      }
+      files.push(argv[index]);
+    } else if (argument.startsWith("--file=")) {
+      files.push(argument.slice("--file=".length));
     } else if (argument.startsWith("-")) {
       throw new Error(`unknown option: ${argument}`);
     } else if (!projectSet) {
@@ -89,15 +119,53 @@ export function parseArguments(argv) {
       throw new Error(`unexpected argument: ${argument}`);
     }
   }
-  return { command, project, tools, force, help: false };
+  if (files.length > 0 && command !== "diff" && command !== "unlink") {
+    throw new Error(`${command} does not accept --file`);
+  }
+  return { command, project, tools, force, files, help: false };
 }
 
 function formatResult(result) {
   if (result.action === "initialized" || result.action === "updated") {
     return `${result.action}: ${result.root} [${result.tools.join(",")}] (${result.managedFiles} managed files)`;
   }
+  if (result.action === "diffed") {
+    return formatDiff(result);
+  }
+  if (result.action === "unlinked") {
+    if (result.changed.length === 0) {
+      return `unlink: ${result.root} (no sdd-flow blocks found)`;
+    }
+    return `unlink: ${result.root} (${result.blocks.length} block(s) removed from ${result.changed.join(", ")})`;
+  }
   if (result.action === "uninstalled") {
     return `uninstalled: ${result.root} (${result.removed.length} managed files removed; config and FLOWs preserved)`;
   }
   return `doctor: ${result.root} clean (${result.managedFiles} managed files)`;
+}
+
+function formatDiff(result) {
+  const lines = [`diff: ${result.root} (${result.canonSize} canon definitions)`];
+  for (const entry of result.files) {
+    if (entry.status === "missing") {
+      lines.push(`  ${entry.file}: not found`);
+      continue;
+    }
+    const differs = entry.definitions.filter((d) => d.status === "differs");
+    const same = entry.definitions.filter((d) => d.status === "same");
+    const local = entry.definitions.filter((d) => d.status === "local-only");
+    lines.push(
+      `  ${entry.file}: ${same.length} in sync, ${differs.length} drifted, ${local.length} local-only`,
+    );
+    for (const definition of differs) {
+      lines.push(`    drifted: ${definition.name}`);
+    }
+    for (const definition of local) {
+      lines.push(`    local-only: ${definition.name}`);
+    }
+  }
+  if (result.canonOnly.length > 0) {
+    lines.push(`  not copied here: ${result.canonOnly.join(", ")}`);
+  }
+  return lines.join("\n");
 }

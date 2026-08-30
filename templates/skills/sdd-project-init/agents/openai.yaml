@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Project Init"
+  short_description: "Integrate sdd-flow with a project's existing docs, tools and ceremonies"
+  default_prompt: "Use $sdd-project-init to survey this project and write its sdd-flow adapter."

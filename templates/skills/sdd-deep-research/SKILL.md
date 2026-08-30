@@ -11,7 +11,10 @@ description: Run a source-verified research pass on questions with no fast right
             ".sdd-flow/references/CLOJURE_NOTATION.md"]
  :authority "FLOW_CONTRACT.md holds the policy — this file is the procedure"
  :missing (:then (stop!)
-                 (tell-user! "run sdd-flow doctor ."))}
+                 (tell-user! "run sdd-flow doctor ."))
+ :project (when (project-adapter-present? ".sdd-flow/project.md")
+            (:then (read-last! ".sdd-flow/project.md")))
+ :adapter-gives "the project's own knowledge tools and entry documents — the first leg of the search, before anything outbound"}
 ```
 
 # Activate

@@ -75,16 +75,20 @@ npx --yes github:zakyrion/sdd-flow init . --tools claude
 
 `init` is safe by design: it refuses to overwrite files it does not manage, never touches your `AGENTS.md` / `CLAUDE.md`, and records a checksum manifest of everything it installed.
 
+That promise belongs to the CLI. Writing into a document your project owns is a different actor's job — the `sdd-project-init` skill, under your explicit go, and only ever inside a marked block that `sdd-flow unlink` can remove.
+
 ## Using it with Claude Code
 
-With `--tools claude`, your project gets two skills and four slash commands:
+With `--tools claude`, your project gets three skills and six slash commands:
 
 | Command | What it does |
 | --- | --- |
 | `/sdd-flow:start <request>` | Normalize the request, show the contract, collect open questions, wait for *go*. |
 | `/sdd-flow:resume` | Reload the active FLOW and continue exactly where the last session stopped. |
 | `/sdd-flow:close` | Check every acceptance meter; archive the FLOW only when all of them pass. |
+| `/sdd-flow:promote <rule>` | Lift a rule that matured in this project into the canon, delta first. |
 | `/sdd-research <question>` | Run a source-verified research pass and return a trade-off map. |
+| `/sdd-project-init` | Survey this project and integrate the framework with what it already has. |
 
 The skills also trigger implicitly: describe an engineering task in normal conversation and Claude Code picks the workflow up on its own.
 
@@ -92,7 +96,7 @@ The skills also trigger implicitly: describe an engineering task in normal conve
 
 With `--tools codex`, your project gets the same skills in Codex's native format (`.agents/skills/`):
 
-- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, or `$sdd-deep-research how should terrain be streamed here`
+- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, or `$sdd-project-init`
 - **Implicit**: Codex selects the skill automatically when your task matches its description.
 
 ## What gets installed
@@ -104,20 +108,26 @@ your-project/
 │   ├── references/
 │   │   ├── CLOJURE_NOTATION.md     #   the complete notation glossary
 │   │   ├── EXAMPLES.md             #   normalization + conditional examples
-│   │   └── ADAPTERS.md             #   how each agent maps onto the contract
+│   │   ├── ADAPTERS.md             #   how each agent maps onto the contract
+│   │   └── PROJECT_ADAPTER.md      #   how a project declares what it already has
 │   ├── templates/
 │   │   ├── FLOW.md                 #   template for new FLOW documents
-│   │   └── RESEARCH.md             #   template for a trade-off research document
+│   │   ├── RESEARCH.md             #   template for a trade-off research document
+│   │   └── PROJECT.md              #   skeleton for your project adapter
+│   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
 │   ├── config.json                 #   your settings (yours; never overwritten)
 │   └── manifest.json               #   checksums of managed files
 ├── .claude/                        # only with --tools claude
 │   ├── skills/sdd-clojure-flow/SKILL.md
 │   ├── skills/sdd-deep-research/SKILL.md
-│   ├── commands/sdd-flow/{start,resume,close}.md
-│   └── commands/sdd-research.md
+│   ├── skills/sdd-project-init/SKILL.md
+│   ├── commands/sdd-flow/{start,resume,close,promote}.md
+│   ├── commands/sdd-research.md
+│   └── commands/sdd-project-init.md
 ├── .agents/                        # only with --tools codex
 │   ├── skills/sdd-clojure-flow/{SKILL.md, agents/openai.yaml}
-│   └── skills/sdd-deep-research/{SKILL.md, agents/openai.yaml}
+│   ├── skills/sdd-deep-research/{SKILL.md, agents/openai.yaml}
+│   └── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
 └── Flows/                          # your FLOW documents live here
     └── Archive/                    #   completed FLOWs
 ```
@@ -129,11 +139,39 @@ your-project/
 | `sdd-flow init [dir] --tools codex,claude` | Install the shared contract and the selected adapters. |
 | `sdd-flow update [dir]` | Regenerate managed files after upgrading the package. |
 | `sdd-flow doctor [dir]` | Report missing, modified, stale, or invalid managed files. |
+| `sdd-flow diff [dir] [--file path]` | Compare your copy of the canon against the installed version. |
+| `sdd-flow unlink [dir] [--file path]` | Strip sdd-flow marked blocks from documents you own. |
 | `sdd-flow uninstall [dir]` | Remove unmodified managed files; keep your config and FLOWs. |
 
 `update` and `init` fail loudly if you modified a managed file, and `--force` is the explicit way to overwrite. `uninstall` is atomic: if anything was modified, nothing is removed.
 
 `doctor` goes further than checksums: the installed documents are themselves written in the notation, so it parses every Clojure form with a built-in reader and rejects normative prose outside the fences — the spec stays machine-checkable.
+
+## Bringing it into a project that already has its own way of working
+
+sdd-flow is meant to be additive. A project that already has its own entry document, its own knowledge tools, its own acceptance commands and its own ceremonies keeps all of them — the framework adapts to those facts instead of asking the project to adapt to it.
+
+Run `/sdd-project-init` (or `$sdd-project-init`). It surveys what the project already has, shows you slot by slot what it found and where each fact came from, and waits. Only after you confirm does it write `.sdd-flow/project.md` — **your** file, absent from the manifest, untouched by `update` and `uninstall`.
+
+The adapter resolves the places the canon leaves deliberately abstract:
+
+| Slot | What it resolves |
+| --- | --- |
+| `:entry` | where reading starts, when your project decrees an entry point |
+| `:tools` | your knowledge tools — what each answers, when to prefer it, when not to use it |
+| `:meters` | the commands that mean *done* here |
+| `:bans` | what must never be run, read, or written |
+| `:ceremonies` | named procedures you already have, and when they run |
+| `:shape` | where FLOW documents live and how their sections are arranged |
+
+Anything past that spine you declare freely. Two rules hold it together: the adapter **points at** your sources instead of reproducing them, and it fills abstract slots without ever switching a gate off.
+
+With no adapter present, nothing changes: every skill runs on framework defaults, byte for byte as before.
+
+**Already running another workflow framework?** Declare `:exclusive` in the adapter. Implicit invocation switches off and your explicit command decides which framework governs the turn — two behavioral frameworks loaded together do not give you a choice, they blend.
+
+**Carrying a hand-maintained copy of the canon?** `sdd-flow diff` measures it by definition name — not by markers, so it reads the copy however you arranged the prose around it — and sorts every rule into in-sync, drifted, local-only, and never-copied. Drifted is where your own residue got woven into general text: move it into the adapter. Local-only is what you invented: send it upward with `/sdd-flow:promote`, so it arrives by version from then on instead of by hand.
+
 
 ## The notation in 90 seconds
 
