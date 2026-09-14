@@ -11,6 +11,7 @@
 ```clojure
 {:task :task-id
  :goal "requested capability"
+ :path #{:direct :cascade}
  :where ?
  :off-limits ?
  :pattern ^:optional PatternName
@@ -37,7 +38,7 @@
   :at "YYYY-MM-DD"
   :fact "the verified fact, stated plainly"
   :verified-by "how this was established, in prose"
-  :research-document "Flows/RESEARCH_<TOPIC>.md, when a deep research pass produced it"
+  :research-document "Flows/<TASK>/RESEARCH_<TOPIC>.md, when a deep research pass produced it"
   :consequence "what it changes for this task"}]
 ```
 
@@ -89,6 +90,8 @@
  :completed #{}
  :current ?
  :remaining #{}
+ :stage ^:optional ?
+ :next-invocation ^:optional ?
  :resume-context "the smallest sufficient cross-session state"}
 ```
 

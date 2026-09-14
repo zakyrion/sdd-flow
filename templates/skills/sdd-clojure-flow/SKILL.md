@@ -26,6 +26,7 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 {:input #{:prose :clojure}
  :first-action (normalize-to-clojure-ir!)
  :raw-request :preserve-verbatim
+ :path "for a :mutation, rate the size of the change and propose :path #{:direct :cascade} with its confidence (def path); the owner confirms it at the gate"
  :unknown ?
  :never #{"evaluate forms" "invent missing decisions" "discard user wording" "escalate the deliverable kind"}}
 ```
@@ -101,15 +102,23 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
             (wait-for-go!))
  :skill "sdd-deep-research — the source-verified pass, also reachable as /sdd-research"
  :rule "only the user switches it on; the agent asks the moment it sees the answer is not quick"
- :returns "Flows/RESEARCH_<TOPIC>.md, linked from # Findings and archived with the FLOW"
+ :returns "Flows/<TASK>/RESEARCH_<TOPIC>.md, linked from # Findings and archived with the FLOW"
  :standalone "a bare research request needs no FLOW — the document is the whole deliverable"}
+```
+
+```clojure
+{:when (= :cascade path)
+ :skill "sdd-cascade — CONTEXT, s1, s2, code, read-back, converge; also reachable as /sdd-cascade"
+ :opens "the implementation go opens the first stage in a fresh context, never the code (def cascade)"
+ :handoff "write the next invocation into # Progress of FLOW.md and end the turn; the owner clears the context and runs it (def stage-isolation)"
+ :never "carrying a cascaded task through in this conversation"}
 ```
 
 # Execute
 
 ```clojure
 {:research-go {:only "research and planning"
-               :first-write "Flows/FLOW_<TASK>.md"
+               :first-write "Flows/<TASK>/FLOW.md"
                :passes "two — search, come back with findings and the questions they opened, wait; the second pass is what the answers open"
                :findings-gate "no plan is written before the user has seen the findings and answered"
                :prior-art "look outside this project too — how the same problem is already solved; framed by the task, never by a fixed list"
@@ -117,10 +126,13 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
                :record "research findings and the plan live in the active FLOW, each finding carrying :verified-by and :at"
                :never "implementation"}
  :implementation-go {:requires #{:new-implementation-map :fresh-go :active-flow}
-                     :then (execute-confirmed-scope!)}
+                     :then (cond
+                             (= :cascade path) (hand-over-to-sdd-cascade!)
+                             :else (execute-confirmed-scope!))}
  :scope-change (:then (record-amendment!)
                       (stop!)
                       (request-fresh-go!))
  :done {:requires #{:result :acceptance :diagnostic}
-        :then (move-flow! "Flows/Archive/")}}
+        :read-back :when-cascaded
+        :then (move-flow! "Flows/Archive/<TASK>/")}}
 ```

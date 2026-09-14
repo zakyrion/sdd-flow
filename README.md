@@ -18,16 +18,18 @@ Anyone who works with coding agents keeps hitting the same failure modes:
 - **The agent forgets.** Close the session, and tomorrow's agent re-derives (or contradicts) yesterday's decisions.
 - **The agent walks in circles.** On a long R&D task it re-proposes the approach that already failed last week — as a fresh idea.
 - **The agent answers from vibes.** Ask about a genuine trade-off — terrain generation, netcode synchronization, service topology — and get a confident summary of its own training data, or the first article it found, handed over as the answer.
+- **The agent writes the code before the algorithm exists.** Ask for a system with a real algorithm inside — it produces thirteen methods where you would have written six, names nothing in the words of the task, and the only design document is the diff.
 
 `sdd-flow` counters all of them with structure:
 
 1. **Normalization.** Every request becomes an explicit task map. Anything unknown becomes a literal `?` — and a `?` must be *asked about*, never guessed.
 2. **Deliverable kinds.** Your words classify every request as *answer*, *plan*, or *mutation* — and the agent may never escalate the kind on its own. A question's deliverable is the answer itself, not the change it hints at.
 3. **Two gates and a checkpoint.** A *research go* lets the agent read code and write a plan — nothing else. A separate *implementation go*, given on a written plan, is required before any change. Between them, research runs in two passes: the agent comes back with findings and the questions they opened *before* any plan is written.
-4. **A persistent FLOW.** Every task lives in `Flows/FLOW_<TASK>.md`: raw request, confirmed contract, research findings, plan, decisions, disproven hypotheses, attempted-and-dropped approaches, progress, acceptance checks. Any future session resumes from that file instead of from memory.
+4. **A persistent FLOW.** Every task lives in its own folder, `Flows/<TASK>/FLOW.md`: raw request, confirmed contract, research findings, plan, decisions, disproven hypotheses, attempted-and-dropped approaches, progress, acceptance checks. Any future session resumes from that file instead of from memory.
 5. **Nothing is recorded without its ground.** Every finding and every decision carries a dated `:verified-by` line saying how it was established — ran it and watched, read the source, the documentation says so, or nothing but a hunch. On the second pass a guess no longer reads like a measurement.
 6. **Options come rated.** Whenever the agent offers you a choice, each option carries a confidence number: how likely *it* is the right decision. Evidence quality is a separate axis, and the two are never collapsed into one figure.
 7. **Deep research when there is no fast answer.** For questions that only have trade-offs, a second skill runs a source-verified pass: real sources first, the agent's own knowledge last, and a trade-off map instead of a manufactured recommendation.
+8. **A cascade when the change is not small.** A task the agent cannot carry out minimally takes a longer road: a self-contained context document, then the algorithm and its data with no method names, then the pseudocode of the future class, and only then code — as a translation. Every stage runs in a fresh context from the task folder alone, and each artifact is approved before the next one exists.
 
 ## What a session looks like
 
@@ -49,7 +51,7 @@ Before doing anything, the agent shows you the normalized contract:
 
 Reading it is easy: `:key value` pairs are facts ("its goal is…"), bare symbols like `DistrictBuiltEvent` are literal code anchors, quoted strings are plain prose, and `?` marks a hole the agent is *not allowed* to fill on its own.
 
-Open questions come back to you in one batch — and if the discussion runs over several rounds, the agent keeps asking the pointed follow-ups rather than guessing; "enough" ends the questions and starts the work. You answer and say **go** — the agent researches the codebase, looks for how the same problem is already solved outside your project, and comes back with its findings and the sharper questions they opened. Only after you answer those does it write the plan into `Flows/FLOW_ADD_DISTRICT_BUILT_EVENT.md` and stop. Reaching outside is itself gated: a web search or another repository is named and confirmed before it happens, while documentation lookups stay open. Only a second, fresh **go** on that written plan opens implementation. When the acceptance checks pass, the FLOW is archived to `Flows/Archive/` — a permanent, greppable history of what was decided and why.
+Open questions come back to you in one batch — and if the discussion runs over several rounds, the agent keeps asking the pointed follow-ups rather than guessing; "enough" ends the questions and starts the work. You answer and say **go** — the agent researches the codebase, looks for how the same problem is already solved outside your project, and comes back with its findings and the sharper questions they opened. Only after you answer those does it write the plan into `Flows/ADD_DISTRICT_BUILT_EVENT/FLOW.md` and stop. Reaching outside is itself gated: a web search or another repository is named and confirmed before it happens, while documentation lookups stay open. Only a second, fresh **go** on that written plan opens implementation. When the acceptance checks pass, the task folder is archived to `Flows/Archive/` — a permanent, greppable history of what was decided and why.
 
 ## Install
 
@@ -79,7 +81,7 @@ That promise belongs to the CLI. Writing into a document your project owns is a 
 
 ## Using it with Claude Code
 
-With `--tools claude`, your project gets three skills and six slash commands:
+With `--tools claude`, your project gets four skills and seven slash commands:
 
 | Command | What it does |
 | --- | --- |
@@ -88,6 +90,7 @@ With `--tools claude`, your project gets three skills and six slash commands:
 | `/sdd-flow:close` | Check every acceptance meter; archive the FLOW only when all of them pass. |
 | `/sdd-flow:promote <rule>` | Lift a rule that matured in this project into the canon, delta first. |
 | `/sdd-research <question>` | Run a source-verified research pass and return a trade-off map. |
+| `/sdd-cascade [stage]` | Run one stage of the cascade for a task that cannot be made minimally; with no stage, propose the next one. |
 | `/sdd-project-init` | Survey this project and integrate the framework with what it already has. |
 
 The skills also trigger implicitly: describe an engineering task in normal conversation and Claude Code picks the workflow up on its own.
@@ -96,7 +99,7 @@ The skills also trigger implicitly: describe an engineering task in normal conve
 
 With `--tools codex`, your project gets the same skills in Codex's native format (`.agents/skills/`):
 
-- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, or `$sdd-project-init`
+- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade s1`, or `$sdd-project-init`
 - **Implicit**: Codex selects the skill automatically when your task matches its description.
 
 ## What gets installed
@@ -113,6 +116,8 @@ your-project/
 │   ├── templates/
 │   │   ├── FLOW.md                 #   template for new FLOW documents
 │   │   ├── RESEARCH.md             #   template for a trade-off research document
+│   │   ├── CONTEXT.md              #   template for the cascade's self-contained context
+│   │   ├── CASCADE.md              #   template for s1, s2, read-back and converge
 │   │   └── PROJECT.md              #   skeleton for your project adapter
 │   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
 │   ├── config.json                 #   your settings (yours; never overwritten)
@@ -121,15 +126,22 @@ your-project/
 │   ├── skills/sdd-clojure-flow/SKILL.md
 │   ├── skills/sdd-deep-research/SKILL.md
 │   ├── skills/sdd-project-init/SKILL.md
+│   ├── skills/sdd-cascade/SKILL.md
 │   ├── commands/sdd-flow/{start,resume,close,promote}.md
 │   ├── commands/sdd-research.md
+│   ├── commands/sdd-cascade.md
 │   └── commands/sdd-project-init.md
 ├── .agents/                        # only with --tools codex
 │   ├── skills/sdd-clojure-flow/{SKILL.md, agents/openai.yaml}
 │   ├── skills/sdd-deep-research/{SKILL.md, agents/openai.yaml}
-│   └── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
-└── Flows/                          # your FLOW documents live here
-    └── Archive/                    #   completed FLOWs
+│   ├── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
+│   └── skills/sdd-cascade/{SKILL.md, agents/openai.yaml}
+└── Flows/                          # one folder per task
+    ├── <TASK>/
+    │   ├── FLOW.md                 #   every task
+    │   ├── CONTEXT.md              #   a cascaded task: what the next stage reads
+    │   └── CASCADE.md              #   a cascaded task: s1, s2, read-back, converge
+    └── Archive/                    #   completed task folders
 ```
 
 ## Commands
@@ -210,22 +222,41 @@ Some questions have no correct answer, only a pool of trade-offs: how to generat
 - **Disconfirmation is a step, not a mood.** The agent searches for what would kill the leading option, not for what would confirm it.
 - **You get a map, not a verdict.** Each option carries the forces it balances, where it applies, where it has actually run, what weakens its evidence, what it buys, what it costs to build *versus* to adopt, and whether the decision is reversible. Coming back with no recommendation is an allowed result — an honest map beats a manufactured answer.
 
-The result is a `Flows/RESEARCH_<TOPIC>.md` document, linked from the FLOW that asked for it and archived alongside it. Reaching outside stays gated: the search area is named and confirmed first, and after the second confirmed pass the agent asks whether it may keep searching without checking in each time.
+The result is a `RESEARCH_<TOPIC>.md` document in the task folder (or under `Flows/` when nothing asked for it), linked from the FLOW that asked for it and archived alongside it. Reaching outside stays gated: the search area is named and confirmed first, and after the second confirmed pass the agent asks whether it may keep searching without checking in each time.
+
+## When the change is not small
+
+Some changes cannot be made minimally: a multi-step refactoring, a system with a real algorithm inside, a large body of generated code, a data mutation under stated requirements. For those the agent proposes the **cascade** at normalization — a `:path :cascade` on the task map, rated like any other option — and you confirm it at the ordinary gate.
+
+The cascade is a chain of artifacts, each derived from the previous one **with no context beyond the document itself**:
+
+```clojure
+(-> FLOW.md      ;; the goal, the contract, the plan — as for every task
+    CONTEXT.md   ;; everything the next stage needs: code references, search targets, facts with provenance, out of scope, verification
+    CASCADE.md   ;; s1: the algorithm and its data, no method names — approved; then s2: the pseudocode of the future class — approved
+    code)        ;; a translation of s2, and only a translation; then read-back and converge
+```
+
+Every stage starts in a **fresh context** — a new session or a cleared one — reads its input artifact and the files that artifact names, and ends by writing the next invocation into the FLOW. `/sdd-cascade s1`, `/sdd-cascade s2`, `/sdd-cascade code`, `/sdd-cascade read-back`; with no stage, `/sdd-cascade` reads the task folder and proposes the next one. Two gates are yours: after s1 the subject is the algorithm, after s2 the structure of the code. Read-back rereads every touched file as a stranger before anything is called done, and `converge` can be run at any later time to classify every s2 entry against the code as present, partial, contradicting or unrequested — the drift meter that tells you whether the product still derives from this level.
+
+What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
 
 ## The lifecycle
 
 ```clojure
 (-> (:request "raw user input")
-    (:normalize "explicit contract, unknowns as ?")
+    (:normalize "explicit contract, unknowns as ?, :path proposed for a mutation")
     (:confirm "your go — research only")
     (:research-1 "search, then findings and the questions they opened")
     (:confirm "the findings gate — you answer before any plan exists")
     (:research-2 "what your answers opened; collapses when they open nothing")
     (:plan "steps, risks, acceptance meters")
     (:confirm "your fresh go — implementation")
-    (:execute "only the confirmed scope")
+    (cond
+      (:direct "only the confirmed scope")
+      (:cascade "CONTEXT, then s1 and its gate, then s2 and its gate, then code, read-back, converge — each stage in a fresh context"))
     (:accept "every meter at its target")
-    (:archive "FLOW moves to Flows/Archive/"))
+    (:archive "the task folder moves to Flows/Archive/"))
 ```
 
 If scope changes mid-flight, the agent records an amendment, stops, and asks for a fresh go. If a session dies, `/sdd-flow:resume` (or just asking Codex to resume) reconstructs everything from the FLOW file.
@@ -238,7 +269,7 @@ cd sdd-flow
 npm test
 ```
 
-22 tests cover the Clojure reader, document validation, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
+39 tests cover the Clojure reader, document validation, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
 
 ## License
 

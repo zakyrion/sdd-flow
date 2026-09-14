@@ -23,6 +23,9 @@
  {:form ":keyword"
   :name :keyword
   :read "self-evident label, verdict, enum, or sibling task reference"}
+ {:form ":keyword in :reads :writes :in :out :scratch :fields or a step's :out"
+  :name :data-reference
+  :read "names the structure declared under the same key in the :data of the same document; a structure born in a later stage lives in that stage's data map"}
  {:form "BareSymbol"
   :name :symbol
   :read "literal code or document anchor; preserve verbatim"}
@@ -112,6 +115,44 @@
    :in "membership invariant"})
 ```
 
+# Cascade fields
+
+```clojure
+(def cascade-fields
+  {:s1 {:makes "the result in one phrase"
+        :criterion "the selection rule"
+        :data "structures: {:key {:type RealType :holds \"what lies in it\" :from \"where it comes from\"}}"
+        :flow "steps: (:step-N \"action\" {:reads #{} :writes #{} :state \"what now exists\" :world :read})"
+        :exits "conditions with a proven occasion"
+        :numbers "named numbers with formulas"}
+   :s2-method {:does "what, in one phrase"
+               :in "keys the method reads"
+               :out "the key it returns, or :none"
+               :writes "keys it changes"
+               :scratch "keys local to the method"
+               :how "the mechanism of one deed"
+               :flow "steps inside; in the entry point each carries {:calls Method :out :key}"
+               :calls "helpers that are not steps"
+               :exits "guards with a proven occasion"
+               :ends-with "what it finishes with"
+               :numbers "named numbers with formulas"
+               :note "a fact not visible otherwise"}
+   :s2-data {:from-s1 "the key of the same structure in s1"
+             :shape "^:new Type for a structure born in s2"
+             :fields "{FieldInCode :key} — what the record consists of"
+             :as "the name in code, a bare symbol"
+             :lives "where it lives, see :lives below"
+             :holds "what lies in it"
+             :paired-with "which structure it shares an index with"
+             :grows "how it changes over the run"
+             :note "a fact not visible otherwise"}
+   :lives {:run "a noun written by two or more spine steps — a field of the owner"
+           :external "borrowed — released by whoever gave it"
+           EntryPoint "a bare symbol: a local of the entry point"
+           Method "a bare symbol: a local of that method"}
+   :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
+```
+
 # Field laws
 
 ```clojure
@@ -121,7 +162,8 @@
                                 :else :alternatives)
                         :conjunctive-fields [:where :off-limits :skip :contains
                                              :requires :never :must-not
-                                             :completed :remaining :tools]
+                                             :completed :remaining :tools
+                                             :reads :writes :in :scratch :calls :exits :ends-with]
                         :authority "the :set form reserves this project-scoped exception"
                         :note "a vector lists the fields; a set here would define itself by the rule it introduces"}
    :do {:may-contain [-> when cond :then]

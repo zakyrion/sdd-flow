@@ -4,7 +4,7 @@
 {:question "what is being researched, stated plainly"
  :why-no-fast-answer "what makes this a trade-off space rather than a lookup"
  :opened-at "YYYY-MM-DD"
- :flow "Flows/FLOW_<TASK>.md, or :standalone"}
+ :flow "Flows/<TASK>/FLOW.md, or :standalone"}
 ```
 
 # Our conditions

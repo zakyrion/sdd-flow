@@ -100,7 +100,7 @@ description: Run a source-verified research pass on questions with no fast right
 # Deliver
 
 ```clojure
-{:artifact "Flows/RESEARCH_<TOPIC>.md, written from the template"
+{:artifact "Flows/<TASK>/RESEARCH_<TOPIC>.md inside a task, Flows/RESEARCH_<TOPIC>.md when standalone; written from the template"
  :map "option → forces → when it applies → known uses → evidence and what weakens it → confidence → what it buys → cost to build against cost to adopt → reversibility"
  :adoption "building a solution and taking a ready one are different numbers — fifty people who invented it is not one person integrating it in three days"
  :evidence-bar "a one-way door demands strong evidence; a two-way door tolerates thin"

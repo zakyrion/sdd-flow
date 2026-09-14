@@ -432,6 +432,165 @@ test("uninstall leaves no deep research directories behind", async () => {
 });
 
 
+test("installed cascade skill carries its stages and rules", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["codex", "claude"]);
+    const skill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-cascade/SKILL.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "name: sdd-cascade",
+      "# Stages",
+      "# Isolation",
+      "# Invoke",
+      "# Context stage",
+      "# Story",
+      "# Cascade",
+      "# s1",
+      "# s2",
+      "# Translation",
+      "# Read-back",
+      "# Converge",
+      "# Meters",
+      "# Calibration",
+      "(def stage-isolation",
+      "(def data-coverage",
+      "(def story-test",
+      ":status :hypothesis",
+      ":invented-at-translation 0",
+      "subagents are not the mechanism",
+    ]) {
+      assert.ok(skill.includes(marker), `cascade SKILL.md missing ${marker}`);
+    }
+    assert.equal(
+      skill,
+      await fs.readFile(
+        path.join(root, ".agents/skills/sdd-cascade/SKILL.md"),
+        "utf8",
+      ),
+      "both adapters must install the same skill text",
+    );
+
+    const command = await fs.readFile(
+      path.join(root, ".claude/commands/sdd-cascade.md"),
+      "utf8",
+    );
+    assert.ok(command.includes(":command :sdd-cascade"));
+    assert.ok(command.includes(".claude/skills/sdd-cascade/SKILL.md"));
+
+    const metadata = await fs.readFile(
+      path.join(root, ".agents/skills/sdd-cascade/agents/openai.yaml"),
+      "utf8",
+    );
+    const shortDescription = /short_description: "([^"]*)"/u.exec(metadata)?.[1] ?? "";
+    assert.ok(
+      shortDescription.length >= 25 && shortDescription.length <= 64,
+      `Codex short_description must be 25-64 characters, got ${shortDescription.length}`,
+    );
+  });
+});
+
+test("installed cascade templates carry every section", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const cascade = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/CASCADE.md"),
+      "utf8",
+    );
+    for (const section of [
+      "# Subject",
+      "# s1",
+      "# s2",
+      "# Contra",
+      "# Read-back",
+      "# Converge",
+      "# Calibration",
+    ]) {
+      assert.ok(cascade.includes(section), `CASCADE.md missing ${section}`);
+    }
+    for (const field of [":from-s1", ":lives", ":spine-reads", ":owner-verdict", ":unrequested"]) {
+      assert.ok(cascade.includes(field), `CASCADE.md missing ${field}`);
+    }
+    const context = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/CONTEXT.md"),
+      "utf8",
+    );
+    for (const section of [
+      "# Task",
+      "# Reads",
+      "# Search",
+      "# Facts",
+      "# Occasions",
+      "# Verification",
+      "# Complete",
+    ]) {
+      assert.ok(context.includes(section), `CONTEXT.md missing ${section}`);
+    }
+    assert.ok(context.includes(":verified-by"), "CONTEXT.md facts must carry provenance");
+    assert.ok(
+      context.includes(":names-every-file-the-next-stage-may-read"),
+      "CONTEXT.md must carry the self-containment check",
+    );
+  });
+});
+
+test("installed contract carries the cascade path", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    for (const marker of [
+      "(def path",
+      "(def cascade",
+      "(def stage-isolation",
+      "Flows/<TASK>/FLOW.md",
+      ":legacy",
+      ":read-back :when-cascaded",
+    ]) {
+      assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
+    }
+    const flowTemplate = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/FLOW.md"),
+      "utf8",
+    );
+    assert.ok(flowTemplate.includes(":path #{:direct :cascade}"));
+    const notation = await fs.readFile(
+      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
+      "utf8",
+    );
+    assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
+    assert.ok(notation.includes(":name :data-reference"), "glossary missing the data-reference reading");
+    const lifecycle = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+      "utf8",
+    );
+    assert.ok(lifecycle.includes("(hand-over-to-sdd-cascade!)"), "lifecycle skill must hand over to the cascade");
+  });
+});
+
+test("uninstall leaves no cascade directories behind", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["codex", "claude"]);
+    await fs.access(path.join(root, ".claude/skills/sdd-cascade"));
+    await fs.access(path.join(root, ".agents/skills/sdd-cascade/agents"));
+
+    await uninstallProject(root);
+
+    for (const stray of [
+      ".claude/skills/sdd-cascade",
+      ".agents/skills/sdd-cascade/agents",
+      ".agents/skills/sdd-cascade",
+      ".claude",
+      ".agents",
+    ]) {
+      await assertMissing(path.join(root, stray));
+    }
+  });
+});
+
 test("the project adapter is the project's own file and survives an update", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);

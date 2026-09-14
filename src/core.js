@@ -47,6 +47,8 @@ const CORE_FILES = [
   ["templates/core/templates/FLOW.md", ".sdd-flow/templates/FLOW.md"],
   ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
   ["templates/core/templates/PROJECT.md", ".sdd-flow/templates/PROJECT.md"],
+  ["templates/core/templates/CONTEXT.md", ".sdd-flow/templates/CONTEXT.md"],
+  ["templates/core/templates/CASCADE.md", ".sdd-flow/templates/CASCADE.md"],
 ];
 const CODEX_FILES = [
   [
@@ -72,6 +74,14 @@ const CODEX_FILES = [
   [
     "templates/skills/sdd-project-init/agents/openai.yaml",
     ".agents/skills/sdd-project-init/agents/openai.yaml",
+  ],
+  [
+    "templates/skills/sdd-cascade/SKILL.md",
+    ".agents/skills/sdd-cascade/SKILL.md",
+  ],
+  [
+    "templates/skills/sdd-cascade/agents/openai.yaml",
+    ".agents/skills/sdd-cascade/agents/openai.yaml",
   ],
 ];
 const CLAUDE_FILES = [
@@ -110,6 +120,14 @@ const CLAUDE_FILES = [
   [
     "templates/claude/commands/sdd-flow/promote.md",
     ".claude/commands/sdd-flow/promote.md",
+  ],
+  [
+    "templates/skills/sdd-cascade/SKILL.md",
+    ".claude/skills/sdd-cascade/SKILL.md",
+  ],
+  [
+    "templates/claude/commands/sdd-cascade.md",
+    ".claude/commands/sdd-cascade.md",
   ],
 ];
 
@@ -630,6 +648,8 @@ async function removeEmptyManagedDirectories(root) {
     ".agents/skills/sdd-deep-research",
     ".agents/skills/sdd-project-init/agents",
     ".agents/skills/sdd-project-init",
+    ".agents/skills/sdd-cascade/agents",
+    ".agents/skills/sdd-cascade",
     ".agents/skills",
     ".agents",
     ".claude/commands/sdd-flow",
@@ -637,6 +657,7 @@ async function removeEmptyManagedDirectories(root) {
     ".claude/skills/sdd-clojure-flow",
     ".claude/skills/sdd-deep-research",
     ".claude/skills/sdd-project-init",
+    ".claude/skills/sdd-cascade",
     ".claude/skills",
     ".claude",
     ".sdd-flow/references",

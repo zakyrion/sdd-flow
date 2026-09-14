@@ -46,6 +46,25 @@
                      (ask-user!))})
 ```
 
+```clojure
+(def path
+  {:axis [:direct :cascade]
+   :applies-to :mutation ;; an answer or a plan has no path
+   :direct "the change can be made minimally — the FLOW alone carries it"
+   :cascade "the change cannot be made minimally — the task takes the cascade (def cascade)"
+   :assessed-by "the agent, at normalization: it rates the size of the change and proposes :path with its confidence; the owner confirms at the ordinary gate"
+   :candidates #{"multi-step refactoring"
+                 "a large amount of generated code"
+                 "heavy systems"
+                 "complex tasks"
+                 "algorithms that need detailing"
+                 "data mutation under stated requirements"}
+   :tiers "an answer is answered; a direct task is carried by its FLOW; a cascaded task is carried by its folder"
+   :escalation "a direct task that turns out not to be minimal records an amendment and asks for the cascade — it never slides into it"
+   :never #{"the agent taking the cascade without the owner's word"
+            "skipping the cascade because it is long"}})
+```
+
 # Project
 
 ```clojure
@@ -152,8 +171,9 @@
 
 ```clojure
 (def flow-document
-  {:home "Flows/FLOW_<TASK>.md"
-   :archive "Flows/Archive/FLOW_<TASK>.md"
+  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md and CASCADE.md beside it"
+   :archive "Flows/Archive/<TASK>/ — the folder moves whole"
+   :legacy "Flows/FLOW_<TASK>.md is read as a folder of one file; resume and close discover both shapes"
    :first-write "create immediately after the confirmed task statement (research go) and before any research artifacts"
    :contains #{:raw-request
                :confirmed-normalized-contract
@@ -306,7 +326,7 @@
                    "the agent asking permission the moment it sees the answer is not quick"}
    :rule "only the user switches it on"
    :standalone "runs without a FLOW; then the research document is the whole deliverable"
-   :artifact "Flows/RESEARCH_<TOPIC>.md, linked from the # Findings of the active FLOW"
+   :artifact "Flows/<TASK>/RESEARCH_<TOPIC>.md inside a task, linked from the # Findings of its FLOW; Flows/RESEARCH_<TOPIC>.md when standalone"
    :archive "moves to Flows/Archive/ together with the FLOW that links it"
    :map "option → forces → when it applies → known uses → evidence and what weakens it → confidence → what it buys → cost to build against cost to adopt → reversibility"
    :conditions "our own regime is written before anything is read — applicability is an axis of its own, not a shade of truth"
@@ -360,6 +380,7 @@
               "diagnostic reread"
               "FLOW close")
    :scope "only the confirmed map"
+   :cascade "when the confirmed map carries :path :cascade, execution is the cascade's stages under its own gates (def cascade): the go opens s1 in a fresh context, and the code stage comes only after s2 is approved"
    :emergent "a choice absent from the confirmed map is a late-discovered ? (def emergent-decision)"
    :when (scope-materially-changes?)
    :then (:then (record-change!)
@@ -376,6 +397,33 @@
    :no-alternative "having no alternative is still a decision — state it before acting, not report it after"})
 ```
 
+# Cascade
+
+```clojure
+(def cascade
+  {:skill "sdd-cascade — the procedure and the rules; also reachable as /sdd-cascade and $sdd-cascade"
+   :chain (-> FLOW.md CONTEXT.md CASCADE.md code)
+   :derivation "each artifact derives from the previous one with no context beyond the document; code to read is referenced from the document, or the document names what to search for"
+   :artifacts {CONTEXT.md "everything the next stage needs: code references, search targets, facts with provenance, decisions to honor, out of scope, verification"
+               CASCADE.md "s1 — the algorithm and its data with no method names; s2 — the pseudocode of the future class; contra, coverage, read-back, converge, calibration"}
+   :gates "the findings gate before s1; the owner's word after s1 (the algorithm) and after s2 (the structure); read-back before done"
+   :opened-by "the implementation go on a map carrying :path :cascade — it opens the first stage, never the code"
+   :isolation "(def stage-isolation)"
+   :drift "converge — every s2 entry classified against the code as present, partial, contradicts or unrequested; runnable at any time"
+   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the archived cascade by reference"
+   :invariant "what must survive a regeneration is the algorithmic, structural and behavioral requirements — never the text"
+   :never "a stage that reads the previous stage's conversation"})
+```
+
+```clojure
+(def stage-isolation
+  {:rule "a stage begins in a fresh context — a new session or a cleared one — and reads its input artifact and the files that artifact names; nothing from any conversation"
+   :mechanism "the owner's hand: a new session or a cleared context; subagents are not the mechanism"
+   :handoff "a stage ends by writing its artifact and the next invocation into # Progress of FLOW.md; the skill cannot clear the context itself — the turn ends and the owner clears"
+   :test "the input artifact is complete when it names every file the stage may read, every decision it must honor, and what is out of scope"
+   :why "a derivation colored by the reasoning that produced its input is not a derivation; context that is not in the artifact is context the next stage will not have"})
+```
+
 # Done
 
 ```clojure
@@ -383,6 +431,7 @@
   {:result :required
    :accept :when-present
    :diagnostic :when-code-changed
+   :read-back :when-cascaded
    :runtime :when-only-user-can-verify
    :commit :only-when-requested
    :research-document "archived together with the FLOW that links it"
@@ -404,8 +453,9 @@
 
 ```clojure
 (def resume-contract
-  {:read-first "the active FLOW selected by the user or discovered from Flows/"
+  {:read-first "the active FLOW selected by the user or discovered from Flows/ — a folder Flows/<TASK>/FLOW.md, or the legacy Flows/FLOW_<TASK>.md"
    :reconstruct #{:confirmed-contract :findings :research-document :decisions :disproven :attempted :progress :acceptance}
+   :cascaded "on a :path :cascade task, also the stage the folder is at and the next invocation, from # Progress"
    :validate "check current project state against FLOW claims"
    :never "repeat completed work"
    :then (cond
