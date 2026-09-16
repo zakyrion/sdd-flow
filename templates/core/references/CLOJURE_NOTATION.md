@@ -121,7 +121,10 @@
 (def cascade-fields
   {:subject {:mode "#{:step :auto} — how the stages are driven"
              :auto-to "#{:s2 :code} — where auto mode stops"
-             :models "{:stage Model …} — the owner's answer per stage"}
+             :models "{:stage Model …} — the owner's answer per stage"
+             :artifact-kind ":class, or a free keyword for a subject that is not a class"
+             :adapted "how a non-class kind adapted the class keys; absent for :class"
+             :living-s2 "Flows/Specs/<Subject>.md when it exists, else :none"}
    :s1 {:makes "the result in one phrase"
         :criterion "the selection rule"
         :data "structures: {:key {:type RealType :holds \"what lies in it\" :from \"where it comes from\"}}"
@@ -164,7 +167,15 @@
    :slice {:slice "the slice's name"
            :writes "the files this slice alone writes"
            :carries "the s2 methods, data or parts it translates"
+           :after "the slices this one waits for — it launches in the wave after them"
            :confidence "0-100 as a decision, rated against :one-runner"}
+   :delta-marks {:added "^:added on the value map of an entry born in this task"
+                 :changed "^:changed on the value map of an entry whose body changed"
+                 :removed "^:removed on the value map of an entry deleted; the body says what it was"}
+   :report {:artifact "the path" :contra "the count" :gate "the questions" :missing "what the stage guessed or could not find"}
+   :gotcha {:trap "what misbehaves" :where "file, symbol or library" :avoid "what to do instead" :verified-by "how it was established"}
+   :ledger-row [:task :at :run-shape :contra-noise :invented-at-translation :read-back-findings :converge :context-gaps :owner-verdict :options]
+   :ledger-options "[{:decision :id :top-rated 70 :held? true}] — every :offered decision of the task and whether its top-rated option held"
    :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
 ```
 

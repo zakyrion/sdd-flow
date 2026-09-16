@@ -50,6 +50,7 @@ const CORE_FILES = [
   ["templates/core/templates/CONTEXT.md", ".sdd-flow/templates/CONTEXT.md"],
   ["templates/core/templates/S1.md", ".sdd-flow/templates/S1.md"],
   ["templates/core/templates/S2.md", ".sdd-flow/templates/S2.md"],
+  ["templates/core/templates/CALIBRATION.md", ".sdd-flow/templates/CALIBRATION.md"],
 ];
 const CODEX_FILES = [
   [

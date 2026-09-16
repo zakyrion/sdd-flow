@@ -171,7 +171,7 @@
 
 ```clojure
 (def flow-document
-  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md, S1.md and S2.md beside it"
+  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md, S1.md and S2.md beside it; the subject's living S2 lives in Flows/Specs/ (def living-s2) and the project's ledger in Flows/CALIBRATION.md (def calibration-ledger)"
    :archive "Flows/Archive/<TASK>/ — the folder moves whole"
    :legacy "Flows/FLOW_<TASK>.md is read as a folder of one file; resume and close discover both shapes"
    :first-write "create immediately after the confirmed task statement (research go) and before any research artifacts"
@@ -406,14 +406,16 @@
    :derivation "each artifact derives from the previous one with no context beyond the document; code to read is referenced from the document, or the document names what to search for"
    :artifacts {CONTEXT.md "everything the next stage needs: code references, search targets, facts with provenance, decisions to honor, out of scope, verification"
                S1.md "the algorithm and its data with no method names; its contra; the s1 gate"
-               S2.md "the pseudocode of the future class, every structure with its type; its contra; the slices; the s2 gate; read-back, converge, calibration"}
+               S2.md "the pseudocode of the future class, every structure with its type; its contra; the slices; the s2 gate; read-back, converge, calibration"
+               "Flows/Specs/<Subject>.md" "the living S2 of the subject — one per class or system, outside the task folders (def living-s2)"}
    :gates "the findings gate before s1; the owner's word after s1 (the algorithm) and after s2 (the structure); read-back before done — in auto mode the gates up to the limit are replaced by :auto-decided entries (def cascade-mode)"
    :opened-by "the implementation go on a map carrying :path :cascade — it names the mode and launches the first runner, or the curator, never the code"
    :runner "(def stage-runner)"
    :mode "(def cascade-mode)"
    :isolation "(def stage-isolation)"
    :drift "converge — every s2 entry classified against the code as present, partial, contradicts or unrequested; runnable at any time"
-   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the archived S2.md by reference"
+   :merge "(def living-s2) — after a clean converge the task's delta folds into the living S2; a stage of its own, run at close"
+   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the subject's living S2 (def living-s2)"
    :legacy "a folder holding CASCADE.md is read as S1.md and S2.md in one file; converge on such a task writes there"
    :invariant "what must survive a regeneration is the algorithmic, structural and behavioral requirements — never the text"
    :never "a stage that reads the previous stage's conversation"})
@@ -434,7 +436,8 @@
    :launched-by "the owner's session in step mode; the curator in auto mode"
    :model "asked of the owner before every launch — never assumed; in auto mode asked for every stage up to the limit in one batch before the curator starts; skipped where the harness offers no choice"
    :prompt "the task folder, the stage, the mode, the chosen model, and the order to read only what the stage reads — never the launching session's reasoning"
-   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate; the artifact itself is read from the file, never repeated in the report"
+   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate, and :missing — what the stage had to guess or could not find in its input artifact; the artifact itself is read from the file, never repeated in the report"
+   :missing "the meter of (def stage-isolation :test): the launching session writes it into # Progress; calibration counts it as :context-gaps; a CONTEXT section that is short run after run is a template to fix"
    :parallel "only code slices run side by side (def slices in the skill); every other stage runs alone"
    :never #{"a runner that runs two stages"
             "a runner told what its input artifact does not say"
@@ -450,6 +453,7 @@
    :auto-to {:s2 "context → s1 → s2, then the narrative and the owner's choice of how the code is written — the default"
              :code "also code, read-back and converge; the code stage takes the highest-rated option among one runner and the slices s2 proposed"}
    :models "in auto mode the owner names the model for every stage up to the limit in one batch before the curator starts — the curator cannot ask mid-run"
+   :escalate "an :auto-decided whose top rating is below 60, or whose top two ratings lie within 10 of each other, does not decide: the curator stops and the narrative arrives early with that entry as the open question; the owner may name other numbers when naming the mode"
    :owner-sees "in step mode every artifact at its gate; in auto mode the narrative and S2.md — and the code, read-back and converge when the limit is :code"
    :never #{"auto mode chosen by the agent"
             "a curator that runs a stage itself instead of launching a runner"}})
@@ -476,6 +480,29 @@
    :never "a narrative that replaces reading the artifact — S2.md remains the subject of the gate"})
 ```
 
+```clojure
+(def living-s2
+  {:is "one S2 per subject — a class or a system — that lives outside the task folders and is the level the code regenerates from"
+   :home "Flows/Specs/<Subject>.md; created by the first merge, never by hand"
+   :born "the first cascade on a subject writes its S2 whole; at close, after a clean converge, it becomes the living S2"
+   :delta "a cascade on a subject with a living S2 reads it at the s2 stage and writes its S2 as a delta: every method and data entry it adds, changes or removes carries ^:added, ^:changed or ^:removed on the entry's value map; an untouched entry is not repeated; the spine is written whole"
+   :merge "a stage after a clean converge, at close: added entries are inserted in call order, changed entries replace their namesake, removed entries are deleted, the marks fall away; the task folder archives with the delta"
+   :converge "measures the code against the living S2 once it exists — the standing drift meter of the subject; a task's converge before merge reads the delta over the living S2"
+   :rot "a living S2 that converge cannot verify is the same as none; it exists only for subjects that went through the cascade — never a documentation effort"
+   :never #{"a living S2 written by hand"
+            "a merge before converge is clean"
+            "a second living S2 for one subject"}})
+```
+
+```clojure
+(def calibration-ledger
+  {:home "Flows/CALIBRATION.md — the project's own file, written from the template at the first close of a cascaded task; absent from the manifest, untouched by update and uninstall"
+   :row "one per closed cascaded task: the run shape, contra-noise, invented-at-translation, read-back findings, converge, context-gaps, the owner's verdict, and every decision that carried :offered with whether its top-rated option held"
+   :held "a decision's top-rated option held when it was chosen and no later decision superseded it; overturned otherwise"
+   :reads "the two-runs rule (def cascade-calibration :rule-changes-when) and the promise of (def option-confidence :survives) are checked here, by reading one file"
+   :never "a row written before the task is closed"})
+```
+
 # Done
 
 ```clojure
@@ -484,6 +511,8 @@
    :accept :when-present
    :diagnostic :when-code-changed
    :read-back :when-cascaded
+   :merge :when-cascaded-on-a-living-subject
+   :ledger :when-cascaded
    :runtime :when-only-user-can-verify
    :commit :only-when-requested
    :research-document "archived together with the FLOW that links it"

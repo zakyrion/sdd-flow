@@ -119,6 +119,7 @@ your-project/
 │   │   ├── CONTEXT.md              #   template for the cascade's self-contained context
 │   │   ├── S1.md                   #   template for s1: the algorithm and its data
 │   │   ├── S2.md                   #   template for s2: the class pseudocode, slices, read-back, converge
+│   │   ├── CALIBRATION.md          #   skeleton for the project's calibration ledger
 │   │   └── PROJECT.md              #   skeleton for your project adapter
 │   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
 │   ├── config.json                 #   your settings (yours; never overwritten)
@@ -143,6 +144,8 @@ your-project/
     │   ├── CONTEXT.md              #   a cascaded task: what the next stage reads
     │   ├── S1.md                   #   a cascaded task: the algorithm, approved before s2 exists
     │   └── S2.md                   #   a cascaded task: the class pseudocode, slices, read-back, converge
+    ├── Specs/<Subject>.md          #   the living S2 of a subject — the level its code regenerates from
+    ├── CALIBRATION.md              #   the project's ledger: one row per closed cascaded task (yours)
     └── Archive/                    #   completed task folders
 ```
 
@@ -244,7 +247,9 @@ Every stage runs in a **stage runner** — a fresh agent launched from your sess
 
 `/sdd-cascade auto` is the other mode. You name the limit — s2 by default, or code — and the model for every stage in one batch; a curator agent then launches one runner per stage in order, without stopping at your gates. Wherever a gate would have asked you, the stage closes the question itself with a rated entry marked `:auto-decided`, the highest rating winning. At the limit the curator comes back and your session tells you the story: what the context stage established, which algorithm s1 chose, which structure s2 chose, every decision it took and how it rated the alternatives, how the result will look — and then asks how the code should be written. Your answer is the s2 gate: any decision can be vetoed there.
 
-The code stage has two shapes. One runner translates all of S2.md, or the translation is sliced: every s2 ends with a `# Slices` proposal, rated against the one-runner option, where no two slices write the same file. You choose at the s2 gate; the slices then run side by side, each a fresh agent with the model you named, the project's meters run once over all of them, and read-back is always one runner over every touched file — the story does not split.
+The code stage has two shapes. One runner translates all of S2.md, or the translation is sliced: every s2 ends with a `# Slices` proposal, rated against the one-runner option, where no two slices write the same file. You choose at the s2 gate; the slices then run in waves by their declared dependencies, each a fresh agent with the model you named, every slice is checked against S2.md the moment it reports, the project's meters run once over all of them, and read-back is always one runner over every touched file — the story does not split.
+
+Once a subject has been through the cascade, its S2 outlives the task: at close, after converge reads clean, it becomes the subject's **living S2** in `Flows/Specs/<Subject>.md`. The next cascade on the same subject reads that file and writes only a delta — entries marked added, changed or removed — which a merge stage folds in at close, so converge from then on measures the code against one file, the level the subject regenerates from. Auto mode has a bar: a decision the stage cannot rate above sixty, or where two options sit within ten points, does not decide on its own; the curator stops and the story arrives early with that question. Every runner reports what it had to guess, the context document has a place for the traps of your codebase, and every closed task writes one row into `Flows/CALIBRATION.md` — the run's meters and whether each rated option held — so the rule "a signal twice in a row" is read from one file.
 
 What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
 
