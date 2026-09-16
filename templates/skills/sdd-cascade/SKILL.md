@@ -70,10 +70,15 @@ description: Carry a change that cannot be made minimally through the cascade �
     :reads #{S2.md "every file s2 names"}
     :gate :none
     :runs "at any time after code exists — the drift meter of the north star"}
+   {:stage :verdict
+    :writes "S2.md # Verdict"
+    :reads #{"S2.md # Converge" "FLOW.md # Acceptance"}
+    :gate :none
+    :runs "at close, by the closing session — not a runner: it reads two records and names the level of every failure (def verdict)"}
    {:stage :merge
     :writes "Flows/Specs/<Subject>.md — the living S2"
     :reads #{S2.md "the living S2 when it exists"}
-    :gate "converge :whole clean — contradicts 0, unrequested 0"
+    :gate "converge :whole clean (def converge :clean) and # Verdict written"
     :runs "at close; on the first cascade of a subject the task's s2 becomes the living S2 whole (def merge)"}])
 ```
 
@@ -598,7 +603,7 @@ description: Carry a change that cannot be made minimally through the cascade �
             :scale    "is there a paragraph flattened into one block, or split without heterogeneous steps"
             :why      "did the why from :note arrive where the code would lie without it — including every continue"}
    :reconcile "every method, field and type in the code ↔ an entry in s2; an entry added to s2 AFTER translation carries :from-code and counts in :invented-at-translation"
-   :verdict "every finding gets :fixed or :kept-because …; a list without verdicts is not a read-back"
+   :verdict "every finding gets :fixed or :kept-because … and :level — where it returns when not fixed (def verdict :levels); a list without verdicts is not a read-back"
    :out    "the list of findings with verdicts and the owner's verdict — reads / does not — or an explicit reading changed nothing"
    :never  "declaring done before this stage"})
 ```
@@ -611,24 +616,51 @@ description: Carry a change that cannot be made minimally through the cascade �
    :scope  "#{:slice :whole} — :slice classifies only the entries one slice carries, right after its runner reports; :whole is the run after the meters, at close, and at any later time"
    :reads  #{S2.md "the living S2 when it exists (def living-s2)" "every file s2 names"}
    :classifies "every s2 method, data entry and born type against the code"
-   :verdict #{:present :partial :contradicts :unrequested}
+   :verdict #{:present :partial :absent :contradicts :unrequested :deferred}
+   :partial "a counterpart exists but lacks part of what the entry declares — a step of :flow, a field, a type, an exit"
+   :absent "no counterpart in the code at all"
    :unrequested "code the s2 does not know — a method, a field, a type born in the code"
-   :writes "S2.md # Converge, append-only; a fix lands in s2 marked :from-code, or in the code — the owner chooses"
+   :deferred "an entry marked ^:deferred with a confirmed amendment (def deferral) — accounted for, outside the tally"
+   :accounted "every entry of the level appears in :entries once; an entry missing from the list is unaccounted, and the run is not clean"
+   :level  "every entry that is not :present or :deferred names the level it returns to (def verdict :levels)"
+   :clean  "every entry accounted; partial 0, absent 0, contradicts 0, unrequested 0; :deferred only where the mark stands"
+   :writes "S2.md # Converge, append-only; a fix lands in s2 marked :from-code, or in the code — the owner chooses; a deferral lands in FLOW.md # Amendments first"
    :never  "editing s1 or s2 silently to match the code"
-   :meter  {:contradicts 0 :unrequested 0}})
+   :meter  {:partial 0 :absent 0 :contradicts 0 :unrequested 0}})
+```
+
+# Verdict
+
+```clojure
+(def verdict  ;; two verdicts, never one — the code derives from the level, and the level does what the task asked
+  {:when "at close, after converge :whole and the acceptance check, before merge; written by the closing session, not a runner — it reads two records and names the level of every failure"
+   :conformance "clean or drifted — read from the last converge :whole (def converge :clean)"
+   :behavior "met, failed or pending — read from FLOW.md # Acceptance, every row at target, and the owner's check when CONTEXT.md # Verification names one"
+   :independent "a faithful translation of a flawed algorithm is clean and fails; a translation patched to pass a meter is met and drifted — the record shows both so neither is read as the other"
+   :failures "every failed meter, every read-back finding kept open and every converge entry that is not :present or :deferred, each with :level and :returns-to; a failure traced to a rated decision names it in :decision"
+   :levels {:context "a fact or gotcha the code stood on was false — CONTEXT.md, then the chain from s1"
+            :s1 "the algorithm computes the wrong thing — S1.md, then s2 and code"
+            :s2 "the structure cannot carry the algorithm — S2.md, then code"
+            :code "the translation slipped — the code alone, s2 unchanged"}
+   :boundary "a behavioral failure with conformance clean is never fixed in the code; the level named is amended and the cascade re-runs from there"
+   :writes "S2.md # Verdict; the calibration block and the ledger row read it"
+   :never #{"a failure without a level"
+            "one verdict standing in for the other"
+            "a green that rests on a deferral"}})
 ```
 
 # Merge
 
 ```clojure
 (def merge  ;; the stage that folds a task's delta into the living S2
-  {:when "at close, after converge :whole reads contradicts 0 and unrequested 0"
+  {:when "at close, after converge :whole is clean (def converge :clean) and # Verdict is written"
    :first "no living S2 yet: the task's S2.md # s2 is copied whole to Flows/Specs/<Subject>.md — methods, data and spine; contra, slices, gates, read-back, converge and calibration stay in the task"
-   :then "a living S2 exists: every ^:added entry is inserted in call order; every ^:changed entry replaces its namesake; every ^:removed entry is deleted; the spine of the delta replaces the living spine; the marks fall away"
+   :then "a living S2 exists: every ^:added entry is inserted in call order; every ^:changed entry replaces its namesake; every ^:removed entry is deleted; every ^:deferred entry is skipped (def deferral); the spine of the delta replaces the living spine; the marks fall away"
    :check "the result is reader-clean and its data-coverage tally is green; a red tally stops the merge and returns to the owner"
    :writes "Flows/Specs/<Subject>.md, and the merge's outcome into # Progress of FLOW.md"
    :never #{"editing the living S2 beyond what the delta says"
             "merging a delta whose converge is not clean"
+            "merging a deferred entry"
             "leaving a mark in the living S2"}})
 ```
 
@@ -665,6 +697,8 @@ description: Carry a change that cannot be made minimally through the cascade �
    ;; ── drift ────────────────────────────────────────────────────────
    :contradicts             {:target 0 :on :converge}
    :unrequested             {:target 0 :on :converge}
+   :partial                 {:target 0 :on :converge}
+   :absent                  {:target 0 :on :converge :means "an s2 entry with no counterpart in the code"}
    ;; ── the limit ────────────────────────────────────────────────────
    :warning "every countable meter green is zero information about the story; the story is caught only by the story-test and the owner"
    :language "the project's adapter adds the meters its language earns; canon carries none"
@@ -681,10 +715,12 @@ description: Carry a change that cannot be made minimally through the cascade �
              :invented-at-translation "how many methods, fields and types were added to s2 from the code"
              :names-lost              "how many named numbers or nouns of s2 lost their names in translation"
              :read-back-findings      "how many findings, and how many of them :fixed"
-             :converge                "contradicts and unrequested at the last run"
+             :converge                "partial, absent, contradicts and unrequested at the last run"
+             :verdicts                "conformance and behavior, from # Verdict (def verdict)"
+             :deferred                "entries left out by a confirmed amendment (def deferral)"
              :owner-verdict           "reads or does not — the only meter that truly counts"}
    :record "S2.md # Calibration of the task, and the project's own record when it keeps one"
-   :ledger "one row into Flows/CALIBRATION.md at close, from the template when the file does not exist yet (def calibration-ledger); the row reads every :offered decision of the task back — did its top-rated option hold"
+   :ledger "one row into Flows/CALIBRATION.md at close, from the template when the file does not exist yet (def calibration-ledger); the row reads every decision of the task that carried rated :options back — did its top-rated option hold, and did a failure trace to it"
    :rule-changes-when "the same signal two runs in a row — a rule, not an accident; until then the translation rules are hypotheses"
    :never "judging the cascade by the volume of its artifacts"})
 ```

@@ -174,8 +174,19 @@
                  :removed "^:removed on the value map of an entry deleted; the body says what it was"}
    :report {:artifact "the path" :contra "the count" :gate "the questions" :missing "what the stage guessed or could not find"}
    :gotcha {:trap "what misbehaves" :where "file, symbol or library" :avoid "what to do instead" :verified-by "how it was established"}
-   :ledger-row [:task :at :run-shape :contra-noise :invented-at-translation :read-back-findings :converge :context-gaps :owner-verdict :options]
-   :ledger-options "[{:decision :id :top-rated 70 :held? true}] — every :offered decision of the task and whether its top-rated option held"
+   :converge-entry {:s2 "the method or data key" :code "where in the code"
+                    :verdict "#{:present :partial :absent :contradicts :unrequested :deferred}"
+                    :level "#{:context :s1 :s2 :code} — where an entry that is not :present returns"
+                    :note "what differs"}
+   :read-back-finding {:finding "what the story-test caught" :asks "the question it answers" :verdict "#{:fixed :kept-because}" :level "where it returns when not fixed" :because "why kept"}
+   :verdict {:conformance "#{:clean :drifted} — from the last converge :whole"
+             :behavior "#{:met :failed :pending} — from FLOW.md # Acceptance"
+             :failures "[{:what :level :returns-to :decision}] — every failure and the level to revisit; :decision names the rated decision it traces to, when one does"
+             :deferred "[{:entry :amendment}] — every entry left out by amendment"}
+   :deferred-mark "^:deferred on the value map of an entry left out of this task's code; :deferred-by inside names the amendment"
+   :amendment {:amendment "an :a- keyword" :received-at "the date" :raw-request "verbatim" :normalized "the IR" :confirmed "the owner's word" :defers "the s2 entries it leaves out, when it does"}
+   :ledger-row [:task :at :run-shape :contra-noise :invented-at-translation :read-back-findings :converge :context-gaps :owner-verdict :verdicts :deferred :options]
+   :ledger-options "[{:decision :id :top-rated 70 :held? true :failed? false}] — every decision of the task that carried rated :options: did its top-rated option hold, and did a behavioral failure trace to it"
    :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
 ```
 

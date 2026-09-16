@@ -101,14 +101,17 @@
 [{:meter "instrument"
   :target "required reading"
   :actual ?
-  :status :pending}]
+  :status :pending
+  :level ^:optional #{:context :s1 :s2 :code}}]   ;; when :status is :failed on a cascaded task — the level to revisit
 ```
 
 # Amendments
 
 ```clojure
-[{:received-at "YYYY-MM-DD"
+[{:amendment :a-1
+  :received-at "YYYY-MM-DD"
   :raw-request "verbatim amendment"
   :normalized ?
-  :confirmed false}]
+  :confirmed false
+  :defers ^:optional #{}}]   ;; the s2 entries this amendment leaves out of the task's code
 ```

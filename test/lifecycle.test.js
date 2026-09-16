@@ -471,6 +471,13 @@ test("installed cascade skill carries its stages and rules", async () => {
       "(def code-stage",
       "(def delta",
       "(def merge",
+      "# Verdict",
+      "(def verdict",
+      "(def deferral)",
+      ":absent",
+      ":deferred",
+      ":accounted",
+      ":clean",
       ":escalate",
       ":missing",
       ":scope  \"#{:slice :whole}",
@@ -541,6 +548,7 @@ test("installed cascade templates carry every section", async () => {
       "# Gate",
       "# Read-back",
       "# Converge",
+      "# Verdict",
       "# Calibration",
     ]) {
       assert.ok(s2.includes(section), `S2.md missing ${section}`);
@@ -560,6 +568,12 @@ test("installed cascade templates carry every section", async () => {
       ":after",
       ":context-gaps",
       "^:added",
+      "^:deferred",
+      ":absent",
+      ":level",
+      ":accounted",
+      ":conformance",
+      ":behavior",
     ]) {
       assert.ok(s2.includes(field), `S2.md missing ${field}`);
     }
@@ -568,7 +582,7 @@ test("installed cascade templates carry every section", async () => {
       "utf8",
     );
     assert.ok(ledger.includes("# Ledger"), "CALIBRATION.md missing # Ledger");
-    for (const field of [":run-shape", ":context-gaps", ":held?", ":top-rated"]) {
+    for (const field of [":run-shape", ":context-gaps", ":held?", ":top-rated", ":verdicts", ":deferred", ":failed?"]) {
       assert.ok(ledger.includes(field), `CALIBRATION.md missing ${field}`);
     }
     const context = await fs.readFile(
@@ -615,6 +629,9 @@ test("installed contract carries the cascade path", async () => {
       "(def auto-narrative",
       "(def living-s2",
       "(def calibration-ledger",
+      "(def verdict",
+      "(def deferral",
+      ":verdict :when-cascaded",
       ":escalate",
       ":merge :when-cascaded-on-a-living-subject",
       "(-> FLOW.md CONTEXT.md S1.md S2.md code)",
@@ -633,12 +650,15 @@ test("installed contract carries the cascade path", async () => {
       "utf8",
     );
     assert.ok(flowTemplate.includes(":path #{:direct :cascade}"));
+    for (const field of [":amendment :a-1", ":defers", ":level"]) {
+      assert.ok(flowTemplate.includes(field), `FLOW.md template missing ${field}`);
+    }
     const notation = await fs.readFile(
       path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
       "utf8",
     );
     assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
-    for (const reading of [":auto-decided", ":slice", ":type \"the real type", ":delta-marks", ":gotcha", ":ledger-row", ":after"]) {
+    for (const reading of [":auto-decided", ":slice", ":type \"the real type", ":delta-marks", ":gotcha", ":ledger-row", ":after", ":converge-entry", ":verdict", ":deferred-mark", ":amendment", ":failed?"]) {
       assert.ok(notation.includes(reading), `glossary missing the ${reading} reading`);
     }
     assert.ok(notation.includes(":name :data-reference"), "glossary missing the data-reference reading");
@@ -648,6 +668,7 @@ test("installed contract carries the cascade path", async () => {
     );
     assert.ok(lifecycle.includes("(hand-over-to-sdd-cascade!)"), "lifecycle skill must hand over to the cascade");
     assert.ok(lifecycle.includes("(def stage-runner)"), "lifecycle skill must launch the runner at the handoff");
+    assert.ok(lifecycle.includes(":verdict :when-cascaded"), "lifecycle skill must mirror the verdict in done");
   });
 });
 

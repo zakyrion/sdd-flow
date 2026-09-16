@@ -7,8 +7,10 @@
   :contra-noise "<rejected out of all>"
   :invented-at-translation 0
   :read-back-findings {:total 0 :fixed 0}
-  :converge {:contradicts 0 :unrequested 0}
+  :converge {:partial 0 :absent 0 :contradicts 0 :unrequested 0}
   :context-gaps 0
   :owner-verdict ?
-  :options [{:decision :decision-id :top-rated 70 :held? true}]}]
+  :verdicts {:conformance :clean :behavior :met}
+  :deferred 0
+  :options [{:decision :decision-id :top-rated 70 :held? true :failed? false}]}]
 ```

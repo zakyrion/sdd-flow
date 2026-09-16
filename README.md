@@ -118,7 +118,7 @@ your-project/
 │   │   ├── RESEARCH.md             #   template for a trade-off research document
 │   │   ├── CONTEXT.md              #   template for the cascade's self-contained context
 │   │   ├── S1.md                   #   template for s1: the algorithm and its data
-│   │   ├── S2.md                   #   template for s2: the class pseudocode, slices, read-back, converge
+│   │   ├── S2.md                   #   template for s2: the class pseudocode, slices, read-back, converge, verdict
 │   │   ├── CALIBRATION.md          #   skeleton for the project's calibration ledger
 │   │   └── PROJECT.md              #   skeleton for your project adapter
 │   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
@@ -143,7 +143,7 @@ your-project/
     │   ├── FLOW.md                 #   every task
     │   ├── CONTEXT.md              #   a cascaded task: what the next stage reads
     │   ├── S1.md                   #   a cascaded task: the algorithm, approved before s2 exists
-    │   └── S2.md                   #   a cascaded task: the class pseudocode, slices, read-back, converge
+    │   └── S2.md                   #   a cascaded task: the class pseudocode, slices, read-back, converge, verdict
     ├── Specs/<Subject>.md          #   the living S2 of a subject — the level its code regenerates from
     ├── CALIBRATION.md              #   the project's ledger: one row per closed cascaded task (yours)
     └── Archive/                    #   completed task folders
@@ -239,7 +239,7 @@ The cascade is a chain of artifacts, each derived from the previous one **with n
 (-> FLOW.md      ;; the goal, the contract, the plan — as for every task
     CONTEXT.md   ;; everything the next stage needs: code references, search targets, facts with provenance, out of scope, verification
     S1.md        ;; the algorithm and its data, no method names — approved
-    S2.md        ;; the pseudocode of the future class, every structure with its type — approved; then slices, read-back, converge
+    S2.md        ;; the pseudocode of the future class, every structure with its type — approved; then slices, read-back, converge, verdict
     code)        ;; a translation of S2.md, and only a translation
 ```
 
@@ -250,6 +250,8 @@ Every stage runs in a **stage runner** — a fresh agent launched from your sess
 The code stage has two shapes. One runner translates all of S2.md, or the translation is sliced: every s2 ends with a `# Slices` proposal, rated against the one-runner option, where no two slices write the same file. You choose at the s2 gate; the slices then run in waves by their declared dependencies, each a fresh agent with the model you named, every slice is checked against S2.md the moment it reports, the project's meters run once over all of them, and read-back is always one runner over every touched file — the story does not split.
 
 Once a subject has been through the cascade, its S2 outlives the task: at close, after converge reads clean, it becomes the subject's **living S2** in `Flows/Specs/<Subject>.md`. The next cascade on the same subject reads that file and writes only a delta — entries marked added, changed or removed — which a merge stage folds in at close, so converge from then on measures the code against one file, the level the subject regenerates from. Auto mode has a bar: a decision the stage cannot rate above sixty, or where two options sit within ten points, does not decide on its own; the curator stops and the story arrives early with that question. Every runner reports what it had to guess, the context document has a place for the traps of your codebase, and every closed task writes one row into `Flows/CALIBRATION.md` — the run's meters and whether each rated option held — so the rule "a signal twice in a row" is read from one file.
+
+Two verdicts close a cascaded task, never one. **Conformance** says the code still derives from the approved S2: converge classifies every entry as present, partial, absent, contradicting, unrequested or deferred, and it is clean only when every entry is accounted for and nothing but present and deferred remains. **Behavior** says the task's acceptance holds. The two are independent: a faithful translation of a flawed algorithm is clean and fails, and the fix returns to the algorithm, never to the code. Every failure names the level to revisit — context, s1, s2 or code. An entry you leave for later is a confirmed amendment the entry points at; merge skips it, so the living S2 always says what the code is, and the ledger records for every rated decision both whether it held and whether a failure traced to it.
 
 What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
 

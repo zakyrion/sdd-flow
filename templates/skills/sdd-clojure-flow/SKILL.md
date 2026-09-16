@@ -134,5 +134,6 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
                       (request-fresh-go!))
  :done {:requires #{:result :acceptance :diagnostic}
         :read-back :when-cascaded
+        :verdict :when-cascaded
         :then (move-flow! "Flows/Archive/<TASK>/")}}
 ```

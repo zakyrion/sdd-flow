@@ -413,8 +413,9 @@
    :runner "(def stage-runner)"
    :mode "(def cascade-mode)"
    :isolation "(def stage-isolation)"
-   :drift "converge — every s2 entry classified against the code as present, partial, contradicts or unrequested; runnable at any time"
-   :merge "(def living-s2) — after a clean converge the task's delta folds into the living S2; a stage of its own, run at close"
+   :drift "converge — every s2 entry classified against the code as present, partial, absent, contradicts, unrequested or deferred; clean when every entry is classified and only present and deferred remain; runnable at any time"
+   :verdict "(def verdict) — conformance and behavior side by side at close; every failure names its level"
+   :merge "(def living-s2) — after a clean converge the task's delta folds into the living S2, deferred entries left out (def deferral); a stage of its own, run at close"
    :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the subject's living S2 (def living-s2)"
    :legacy "a folder holding CASCADE.md is read as S1.md and S2.md in one file; converge on such a task writes there"
    :invariant "what must survive a regeneration is the algorithmic, structural and behavioral requirements — never the text"
@@ -486,7 +487,7 @@
    :home "Flows/Specs/<Subject>.md; created by the first merge, never by hand"
    :born "the first cascade on a subject writes its S2 whole; at close, after a clean converge, it becomes the living S2"
    :delta "a cascade on a subject with a living S2 reads it at the s2 stage and writes its S2 as a delta: every method and data entry it adds, changes or removes carries ^:added, ^:changed or ^:removed on the entry's value map; an untouched entry is not repeated; the spine is written whole"
-   :merge "a stage after a clean converge, at close: added entries are inserted in call order, changed entries replace their namesake, removed entries are deleted, the marks fall away; the task folder archives with the delta"
+   :merge "a stage after a clean converge, at close: added entries are inserted in call order, changed entries replace their namesake, removed entries are deleted, deferred entries stay out (def deferral), the marks fall away; the task folder archives with the delta"
    :converge "measures the code against the living S2 once it exists — the standing drift meter of the subject; a task's converge before merge reads the delta over the living S2"
    :rot "a living S2 that converge cannot verify is the same as none; it exists only for subjects that went through the cascade — never a documentation effort"
    :never #{"a living S2 written by hand"
@@ -497,10 +498,36 @@
 ```clojure
 (def calibration-ledger
   {:home "Flows/CALIBRATION.md — the project's own file, written from the template at the first close of a cascaded task; absent from the manifest, untouched by update and uninstall"
-   :row "one per closed cascaded task: the run shape, contra-noise, invented-at-translation, read-back findings, converge, context-gaps, the owner's verdict, and every decision that carried :offered with whether its top-rated option held"
+   :row "one per closed cascaded task: the run shape, contra-noise, invented-at-translation, read-back findings, converge, context-gaps, the owner's verdict, the two verdicts (def verdict), the count of deferred entries, and every decision that carried rated :options with whether its top-rated option held and whether a failure traced to it"
    :held "a decision's top-rated option held when it was chosen and no later decision superseded it; overturned otherwise"
+   :failed "a decision's option failed when S2.md # Verdict traces a behavioral failure to it — persistence and outcome are two columns, never one"
    :reads "the two-runs rule (def cascade-calibration :rule-changes-when) and the promise of (def option-confidence :survives) are checked here, by reading one file"
    :never "a row written before the task is closed"})
+```
+
+```clojure
+(def verdict
+  {:two "conformance — the code derives from the approved S2, the living S2 once it exists: converge :whole is clean; behavior — the task's acceptance holds: every row of FLOW.md # Acceptance at target, and the owner's check when CONTEXT.md names one"
+   :independent "neither implies the other: a faithful translation of a flawed algorithm is clean and fails; a translation patched to pass a meter is met and drifted"
+   :record "S2.md # Verdict, written by the session that closes the task, after converge :whole and the acceptance check, before merge; both verdicts side by side, and every failure with the level to revisit"
+   :levels #{:context :s1 :s2 :code}
+   :returns "a failure returns to its level and the cascade re-runs from that stage: a false fact to CONTEXT, a wrong algorithm to s1, a wrong structure to s2, a slipped translation to the code"
+   :boundary "a behavioral failure on a clean conformance is never fixed in the code — the level named is amended, then translated again"
+   :never #{"one verdict read as the other"
+            "a failure without a level"
+            "a green that rests on a deferral"}})
+```
+
+```clojure
+(def deferral
+  {:is "an s2 entry the owner leaves out of this task's code — a scope amendment, never a verdict"
+   :how "a row in FLOW.md # Amendments with its :amendment id, confirmed by the owner; the entry in S2.md carries ^:deferred on its value map and :deferred-by naming that row"
+   :converge "a deferred entry is accounted for and classified :deferred — outside the tally that decides clean"
+   :merge "a deferred entry does not enter the living S2 — the living S2 says what the code is; the archived S2.md and the amendment say what waits"
+   :ledger "the row counts :deferred"
+   :never #{"a deferral without a confirmed amendment"
+            "an entry deferred by the agent"
+            "a deferral that turns a red converge green"}})
 ```
 
 # Done
@@ -511,6 +538,7 @@
    :accept :when-present
    :diagnostic :when-code-changed
    :read-back :when-cascaded
+   :verdict :when-cascaded
    :merge :when-cascaded-on-a-living-subject
    :ledger :when-cascaded
    :runtime :when-only-user-can-verify
@@ -518,7 +546,9 @@
    :research-document "archived together with the FLOW that links it"
    :never #{"edited files alone"
             "unchecked boxes"
-            "almost passing acceptance"}})
+            "almost passing acceptance"
+            "a failure without a level"
+            "a deferral without an amendment"}})
 ```
 
 ```clojure
