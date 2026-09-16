@@ -171,7 +171,7 @@
 
 ```clojure
 (def flow-document
-  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md and CASCADE.md beside it"
+  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md, S1.md and S2.md beside it"
    :archive "Flows/Archive/<TASK>/ — the folder moves whole"
    :legacy "Flows/FLOW_<TASK>.md is read as a folder of one file; resume and close discover both shapes"
    :first-write "create immediately after the confirmed task statement (research go) and before any research artifacts"
@@ -380,7 +380,7 @@
               "diagnostic reread"
               "FLOW close")
    :scope "only the confirmed map"
-   :cascade "when the confirmed map carries :path :cascade, execution is the cascade's stages under its own gates (def cascade): the go opens s1 in a fresh context, and the code stage comes only after s2 is approved"
+   :cascade "when the confirmed map carries :path :cascade, execution is the cascade's stages under its own gates (def cascade): the go names the mode and launches the first runner, or the curator in auto mode, never the code; the code stage comes only after s2 is approved"
    :emergent "a choice absent from the confirmed map is a late-discovered ? (def emergent-decision)"
    :when (scope-materially-changes?)
    :then (:then (record-change!)
@@ -402,26 +402,78 @@
 ```clojure
 (def cascade
   {:skill "sdd-cascade — the procedure and the rules; also reachable as /sdd-cascade and $sdd-cascade"
-   :chain (-> FLOW.md CONTEXT.md CASCADE.md code)
+   :chain (-> FLOW.md CONTEXT.md S1.md S2.md code)
    :derivation "each artifact derives from the previous one with no context beyond the document; code to read is referenced from the document, or the document names what to search for"
    :artifacts {CONTEXT.md "everything the next stage needs: code references, search targets, facts with provenance, decisions to honor, out of scope, verification"
-               CASCADE.md "s1 — the algorithm and its data with no method names; s2 — the pseudocode of the future class; contra, coverage, read-back, converge, calibration"}
-   :gates "the findings gate before s1; the owner's word after s1 (the algorithm) and after s2 (the structure); read-back before done"
-   :opened-by "the implementation go on a map carrying :path :cascade — it opens the first stage, never the code"
+               S1.md "the algorithm and its data with no method names; its contra; the s1 gate"
+               S2.md "the pseudocode of the future class, every structure with its type; its contra; the slices; the s2 gate; read-back, converge, calibration"}
+   :gates "the findings gate before s1; the owner's word after s1 (the algorithm) and after s2 (the structure); read-back before done — in auto mode the gates up to the limit are replaced by :auto-decided entries (def cascade-mode)"
+   :opened-by "the implementation go on a map carrying :path :cascade — it names the mode and launches the first runner, or the curator, never the code"
+   :runner "(def stage-runner)"
+   :mode "(def cascade-mode)"
    :isolation "(def stage-isolation)"
    :drift "converge — every s2 entry classified against the code as present, partial, contradicts or unrequested; runnable at any time"
-   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the archived cascade by reference"
+   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the archived S2.md by reference"
+   :legacy "a folder holding CASCADE.md is read as S1.md and S2.md in one file; converge on such a task writes there"
    :invariant "what must survive a regeneration is the algorithmic, structural and behavioral requirements — never the text"
    :never "a stage that reads the previous stage's conversation"})
 ```
 
 ```clojure
 (def stage-isolation
-  {:rule "a stage begins in a fresh context — a new session or a cleared one — and reads its input artifact and the files that artifact names; nothing from any conversation"
-   :mechanism "the owner's hand: a new session or a cleared context; subagents are not the mechanism"
-   :handoff "a stage ends by writing its artifact and the next invocation into # Progress of FLOW.md; the skill cannot clear the context itself — the turn ends and the owner clears"
+  {:rule "a stage begins in a fresh context and reads its input artifact and the files that artifact names; nothing from any conversation"
+   :mechanism "a stage runner — a fresh agent launched for that one stage (def stage-runner); where the harness offers no such agent, the owner's hand: a new session or a cleared one"
+   :handoff "a stage ends by writing its artifact and the next stage into # Progress of FLOW.md; the runner reports where it wrote and what waits at the gate — the launching session reads the artifact from the file"
    :test "the input artifact is complete when it names every file the stage may read, every decision it must honor, and what is out of scope"
    :why "a derivation colored by the reasoning that produced its input is not a derivation; context that is not in the artifact is context the next stage will not have"})
+```
+
+```clojure
+(def stage-runner
+  {:is "a fresh agent launched from the session that carries the task, for exactly one stage: it reads the stage's input artifact and the files that artifact names, runs the stage, writes the stage's artifact and # Progress, and reports back"
+   :launched-by "the owner's session in step mode; the curator in auto mode"
+   :model "asked of the owner before every launch — never assumed; in auto mode asked for every stage up to the limit in one batch before the curator starts; skipped where the harness offers no choice"
+   :prompt "the task folder, the stage, the mode, the chosen model, and the order to read only what the stage reads — never the launching session's reasoning"
+   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate; the artifact itself is read from the file, never repeated in the report"
+   :parallel "only code slices run side by side (def slices in the skill); every other stage runs alone"
+   :never #{"a runner that runs two stages"
+            "a runner told what its input artifact does not say"
+            "a report that stands in for the artifact"}})
+```
+
+```clojure
+(def cascade-mode
+  {:axis [:step :auto]
+   :named-at "the implementation go on a :path :cascade map; unnamed = :step"
+   :step "one runner per stage, launched from the owner's session; every gate is the owner's word in that session before the next runner starts"
+   :auto "a curator — itself a fresh agent — launches one runner per stage in order up to the limit, with no owner's gate between them; a disputed place is closed by an :auto-decided entry (def auto-decided); at the limit the curator returns the narrative (def auto-narrative)"
+   :auto-to {:s2 "context → s1 → s2, then the narrative and the owner's choice of how the code is written — the default"
+             :code "also code, read-back and converge; the code stage takes the highest-rated option among one runner and the slices s2 proposed"}
+   :models "in auto mode the owner names the model for every stage up to the limit in one batch before the curator starts — the curator cannot ask mid-run"
+   :owner-sees "in step mode every artifact at its gate; in auto mode the narrative and S2.md — and the code, read-back and converge when the limit is :code"
+   :never #{"auto mode chosen by the agent"
+            "a curator that runs a stage itself instead of launching a runner"}})
+```
+
+```clojure
+(def auto-decided
+  {:is "a decision a stage makes in auto mode where step mode would have asked the owner"
+   :entry {:id :ad-name :auto-decided true :confidence 70
+           :chosen "the option taken"
+           :options [{:option "the option taken" :confidence 70} {:option "the other" :confidence 30}]
+           :because "why the rating"
+           :answers ^:optional :c-1}
+   :rule "the highest-rated option wins; the entry stands in the artifact where the decision was made"
+   :collected "every entry into # Decisions of FLOW.md with :status :auto, so a resume and the narrative retell them"
+   :owner "may veto any entry at the next gate — the veto amends the artifact as a dated decision (def decision-revisit)"
+   :never "a decision taken silently, without an entry"})
+```
+
+```clojure
+(def auto-narrative
+  {:told "in the owner's session, in prose: the facts the context stage established, the algorithm s1 chose, the structure s2 chose, every :auto-decided with its rating, how the result will look in the code, and the question that ends it — how is the code written: one runner or the slices s2 proposed, and which models"
+   :then "the owner's answer is the s2 gate: a veto amends S2.md, a yes launches the code stage as chosen"
+   :never "a narrative that replaces reading the artifact — S2.md remains the subject of the gate"})
 ```
 
 # Done
@@ -455,7 +507,7 @@
 (def resume-contract
   {:read-first "the active FLOW selected by the user or discovered from Flows/ — a folder Flows/<TASK>/FLOW.md, or the legacy Flows/FLOW_<TASK>.md"
    :reconstruct #{:confirmed-contract :findings :research-document :decisions :disproven :attempted :progress :acceptance}
-   :cascaded "on a :path :cascade task, also the stage the folder is at and the next invocation, from # Progress"
+   :cascaded "on a :path :cascade task, also the mode, the stage the folder is at and the next stage, from # Progress; a runner that died leaves its stage unfinished — the stage runs again from its input artifact"
    :validate "check current project state against FLOW claims"
    :never "repeat completed work"
    :then (cond

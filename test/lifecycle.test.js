@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -444,6 +445,9 @@ test("installed cascade skill carries its stages and rules", async () => {
       "# Stages",
       "# Isolation",
       "# Invoke",
+      "# Runner",
+      "# Auto",
+      "# Code stage",
       "# Context stage",
       "# Story",
       "# Cascade",
@@ -455,13 +459,25 @@ test("installed cascade skill carries its stages and rules", async () => {
       "# Meters",
       "# Calibration",
       "(def stage-isolation",
+      "(def stage-runner",
+      "(def runner-launch",
+      "(def runner-inside",
+      "(def cascade-mode",
+      "(def curator",
+      "(def auto-decided",
+      "(def auto-narrative",
+      "(def slices",
+      "(def code-stage",
       "(def data-coverage",
       "(def story-test",
       ":status :hypothesis",
       ":invented-at-translation 0",
-      "subagents are not the mechanism",
+      "a stage runner — a fresh agent launched for that one stage",
     ]) {
       assert.ok(skill.includes(marker), `cascade SKILL.md missing ${marker}`);
+    }
+    for (const retired of ["subagents are not the mechanism", "CASCADE.md # s1", "CASCADE.md # s2"]) {
+      assert.ok(!skill.includes(retired), `cascade SKILL.md still carries ${retired}`);
     }
     assert.equal(
       skill,
@@ -494,23 +510,47 @@ test("installed cascade skill carries its stages and rules", async () => {
 test("installed cascade templates carry every section", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
-    const cascade = await fs.readFile(
-      path.join(root, ".sdd-flow/templates/CASCADE.md"),
+    await assertMissing(path.join(root, ".sdd-flow/templates/CASCADE.md"));
+    const s1 = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/S1.md"),
+      "utf8",
+    );
+    for (const section of ["# Subject", "# s1", "# Contra", "# Gate"]) {
+      assert.ok(s1.includes(section), `S1.md missing ${section}`);
+    }
+    for (const field of [":mode", ":auto-to", ":models", ":s1-tally", ":auto-decided", ":gate-after-s1", ":owner-verdict"]) {
+      assert.ok(s1.includes(field), `S1.md missing ${field}`);
+    }
+    const s2 = await fs.readFile(
+      path.join(root, ".sdd-flow/templates/S2.md"),
       "utf8",
     );
     for (const section of [
       "# Subject",
-      "# s1",
       "# s2",
       "# Contra",
+      "# Slices",
+      "# Gate",
       "# Read-back",
       "# Converge",
       "# Calibration",
     ]) {
-      assert.ok(cascade.includes(section), `CASCADE.md missing ${section}`);
+      assert.ok(s2.includes(section), `S2.md missing ${section}`);
     }
-    for (const field of [":from-s1", ":lives", ":spine-reads", ":owner-verdict", ":unrequested"]) {
-      assert.ok(cascade.includes(field), `CASCADE.md missing ${field}`);
+    for (const field of [
+      ":from-s1",
+      ":type <RealType>",
+      ":lives",
+      ":spine-reads",
+      ":typed",
+      ":slice",
+      ":one-runner",
+      ":code-as",
+      ":owner-verdict",
+      ":unrequested",
+      ":run-shape",
+    ]) {
+      assert.ok(s2.includes(field), `S2.md missing ${field}`);
     }
     const context = await fs.readFile(
       path.join(root, ".sdd-flow/templates/CONTEXT.md"),
@@ -546,12 +586,21 @@ test("installed contract carries the cascade path", async () => {
       "(def path",
       "(def cascade",
       "(def stage-isolation",
+      "(def stage-runner",
+      "(def cascade-mode",
+      "(def auto-decided",
+      "(def auto-narrative",
+      "(-> FLOW.md CONTEXT.md S1.md S2.md code)",
       "Flows/<TASK>/FLOW.md",
       ":legacy",
       ":read-back :when-cascaded",
     ]) {
       assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
     }
+    assert.ok(
+      !contract.includes("subagents are not the mechanism"),
+      "FLOW_CONTRACT.md still names the owner's hand as the only mechanism",
+    );
     const flowTemplate = await fs.readFile(
       path.join(root, ".sdd-flow/templates/FLOW.md"),
       "utf8",
@@ -562,12 +611,40 @@ test("installed contract carries the cascade path", async () => {
       "utf8",
     );
     assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
+    for (const reading of [":auto-decided", ":slice", ":type \"the real type"]) {
+      assert.ok(notation.includes(reading), `glossary missing the ${reading} reading`);
+    }
     assert.ok(notation.includes(":name :data-reference"), "glossary missing the data-reference reading");
     const lifecycle = await fs.readFile(
       path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
       "utf8",
     );
     assert.ok(lifecycle.includes("(hand-over-to-sdd-cascade!)"), "lifecycle skill must hand over to the cascade");
+    assert.ok(lifecycle.includes("(def stage-runner)"), "lifecycle skill must launch the runner at the handoff");
+  });
+});
+
+test("update removes the retired CASCADE.md template an older install left behind", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const retired = ".sdd-flow/templates/CASCADE.md";
+    const content = "# Subject\n\n```clojure\n{:stage :s1}\n```\n";
+    await fs.writeFile(path.join(root, retired), content);
+    const manifestPath = path.join(root, ".sdd-flow/manifest.json");
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+    manifest.managedFiles[retired] = createHash("sha256").update(content).digest("hex");
+    await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+    const report = await updateProject(root);
+
+    assert.ok(report.removed.includes(retired), "update must report the retired template");
+    await assertMissing(path.join(root, retired));
+    const refreshed = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+    assert.ok(!(retired in refreshed.managedFiles));
+    await fs.access(path.join(root, ".sdd-flow/templates/S1.md"));
+    await fs.access(path.join(root, ".sdd-flow/templates/S2.md"));
+    const health = await doctorProject(root);
+    assert.deepEqual(health.issues, []);
   });
 });
 

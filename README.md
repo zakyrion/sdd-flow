@@ -29,7 +29,7 @@ Anyone who works with coding agents keeps hitting the same failure modes:
 5. **Nothing is recorded without its ground.** Every finding and every decision carries a dated `:verified-by` line saying how it was established — ran it and watched, read the source, the documentation says so, or nothing but a hunch. On the second pass a guess no longer reads like a measurement.
 6. **Options come rated.** Whenever the agent offers you a choice, each option carries a confidence number: how likely *it* is the right decision. Evidence quality is a separate axis, and the two are never collapsed into one figure.
 7. **Deep research when there is no fast answer.** For questions that only have trade-offs, a second skill runs a source-verified pass: real sources first, the agent's own knowledge last, and a trade-off map instead of a manufactured recommendation.
-8. **A cascade when the change is not small.** A task the agent cannot carry out minimally takes a longer road: a self-contained context document, then the algorithm and its data with no method names, then the pseudocode of the future class, and only then code — as a translation. Every stage runs in a fresh context from the task folder alone, and each artifact is approved before the next one exists.
+8. **A cascade when the change is not small.** A task the agent cannot carry out minimally takes a longer road: a self-contained context document, then the algorithm and its data with no method names, then the pseudocode of the future class, and only then code — as a translation. Every stage runs in a fresh agent from the task folder alone; in step mode each artifact is approved before the next one exists, in auto mode the agent runs to a limit and comes back with a narrative of what it decided.
 
 ## What a session looks like
 
@@ -90,7 +90,7 @@ With `--tools claude`, your project gets four skills and seven slash commands:
 | `/sdd-flow:close` | Check every acceptance meter; archive the FLOW only when all of them pass. |
 | `/sdd-flow:promote <rule>` | Lift a rule that matured in this project into the canon, delta first. |
 | `/sdd-research <question>` | Run a source-verified research pass and return a trade-off map. |
-| `/sdd-cascade [stage]` | Run one stage of the cascade for a task that cannot be made minimally; with no stage, propose the next one. |
+| `/sdd-cascade [stage\|auto]` | Launch one stage of the cascade in a fresh runner; `auto` runs the cascade to a limit and returns a narrative; with no argument, propose the next stage. |
 | `/sdd-project-init` | Survey this project and integrate the framework with what it already has. |
 
 The skills also trigger implicitly: describe an engineering task in normal conversation and Claude Code picks the workflow up on its own.
@@ -117,7 +117,8 @@ your-project/
 │   │   ├── FLOW.md                 #   template for new FLOW documents
 │   │   ├── RESEARCH.md             #   template for a trade-off research document
 │   │   ├── CONTEXT.md              #   template for the cascade's self-contained context
-│   │   ├── CASCADE.md              #   template for s1, s2, read-back and converge
+│   │   ├── S1.md                   #   template for s1: the algorithm and its data
+│   │   ├── S2.md                   #   template for s2: the class pseudocode, slices, read-back, converge
 │   │   └── PROJECT.md              #   skeleton for your project adapter
 │   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
 │   ├── config.json                 #   your settings (yours; never overwritten)
@@ -140,7 +141,8 @@ your-project/
     ├── <TASK>/
     │   ├── FLOW.md                 #   every task
     │   ├── CONTEXT.md              #   a cascaded task: what the next stage reads
-    │   └── CASCADE.md              #   a cascaded task: s1, s2, read-back, converge
+    │   ├── S1.md                   #   a cascaded task: the algorithm, approved before s2 exists
+    │   └── S2.md                   #   a cascaded task: the class pseudocode, slices, read-back, converge
     └── Archive/                    #   completed task folders
 ```
 
@@ -233,11 +235,16 @@ The cascade is a chain of artifacts, each derived from the previous one **with n
 ```clojure
 (-> FLOW.md      ;; the goal, the contract, the plan — as for every task
     CONTEXT.md   ;; everything the next stage needs: code references, search targets, facts with provenance, out of scope, verification
-    CASCADE.md   ;; s1: the algorithm and its data, no method names — approved; then s2: the pseudocode of the future class — approved
-    code)        ;; a translation of s2, and only a translation; then read-back and converge
+    S1.md        ;; the algorithm and its data, no method names — approved
+    S2.md        ;; the pseudocode of the future class, every structure with its type — approved; then slices, read-back, converge
+    code)        ;; a translation of S2.md, and only a translation
 ```
 
-Every stage starts in a **fresh context** — a new session or a cleared one — reads its input artifact and the files that artifact names, and ends by writing the next invocation into the FLOW. `/sdd-cascade s1`, `/sdd-cascade s2`, `/sdd-cascade code`, `/sdd-cascade read-back`; with no stage, `/sdd-cascade` reads the task folder and proposes the next one. Two gates are yours: after s1 the subject is the algorithm, after s2 the structure of the code. Read-back rereads every touched file as a stranger before anything is called done, and `converge` can be run at any later time to classify every s2 entry against the code as present, partial, contradicting or unrequested — the drift meter that tells you whether the product still derives from this level.
+Every stage runs in a **stage runner** — a fresh agent launched from your session for that one stage. It reads its input artifact and the files that artifact names, nothing from any conversation, writes its artifact, and reports back where it wrote and what waits at the gate. Before every launch the agent asks you which model runs the stage; it never assumes one. `/sdd-cascade s1`, `/sdd-cascade s2`, `/sdd-cascade code`, `/sdd-cascade read-back`; with no stage, `/sdd-cascade` reads the task folder and proposes the next one. Two gates are yours: after s1 the subject is the algorithm, after s2 the structure of the code. Read-back rereads every touched file as a stranger before anything is called done, and `converge` can be run at any later time to classify every s2 entry against the code as present, partial, contradicting or unrequested — the drift meter that tells you whether the product still derives from this level.
+
+`/sdd-cascade auto` is the other mode. You name the limit — s2 by default, or code — and the model for every stage in one batch; a curator agent then launches one runner per stage in order, without stopping at your gates. Wherever a gate would have asked you, the stage closes the question itself with a rated entry marked `:auto-decided`, the highest rating winning. At the limit the curator comes back and your session tells you the story: what the context stage established, which algorithm s1 chose, which structure s2 chose, every decision it took and how it rated the alternatives, how the result will look — and then asks how the code should be written. Your answer is the s2 gate: any decision can be vetoed there.
+
+The code stage has two shapes. One runner translates all of S2.md, or the translation is sliced: every s2 ends with a `# Slices` proposal, rated against the one-runner option, where no two slices write the same file. You choose at the s2 gate; the slices then run side by side, each a fresh agent with the model you named, the project's meters run once over all of them, and read-back is always one runner over every touched file — the story does not split.
 
 What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
 
@@ -254,7 +261,7 @@ What must survive a regeneration from the artifacts is the algorithmic, structur
     (:confirm "your fresh go — implementation")
     (cond
       (:direct "only the confirmed scope")
-      (:cascade "CONTEXT, then s1 and its gate, then s2 and its gate, then code, read-back, converge — each stage in a fresh context"))
+      (:cascade "CONTEXT, then s1 and its gate, then s2 and its gate, then code, read-back, converge — each stage in a fresh runner; or auto to a limit, then the narrative"))
     (:accept "every meter at its target")
     (:archive "the task folder moves to Flows/Archive/"))
 ```

@@ -109,9 +109,9 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 ```clojure
 {:when (= :cascade path)
  :skill "sdd-cascade — CONTEXT, s1, s2, code, read-back, converge; also reachable as /sdd-cascade"
- :opens "the implementation go opens the first stage in a fresh context, never the code (def cascade)"
- :handoff "write the next invocation into # Progress of FLOW.md and end the turn; the owner clears the context and runs it (def stage-isolation)"
- :never "carrying a cascaded task through in this conversation"}
+ :opens "the implementation go names the mode and launches the first runner, or the curator in auto mode — never the code (def cascade)"
+ :handoff "write the mode and the next stage into # Progress of FLOW.md, ask the owner which model, launch the runner and wait; the gates are the owner's word in this session (def stage-runner)"
+ :never "running a stage in this conversation — a stage runs only in its runner"}
 ```
 
 # Execute

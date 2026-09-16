@@ -48,7 +48,8 @@ const CORE_FILES = [
   ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
   ["templates/core/templates/PROJECT.md", ".sdd-flow/templates/PROJECT.md"],
   ["templates/core/templates/CONTEXT.md", ".sdd-flow/templates/CONTEXT.md"],
-  ["templates/core/templates/CASCADE.md", ".sdd-flow/templates/CASCADE.md"],
+  ["templates/core/templates/S1.md", ".sdd-flow/templates/S1.md"],
+  ["templates/core/templates/S2.md", ".sdd-flow/templates/S2.md"],
 ];
 const CODEX_FILES = [
   [

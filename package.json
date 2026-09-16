@@ -1,6 +1,6 @@
 {
   "name": "sdd-flow",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Spec-Driven Development workflow for AI coding agents (Claude Code and Codex): every request becomes an explicit contract with a gated Research -> Plan -> Execute lifecycle and a persistent FLOW document.",
   "type": "module",

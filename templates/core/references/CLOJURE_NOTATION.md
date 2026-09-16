@@ -119,7 +119,10 @@
 
 ```clojure
 (def cascade-fields
-  {:s1 {:makes "the result in one phrase"
+  {:subject {:mode "#{:step :auto} — how the stages are driven"
+             :auto-to "#{:s2 :code} — where auto mode stops"
+             :models "{:stage Model …} — the owner's answer per stage"}
+   :s1 {:makes "the result in one phrase"
         :criterion "the selection rule"
         :data "structures: {:key {:type RealType :holds \"what lies in it\" :from \"where it comes from\"}}"
         :flow "steps: (:step-N \"action\" {:reads #{} :writes #{} :state \"what now exists\" :world :read})"
@@ -138,6 +141,7 @@
                :numbers "named numbers with formulas"
                :note "a fact not visible otherwise"}
    :s2-data {:from-s1 "the key of the same structure in s1"
+             :type "the real type, repeated from s1 beside :from-s1 — S2.md alone must translate into code"
              :shape "^:new Type for a structure born in s2"
              :fields "{FieldInCode :key} — what the record consists of"
              :as "the name in code, a bare symbol"
@@ -150,6 +154,17 @@
            :external "borrowed — released by whoever gave it"
            EntryPoint "a bare symbol: a local of the entry point"
            Method "a bare symbol: a local of that method"}
+   :auto-decided {:id "an :ad- keyword"
+                  :auto-decided true
+                  :confidence "0-100 for the chosen option"
+                  :chosen "the option taken"
+                  :options "rated alternatives"
+                  :because "why the rating"
+                  :answers "the contra entry it closes, optional"}
+   :slice {:slice "the slice's name"
+           :writes "the files this slice alone writes"
+           :carries "the s2 methods, data or parts it translates"
+           :confidence "0-100 as a decision, rated against :one-runner"}
    :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
 ```
 

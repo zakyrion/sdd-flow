@@ -1,4 +1,4 @@
 interface:
   display_name: "SDD Cascade"
   short_description: "Algorithm, then class pseudocode, then code"
-  default_prompt: "Use $sdd-cascade to carry this task through CONTEXT, s1, s2, code and read-back, one stage per fresh context."
+  default_prompt: "Use $sdd-cascade to carry this task through CONTEXT, s1, s2, code and read-back, one stage per fresh runner."
