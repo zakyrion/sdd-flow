@@ -471,6 +471,12 @@ test("installed cascade skill carries its stages and rules", async () => {
       "(def code-stage",
       "(def delta",
       "(def merge",
+      "# Cards",
+      "(def cards",
+      "(def from-code",
+      "(def context-stage",
+      ":single-writer",
+      "sdd-flow lint",
       "# Verdict",
       "(def verdict",
       "(def deferral)",
@@ -601,7 +607,8 @@ test("installed cascade templates carry every section", async () => {
     ]) {
       assert.ok(context.includes(section), `CONTEXT.md missing ${section}`);
     }
-    for (const field of [":artifact-kind", ":living-s2", ":trap", ":avoid", ":names-artifact-kind"]) {
+    assert.ok(context.includes("# Build"), "CONTEXT.md missing # Build");
+    for (const field of [":artifact-kind", ":living-s2", ":trap", ":avoid", ":names-artifact-kind", ":names-build-facts", ":modules", ":tests"]) {
       assert.ok(context.includes(field), `CONTEXT.md missing ${field}`);
     }
     assert.ok(context.includes(":verified-by"), "CONTEXT.md facts must carry provenance");
@@ -629,6 +636,8 @@ test("installed contract carries the cascade path", async () => {
       "(def auto-narrative",
       "(def living-s2",
       "(def calibration-ledger",
+      ":card \"a runner reads a card",
+      ":lint \"sdd-flow lint",
       "(def verdict",
       "(def deferral",
       ":verdict :when-cascaded",
@@ -658,7 +667,7 @@ test("installed contract carries the cascade path", async () => {
       "utf8",
     );
     assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
-    for (const reading of [":auto-decided", ":slice", ":type \"the real type", ":delta-marks", ":gotcha", ":ledger-row", ":after", ":converge-entry", ":verdict", ":deferred-mark", ":amendment", ":failed?"]) {
+    for (const reading of [":auto-decided", ":slice", ":type \"the real type", ":delta-marks", ":gotcha", ":ledger-row", ":after", ":converge-entry", ":verdict", ":deferred-mark", ":amendment", ":failed?", ":from-code", ":build", ":lint"]) {
       assert.ok(notation.includes(reading), `glossary missing the ${reading} reading`);
     }
     assert.ok(notation.includes(":name :data-reference"), "glossary missing the data-reference reading");

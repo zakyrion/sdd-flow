@@ -105,7 +105,16 @@ test("placeholders and open values are valid under a templates directory", async
 });
 
 test("the report is ordered by document in chain order, then line", async () => {
-  const result = await lint(path.join(ROOT, "Flows", "FLOW_ANALYZER"));
+  const open = (heading) => `# ${heading}\n\n\`\`\`clojure\n{:first ?}\n\`\`\`\n\n\`\`\`clojure\n{:second ?}\n\`\`\`\n`;
+  const clean = (name) => fs.readFile(path.join(FIXTURES, "clean", name), "utf8");
+  const result = await withFolder(
+    {
+      "S2.md": `${await clean("S2.md")}\n${open("Calibration")}`,
+      "FLOW.md": open("Progress"),
+      "S1.md": `${await clean("S1.md")}\n${open("Notes")}`,
+    },
+    (root) => lint(root),
+  );
   const files = [...new Set(result.diagnostics.map((diagnostic) => diagnostic.file))];
   assert.deepEqual(
     files.map((file) => path.basename(file)),
@@ -227,4 +236,25 @@ test("the schema family never fails a run: its rules are :info or :warning", () 
   for (const row of RULES.filter((candidate) => candidate.rule.startsWith(":schema/"))) {
     assert.notEqual(row.severity, ":error", `${row.rule} is :error`);
   }
+});
+
+// ── 0.3.5 — the schema follows the templates ──
+
+test("a FLOW.md's headings report nothing — the kind is open, the :form family still reads it", async () => {
+  const result = await withFolder(
+    { "FLOW.md": "# Request\n\n```clojure\n{:raw ?}\n```\n\n# Anything the owner likes\n\n```clojure\n{:a 1}\n```\n" },
+    (root) => lint(root),
+  );
+  assert.deepEqual(result.diagnostics.map((d) => d.rule), [":form/open-value"]);
+});
+
+test(":from-code is a key the method and the data kinds know", async () => {
+  const s2 = (await fs.readFile(path.join(FIXTURES, "clean", "S2.md"), "utf8"))
+    .replace(':how "', ':from-code "born in the code: the fixture says why" :how "');
+  assert.ok(s2.includes(":from-code"));
+  const result = await withFolder(
+    { "S1.md": await fs.readFile(path.join(FIXTURES, "clean", "S1.md"), "utf8"), "S2.md": s2 },
+    (root) => lint(root),
+  );
+  assert.deepEqual(result.diagnostics, []);
 });

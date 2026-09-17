@@ -19,7 +19,8 @@ description: Carry a change that cannot be made minimally through the cascade �
  :project (when (project-adapter-present? ".sdd-flow/project.md")
             (:then (read! ".sdd-flow/references/PROJECT_ADAPTER.md")
                    (read-last! ".sdd-flow/project.md")))
- :adapter-gives "the project's knowledge tools for the context stage, its meters for the code stage, its :shape for where the task folder lives"}
+ :adapter-gives "the project's knowledge tools for the context stage, its meters for the code stage, its :shape for where the task folder lives"
+ :runner "a stage runner loads its card instead of this file (def cards)"}
 ```
 
 # Nature
@@ -135,8 +136,8 @@ description: Carry a change that cannot be made minimally through the cascade �
   {:is "a fresh agent launched from the session that carries the task, for exactly one stage: it reads the stage's input artifact and the files that artifact names, runs the stage, writes the stage's artifact and # Progress, and reports back"
    :launched-by "the owner's session in step mode; the curator in auto mode"
    :model "asked of the owner before every launch — never assumed; in auto mode asked for every stage up to the limit in one batch before the curator starts; skipped where the harness offers no choice"
-   :prompt "the task folder, the stage, the mode, the chosen model, and the order to read only what the stage reads — never the launching session's reasoning"
-   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate, and :missing — what the stage had to guess or could not find in its input artifact; the artifact itself is read from the file, never repeated in the report"
+   :prompt "the task folder, the stage, the mode, the chosen model, and the order: read the stage's card and the glossary (def cards), then only what the stage reads — never the launching session's reasoning"
+   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate, the counts sdd-flow lint leaves (def runner-inside :lint), and :missing — what the stage had to guess or could not find in its input artifact; the artifact itself is read from the file, never repeated in the report"
    :missing "the meter of (def stage-isolation :test): the launching session writes it into # Progress; calibration counts it as :context-gaps; a CONTEXT section that is short run after run is a template to fix"
    :parallel "only code slices run side by side (def slices); every other stage runs alone"
    :never #{"a runner that runs two stages"
@@ -147,21 +148,49 @@ description: Carry a change that cannot be made minimally through the cascade �
 ```clojure
 (def runner-launch  ;; what the launching session does
   {:ask "which model runs this stage — every launch, never assumed; skipped where the harness offers no choice"
-   :prompt #{"the task folder" "the stage" "the mode" "the order: read only the stage's input artifact and the files it names; invoke sdd-cascade inside"}
+   :prompt #{"the task folder" "the stage" "the mode" "the order: read .sdd-flow/cards/<stage>.md and the glossary, then only the stage's input artifact and the files it names — this whole file only where the card is absent"}
    :never-in-prompt "the launching session's findings, reasoning or answers — if the stage needs them, they belong in the artifact"
    :wait "the runner's report: the artifact's path, the count of contra entries, the questions at the gate"
    :then (:then (read-artifact-from-file!)
+                (lint-the-task-folder!)
                 (present-gate!))
+   :lint "the launching session runs sdd-flow lint before it presents a gate and shows the counts beside the artifact; an :error is the owner's to weigh, never hidden"
    :progress "the launching session writes the runner's model, outcome and :missing into # Progress"})
 ```
 
 ```clojure
 (def runner-inside  ;; what this skill does when it runs as a runner
-  {:reads "only what (def stages) lists for the stage — and nothing the prompt adds beyond the folder and the stage"
+  {:loads "its card, .sdd-flow/cards/<stage>.md, the glossary and the stage's template (def cards) — this whole file only where the card is absent"
+   :reads "only what (def stages) lists for the stage — and nothing the prompt adds beyond the folder and the stage"
    :runs "the stage as this skill states it, contra included"
-   :writes "the stage's artifact and # Progress of FLOW.md — the next stage, and :auto-decided entries into # Decisions when in auto mode"
+   :writes "the stage's artifact and # Progress of FLOW.md — the next stage, and :auto-decided entries into # Decisions when in auto mode; in a wave of more than one slice, its own files and nothing shared (def code-stage :single-writer)"
+   :lint "before reporting: sdd-flow lint <task folder>; fix what is this stage's own; the counts that remain go into the report; where the command is absent the tallies are taken by eye and the report says so"
    :reports "the pointer (def stage-runner :report), :missing included — what this stage guessed or could not find in its input"
    :never "answering the launching session's questions in the report — the artifact answers"})
+```
+
+# Cards
+
+```clojure
+(def cards  ;; what a runner reads instead of this file — generated, never written
+  {:is "one managed file per stage, .sdd-flow/cards/<stage>.md, cut from this file by sdd-flow init and update: the defs the stage needs, byte for byte, a def this file lacks taken from FLOW_CONTRACT.md; this file stays the only place a rule is edited"
+   :reads "a runner reads its card, the glossary and the stage's template, then its input artifact"
+   :common [stage-isolation stage-runner runner-inside auto-decided artifact-syntax cascade from-code]
+   :context [context-stage]
+   :s1 [cascade-flow s1 step s1-detectors contra]
+   :s2 [cascade-flow method-keys step-keys data-flow-law data-keys data-coverage spine contra delta slices living-s2
+        story translation order returned-results names paragraph entry-point primitive guards pair-is-a-type lifetime comments]
+   :code [code-stage slices method-keys step-keys data-flow-law data-keys spine delta
+          story story-test translation order returned-results names paragraph entry-point primitive guards pair-is-a-type lifetime comments meters]
+   :read-back [read-back story story-test method-keys step-keys data-keys spine
+               translation order returned-results names paragraph entry-point primitive guards pair-is-a-type lifetime comments meters verdict]
+   :converge [converge verdict deferral living-s2 delta method-keys step-keys data-keys]
+   :merge [merge living-s2 delta deferral data-coverage data-keys]
+   :curator [stages cascade-mode curator runner-launch auto-narrative code-stage slices]
+   :template {:context ".sdd-flow/templates/CONTEXT.md" :s1 ".sdd-flow/templates/S1.md" :s2 ".sdd-flow/templates/S2.md"
+              :code ".sdd-flow/templates/S2.md" :read-back ".sdd-flow/templates/S2.md" :converge ".sdd-flow/templates/S2.md"
+              :merge ".sdd-flow/templates/S2.md"}
+   :never "a card edited by hand — doctor reports it as a modified managed file"})
 ```
 
 # Auto
@@ -188,7 +217,7 @@ description: Carry a change that cannot be made minimally through the cascade �
              (:stage-2 "launch the s1 runner; wait; read its report")
              (:stage-3 "launch the s2 runner; wait; read its report")
              (:limit (when (= :code auto-to)
-                       (:then "launch the code stage as the highest-rated option of S2.md # Slices — slices in waves by :after, converge :scope :slice after every slice reports"
+                       (:then "launch the code stage as the highest-rated option of S2.md # Slices — slices in waves by :after; after every wave, write what its runners reported for the shared files (def code-stage :single-writer), then one converge runner with :scope :slice, one record per slice"
                               "run the project's meters once, after every runner has reported"
                               "launch one read-back runner over every touched file"
                               "launch the converge runner, :scope :whole"))))
@@ -223,22 +252,25 @@ description: Carry a change that cannot be made minimally through the cascade �
 # Context stage
 
 ```clojure
-{:writes CONTEXT.md
- :from "FLOW.md: the confirmed contract, the findings, the decisions"
- :is "everything s1 needs and nothing it does not: the task restated, the code to read with paths and symbols, what to search for and where, facts with provenance, decisions to honor, what is out of scope, how the result is verified"
- :tools "the project's knowledge tools first (adapter), targeted reads second, prior art as the contract allows (def prior-art)"
- :existing-code {:is :number-source :is-not :subject :read "whole, without a cap on how many files are opened"}
- :kind ":artifact-kind — :class, or a free keyword; a non-class kind adapts the class keys of s1 and s2 and records the adaptation in Subject :adapted; a kind's own key set enters canon after its second run"
- :gotchas "traps of the codebase and its libraries the next stage would fall into — each with :where, :avoid and :verified-by; a fact that only says how things are belongs in # Facts; empty is valid"
- :living "when Flows/Specs/<Subject>.md exists, # Reads names it as :spec-source and the s2 stage writes a delta against it (def delta)"
- :gate "the lifecycle's findings gate — the owner reads CONTEXT.md and answers before s1 exists"
- :complete-when (and (names-every-file-the-next-stage-may-read?)
-                     (names-artifact-kind?)
-                     (states-out-of-scope?)
-                     (ends-with-verification?))
- :never #{"a raw dump"
-          "a link the next stage would have to follow on its own initiative"
-          "a fact without :verified-by"}}
+(def context-stage
+  {:writes CONTEXT.md
+   :from "FLOW.md: the confirmed contract, the findings, the decisions"
+   :is "everything s1 needs and nothing it does not: the task restated, the code to read with paths and symbols, what to search for and where, facts with provenance, decisions to honor, what is out of scope, how the result is verified"
+   :tools "the project's knowledge tools first (adapter), targeted reads second, prior art as the contract allows (def prior-art)"
+   :existing-code {:is :number-source :is-not :subject :read "whole, without a cap on how many files are opened"}
+   :kind ":artifact-kind — :class, or a free keyword; a non-class kind adapts the class keys of s1 and s2 and records the adaptation in Subject :adapted; a kind's own key set enters canon after its second run"
+   :build "how the project builds, in # Build: the language, the runtime, how files import each other, the test runner with its exact command and style, where the conventions are stated — a code runner must never have to guess the module system from a neighbouring file"
+   :gotchas "traps of the codebase and its libraries the next stage would fall into — each with :where, :avoid and :verified-by; a fact that only says how things are belongs in # Facts; empty is valid"
+   :living "when Flows/Specs/<Subject>.md exists, # Reads names it as :spec-source and the s2 stage writes a delta against it (def delta)"
+   :gate "the lifecycle's findings gate — the owner reads CONTEXT.md and answers before s1 exists"
+   :complete-when (and (names-every-file-the-next-stage-may-read?)
+                       (names-artifact-kind?)
+                       (names-build-facts?)
+                       (states-out-of-scope?)
+                       (ends-with-verification?))
+   :never #{"a raw dump"
+            "a link the next stage would have to follow on its own initiative"
+            "a fact without :verified-by"}})
 ```
 
 # Story
@@ -276,7 +308,7 @@ description: Carry a change that cannot be made minimally through the cascade �
    :code      "a translation of s2 — and only a translation"
    :law       "s1 knows no method or class names — only data types; decomposition is born for the first time in s2; nothing exists in the code that does not exist in s2"
    :s1-is-not "a less detailed copy of s2: if future methods show in s1, it is already too late to discuss the algorithm"
-   :back-to-s2 "a need the code discovers and s2 lacks — a helper, a scratch, a field, a type — is written into s2 marked :from-code, never invented silently"
+   :back-to-s2 "a need the code discovers and s2 lacks — a helper, a scratch, a field, a type — is written into s2 marked :from-code (def from-code), never invented silently"
    :existing-code {:is :number-source :is-not :subject :read "whole, without a cap on how many files are opened"}
    :findings  "CONTEXT.md, and the # Findings of FLOW.md behind it — the only place a guard's occasion counts as proven"
    :value-comes-from #{"decomposition DERIVED from the states of the data"
@@ -411,6 +443,7 @@ description: Carry a change that cannot be made minimally through the cascade �
    :type-home "the type is chosen in s1 and repeated in s2 — the code stage reads S2.md only"
    :unborn "a record whose :fields landed on a foreign type (a pair, a tuple), or a record with :paired-with — an unborn type (def pair-is-a-type)"
    :numbers-become "a number from :numbers that outlives its method becomes a field of a record (:fields) or a data entry with :as — and carries the same name"
+   :machine "sdd-flow lint takes every tally here that is a count — the s1 family of its catalogue; untouched input, a step's name against its state and a guard's occasion are judgments of one sentence against another and stay by eye"
    :glossary "CLOJURE_NOTATION.md (def cascade-fields) and the :data-reference reading"})
 ```
 
@@ -424,6 +457,7 @@ description: Carry a change that cannot be made minimally through the cascade �
    :orphan         "a data entry that no :in/:out/:writes/:scratch names"
    :one-step-fields "an entry with :lives :run WRITTEN by only one spine step — a local, not a field"
    :unborn         "see data-keys :unborn"
+   :machine        "sdd-flow lint computes every tally of this def — the s2 family of its catalogue; scratch-heavy arrives as a warning"
    :scratch-heavy  "three or more keys in the :scratch of one method — a SIGNAL to check whether the steps are heterogeneous (def paragraph); a homogeneous traversal with three buffers stays one method"})
 ```
 
@@ -464,7 +498,8 @@ description: Carry a change that cannot be made minimally through the cascade �
    :entry {:slice :name :writes #{} :carries #{} :after #{} :confidence 60}
    :law #{"no two slices write the same file"
           "every slice's runner reads S2.md whole and writes only its files"
-          "a shared type or helper is written by one slice; every slice that reads it names that slice in :after"}
+          "a shared type or helper is written by one slice; every slice that reads it names that slice in :after"
+          "in a wave of more than one slice a runner writes its own files and nothing shared (def code-stage :single-writer)"}
    :waves "slices launch in waves: every slice whose :after have all reported launches together; a slice with an empty :after is in the first wave"
    :chosen "at the s2 gate by the owner; in auto mode to :code by the highest rating"
    :after "the launching session runs the project's meters over all slices together, then one read-back runner over every touched file — the story does not split"
@@ -479,10 +514,22 @@ description: Carry a change that cannot be made minimally through the cascade �
   {:how #{:one-runner :slices}
    :reads "S2.md and the files it writes, whole"
    :one-runner "one fresh agent translates all of S2.md"
-   :slices "one fresh agent per slice, in waves by :after, each with the model the owner named; after every slice reports, converge with :scope :slice over the entries it carries — a slice that drifted is fixed before the next wave"
+   :slices "one fresh agent per slice, in waves by :after, each with the model the owner named; after every wave reports, one converge runner with :scope :slice — one record per slice of the wave; a slice that drifted is fixed before the next wave"
+   :single-writer "in a wave of more than one slice a runner writes its own files and nothing shared — not FLOW.md, not S2.md; its :from-code needs and its :missing travel in its report, and the launching session, or the curator, writes them after the wave — one writer, no collision; a slice alone in its wave writes S2.md itself"
    :meters "the project's meters (adapter) run once, after every runner has reported"
    :then "read-back — one runner, every touched file"
-   :from-code "a need the code discovers is written into S2.md marked :from-code by the runner that found it — in a slice, into that slice's entries only"})
+   :from-code "a need the code discovers is written into S2.md in the one form (def from-code) — by the runner that found it, into its slice's entries only; in a parallel wave, through its report (:single-writer)"})
+```
+
+```clojure
+(def from-code  ;; the one form of the mark — a rule can count it
+  {:form ":from-code \"what the code discovered, and why s2 lacked it\" — a key on the entry's value map, for a method and a data entry alike"
+   :new "an entry born in the code carries the key from birth"
+   :amended "an entry s2 already held, amended from the code, gains the key saying what was amended; a later amendment extends the same string"
+   :counts ":invented-at-translation is the number of entries that carry the key"
+   :never #{"the mark as prose inside :note"
+            "^:from-code as metadata — a reader of entries meets a wrapped map"
+            "a need that reaches the code and not s2"}})
 ```
 
 # Translation
@@ -602,7 +649,7 @@ description: Carry a change that cannot be made minimally through the cascade �
             :name     "does every concept name have a source in s2 (:as or :fields)"
             :scale    "is there a paragraph flattened into one block, or split without heterogeneous steps"
             :why      "did the why from :note arrive where the code would lie without it — including every continue"}
-   :reconcile "every method, field and type in the code ↔ an entry in s2; an entry added to s2 AFTER translation carries :from-code and counts in :invented-at-translation"
+   :reconcile "every method, field and type in the code ↔ an entry in s2; an entry added to s2 AFTER translation carries :from-code (def from-code) and counts in :invented-at-translation"
    :verdict "every finding gets :fixed or :kept-because … and :level — where it returns when not fixed (def verdict :levels); a list without verdicts is not a read-back"
    :out    "the list of findings with verdicts and the owner's verdict — reads / does not — or an explicit reading changed nothing"
    :never  "declaring done before this stage"})
@@ -621,7 +668,7 @@ description: Carry a change that cannot be made minimally through the cascade �
    :absent "no counterpart in the code at all"
    :unrequested "code the s2 does not know — a method, a field, a type born in the code"
    :deferred "an entry marked ^:deferred with a confirmed amendment (def deferral) — accounted for, outside the tally"
-   :accounted "every entry of the level appears in :entries once; an entry missing from the list is unaccounted, and the run is not clean"
+   :accounted "every entry of the level appears in :entries once; an entry missing from the list is unaccounted, and the run is not clean — sdd-flow lint computes it against the effective s2"
    :level  "every entry that is not :present or :deferred names the level it returns to (def verdict :levels)"
    :clean  "every entry accounted; partial 0, absent 0, contradicts 0, unrequested 0; :deferred only where the mark stands"
    :writes "S2.md # Converge, append-only; a fix lands in s2 marked :from-code, or in the code — the owner chooses; a deferral lands in FLOW.md # Amendments first"
@@ -656,7 +703,7 @@ description: Carry a change that cannot be made minimally through the cascade �
   {:when "at close, after converge :whole is clean (def converge :clean) and # Verdict is written"
    :first "no living S2 yet: the task's S2.md # s2 is copied whole to Flows/Specs/<Subject>.md — methods, data and spine; contra, slices, gates, read-back, converge and calibration stay in the task"
    :then "a living S2 exists: every ^:added entry is inserted in call order; every ^:changed entry replaces its namesake; every ^:removed entry is deleted; every ^:deferred entry is skipped (def deferral); the spine of the delta replaces the living spine; the marks fall away"
-   :check "the result is reader-clean and its data-coverage tally is green; a red tally stops the merge and returns to the owner"
+   :check "sdd-flow lint exits 0 on the result — reader-clean, its data-coverage tally green; a red tally stops the merge and returns to the owner; where the command is absent the tally is taken by eye and the outcome says so"
    :writes "Flows/Specs/<Subject>.md, and the merge's outcome into # Progress of FLOW.md"
    :never #{"editing the living S2 beyond what the delta says"
             "merging a delta whose converge is not clean"
@@ -674,7 +721,7 @@ description: Carry a change that cannot be made minimally through the cascade �
    :call-order              {:target "0 exceptions" :on :code}
    :steps-visible           {:target "= spine steps" :on :entry-point}
    :names-from-artifact     {:target 0 :on :code :means "concept identifiers without :as or :fields in s2"}
-   :invented-at-translation {:target 0 :on :code :means "s2 entries marked :from-code"}
+   :invented-at-translation {:target 0 :on :code :means "s2 entries that carry :from-code (def from-code)"}
    ;; ── the artifacts — by eye ───────────────────────────────────────
    :state-named             {:target "every step leaves a named state" :on s1}
    :hollow-steps            {:target 0 :on s1 :means "steps without mutation and without a decision"}

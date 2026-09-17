@@ -142,7 +142,8 @@
                :exits "guards with a proven occasion"
                :ends-with "what it finishes with"
                :numbers "named numbers with formulas"
-               :note "a fact not visible otherwise"}
+               :note "a fact not visible otherwise"
+               :from-code "what the code discovered and why s2 lacked it — only on an entry born in the code or amended from it"}
    :s2-data {:from-s1 "the key of the same structure in s1"
              :type "the real type, repeated from s1 beside :from-s1 — S2.md alone must translate into code"
              :shape "^:new Type for a structure born in s2"
@@ -152,7 +153,8 @@
              :holds "what lies in it"
              :paired-with "which structure it shares an index with"
              :grows "how it changes over the run"
-             :note "a fact not visible otherwise"}
+             :note "a fact not visible otherwise"
+             :from-code "what the code discovered and why s2 lacked it — only on an entry born in the code or amended from it"}
    :lives {:run "a noun written by two or more spine steps — a field of the owner"
            :external "borrowed — released by whoever gave it"
            EntryPoint "a bare symbol: a local of the entry point"
@@ -172,7 +174,10 @@
    :delta-marks {:added "^:added on the value map of an entry born in this task"
                  :changed "^:changed on the value map of an entry whose body changed"
                  :removed "^:removed on the value map of an entry deleted; the body says what it was"}
-   :report {:artifact "the path" :contra "the count" :gate "the questions" :missing "what the stage guessed or could not find"}
+   :report {:artifact "the path" :contra "the count" :gate "the questions" :lint "the counts sdd-flow lint leaves" :missing "what the stage guessed or could not find"
+            :from-code "in a wave of more than one slice: the entries the code needs, for the one writer of S2.md"}
+   :build {:language "the language and its version" :runtime "what runs the code" :modules "how files import each other"
+           :tests "{:runner :command :style}" :conventions "where the project states its code conventions, or :none"}
    :gotcha {:trap "what misbehaves" :where "file, symbol or library" :avoid "what to do instead" :verified-by "how it was established"}
    :converge-entry {:s2 "the method or data key" :code "where in the code"
                     :verdict "#{:present :partial :absent :contradicts :unrequested :deferred}"

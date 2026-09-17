@@ -94,7 +94,7 @@ test("context requires every section of its template", () => {
   const sections = SCHEMA.kinds.context.sections;
   assert.deepEqual(
     Object.keys(sections).sort(),
-    ["Complete", "Facts", "Gotchas", "Occasions", "Reads", "Search", "Task", "Verification"].sort(),
+    ["Build", "Complete", "Facts", "Gotchas", "Occasions", "Reads", "Search", "Task", "Verification"].sort(),
   );
   for (const [name, row] of Object.entries(sections)) {
     assert.equal(row.required, true, `${name} should be required`);

@@ -515,7 +515,7 @@ function resolveModel(model, fences, documents, diagnostics) {
       }
       const sectionName = sectionNameOf(kindRow, fence);
       if (sectionName === null) {
-        if (!unknownHeadings.has(fence.heading)) {
+        if (!kindRow.open && !unknownHeadings.has(fence.heading)) {
           unknownHeadings.add(fence.heading);
           addDiagnostic(
             diagnostics,

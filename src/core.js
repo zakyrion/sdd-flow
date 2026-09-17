@@ -8,6 +8,8 @@ import {
   validateNotationCoverage,
 } from "./document-validator.js";
 
+import { CARD_DIRECTORY, buildCards } from "./cards.js";
+
 import {
   ADAPTER_PATH,
   adapterFileSets,
@@ -467,6 +469,21 @@ async function desiredFiles(tools) {
     );
     desired.set(targetPath, { content, hash: sha256(content), sourcePath });
   }
+
+  // A runner reads a card, not the skill: one managed file per stage, cut from
+  // the one skill file so that no rule is ever written twice.
+  const skillSource = "templates/skills/sdd-cascade/SKILL.md";
+  const cards = buildCards(
+    await fs.readFile(resolveInside(PACKAGE_ROOT, skillSource), "utf8"),
+    await fs.readFile(resolveInside(PACKAGE_ROOT, "templates/core/FLOW_CONTRACT.md"), "utf8"),
+  );
+  for (const [stage, content] of cards) {
+    desired.set(`${CARD_DIRECTORY}/${stage}.md`, {
+      content,
+      hash: sha256(content),
+      sourcePath: skillSource,
+    });
+  }
   return desired;
 }
 
@@ -664,6 +681,7 @@ async function removeEmptyManagedDirectories(root) {
     ".claude",
     ".sdd-flow/references",
     ".sdd-flow/templates",
+    ".sdd-flow/cards",
     ".sdd-flow",
   ];
   for (const relativePath of directories) {

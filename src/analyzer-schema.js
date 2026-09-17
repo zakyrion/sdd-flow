@@ -63,12 +63,15 @@ export const SCHEMA = {
   kinds: {
     // FLOW.md carries no recognized section — every heading in it is
     // unrecognized, so only the :form family reaches it (# Gate :ad-flow-in-folder).
-    flow: { file: "FLOW.md", sections: {} },
+    // open: the kind's headings are not the schema's business — a FLOW.md
+    // is read for the :form family alone, and its sections report nothing.
+    flow: { file: "FLOW.md", sections: {}, open: true },
 
     context: {
       file: "CONTEXT.md",
       sections: {
         Task: { required: true, fences: [{ shape: "map", suffix: null, entry: "subject" }] },
+        Build: { required: true, fences: [{ shape: "map", suffix: null, entry: "build" }] },
         Reads: { required: true, fences: [{ shape: "vector", suffix: null, entry: "read" }] },
         Search: { required: true, fences: [{ shape: "vector", suffix: null, entry: "search" }] },
         Facts: { required: true, fences: [{ shape: "vector", suffix: null, entry: "fact" }] },
@@ -177,6 +180,7 @@ export const SCHEMA = {
         "ends-with": { required: false },
         numbers: { required: false, shape: "map" },
         note: { required: false },
+        "from-code": { required: false, shape: "string" },
       },
     },
 
@@ -193,6 +197,7 @@ export const SCHEMA = {
         "paired-with": { required: false },
         grows: { required: false },
         note: { required: false },
+        "from-code": { required: false, shape: "string" },
       },
     },
 
@@ -408,10 +413,22 @@ export const SCHEMA = {
     },
 
     // ^:from-code — CONTEXT.md # Complete, for the same reason as :search
+    // CONTEXT.md # Build — how the project builds (def cascade-fields) :build
+    build: {
+      keys: {
+        language: { required: false },
+        runtime: { required: false },
+        modules: { required: false },
+        tests: { required: false, shape: "map" },
+        conventions: { required: false },
+      },
+    },
+
     complete: {
       keys: {
         "names-every-file-the-next-stage-may-read": { required: false },
         "names-artifact-kind": { required: false },
+        "names-build-facts": { required: false },
         "states-out-of-scope": { required: false },
         "ends-with-verification": { required: false },
         "links-to-follow-on-own-initiative": { required: false },
