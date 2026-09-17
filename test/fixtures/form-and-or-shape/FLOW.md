@@ -1,0 +1,3 @@
+```clojure
+(and (ready?) (build!))
+```

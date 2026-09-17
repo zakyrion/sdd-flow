@@ -34,20 +34,19 @@ export const REQUIRED_CONDITIONAL_MARKERS = [
   ":else",
 ];
 
-export function validateNormativeMarkdown(content, fileName = "<document>") {
-  const issues = [];
-  const lines = content.split(/\r?\n/u);
+export function markdownBlocks(source) {
+  const lines = source.split(/\r?\n/u);
+  const blocks = [];
   let index = 0;
 
   if (lines[0] === "---") {
-    index = 1;
-    while (index < lines.length && lines[index] !== "---") {
-      index += 1;
+    let closeIndex = 1;
+    while (closeIndex < lines.length && lines[closeIndex] !== "---") {
+      closeIndex += 1;
     }
-    if (index >= lines.length) {
-      return [`${fileName}: unterminated YAML frontmatter`];
-    }
-    index += 1;
+    const closed = closeIndex < lines.length;
+    blocks.push({ kind: "frontmatter", line: 1, text: "", closed });
+    index = closed ? closeIndex + 1 : lines.length;
   }
 
   let inFence = false;
@@ -62,24 +61,23 @@ export function validateNormativeMarkdown(content, fileName = "<document>") {
         inFence = true;
         fenceStart = lineNumber;
         buffer = [];
-      } else if (
-        line.trim() !== "" &&
-        !/^#{1,6}\s+\S/u.test(line)
-      ) {
-        issues.push(
-          `${fileName}:${lineNumber}: normative prose must be inside a Clojure form`,
-        );
+      } else if (/^#{1,6}\s+\S/u.test(line)) {
+        blocks.push({
+          kind: "heading",
+          line: lineNumber,
+          text: line.replace(/^#{1,6}\s+/u, ""),
+          closed: true,
+        });
+      } else if (line.trim() !== "") {
+        blocks.push({ kind: "prose", line: lineNumber, text: "", closed: true });
       }
     } else if (line === "```") {
-      if (buffer.join("\n").trim() === "") {
-        issues.push(`${fileName}:${fenceStart}: empty Clojure fence`);
-      } else {
-        try {
-          readAll(buffer.join("\n"));
-        } catch (error) {
-          issues.push(`${fileName}:${fenceStart}: ${error.message}`);
-        }
-      }
+      blocks.push({
+        kind: "fence",
+        line: fenceStart,
+        text: buffer.join("\n"),
+        closed: true,
+      });
       inFence = false;
       buffer = [];
     } else {
@@ -88,8 +86,45 @@ export function validateNormativeMarkdown(content, fileName = "<document>") {
   }
 
   if (inFence) {
-    issues.push(`${fileName}:${fenceStart}: unterminated Clojure fence`);
+    blocks.push({
+      kind: "fence",
+      line: fenceStart,
+      text: buffer.join("\n"),
+      closed: false,
+    });
   }
+
+  return blocks;
+}
+
+export function validateNormativeMarkdown(content, fileName = "<document>") {
+  const blocks = markdownBlocks(content);
+  const issues = [];
+
+  for (const block of blocks) {
+    if (block.kind === "frontmatter") {
+      if (!block.closed) {
+        return [`${fileName}: unterminated YAML frontmatter`];
+      }
+    } else if (block.kind === "prose") {
+      issues.push(
+        `${fileName}:${block.line}: normative prose must be inside a Clojure form`,
+      );
+    } else if (block.kind === "fence") {
+      if (!block.closed) {
+        issues.push(`${fileName}:${block.line}: unterminated Clojure fence`);
+      } else if (block.text.trim() === "") {
+        issues.push(`${fileName}:${block.line}: empty Clojure fence`);
+      } else {
+        try {
+          readAll(block.text);
+        } catch (error) {
+          issues.push(`${fileName}:${block.line}: ${error.message}`);
+        }
+      }
+    }
+  }
+
   return issues;
 }
 

@@ -40,6 +40,42 @@ test("reader rejects incomplete and malformed forms", () => {
   assert.throws(() => readAll("#unknown"), /Unsupported reader macro/);
 });
 
+test("readAll leaves nodes without start or end when positions is not requested", () => {
+  const [form] = readAll("{:a 1}");
+  assert.equal(form.start, undefined);
+  assert.equal(form.end, undefined);
+});
+
+test("readAll attaches start and end offsets to every node in positions mode", () => {
+  const source = "{:a 1}";
+  const [form] = readAll(source, { positions: true });
+  assert.equal(form.type, "map");
+  assert.equal(form.start, 0);
+  assert.equal(form.end, source.length);
+
+  const [keyNode, valueNode] = form.values;
+  assert.equal(keyNode.type, "keyword");
+  assert.equal(keyNode.start, 1);
+  assert.equal(keyNode.end, 3);
+  assert.equal(valueNode.type, "number");
+  assert.equal(valueNode.start, 4);
+  assert.equal(valueNode.end, 5);
+});
+
+test("positions mode stamps the caret for metadata and the quote character for quote", () => {
+  const metaSource = "^:new value";
+  const [metaForm] = readAll(metaSource, { positions: true });
+  assert.equal(metaForm.type, "metadata");
+  assert.equal(metaForm.start, 0);
+  assert.equal(metaForm.end, metaSource.length);
+
+  const quoteSource = "'->";
+  const [quoteForm] = readAll(quoteSource, { positions: true });
+  assert.equal(quoteForm.type, "quote");
+  assert.equal(quoteForm.start, 0);
+  assert.equal(quoteForm.end, quoteSource.length);
+});
+
 test("glossary defines all forms and examples cover normalization and conditions", async () => {
   const glossary = await fs.readFile(
     path.join(

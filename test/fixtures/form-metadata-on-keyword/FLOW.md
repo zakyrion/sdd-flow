@@ -1,0 +1,3 @@
+```clojure
+{:decorated ^:new :name}
+```

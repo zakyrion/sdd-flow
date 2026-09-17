@@ -15,14 +15,15 @@ export class ClojureReaderError extends Error {
   }
 }
 
-export function readAll(source) {
-  return new Reader(source).readAll();
+export function readAll(source, options = {}) {
+  return new Reader(source, options.positions).readAll();
 }
 
 class Reader {
-  constructor(source) {
+  constructor(source, positions = false) {
     this.source = source;
     this.index = 0;
+    this.positions = positions;
   }
 
   readAll() {
@@ -41,44 +42,47 @@ class Reader {
       this.fail("Expected a form");
     }
 
+    const start = this.index;
+    let node;
+
     if (this.startsWith("#{")) {
       this.index += 2;
-      return this.readCollection("set", "}");
+      node = this.readCollection("set", "}");
+    } else {
+      const char = this.peek();
+      if (char === "(") {
+        this.index += 1;
+        node = this.readCollection("list", ")");
+      } else if (char === "[") {
+        this.index += 1;
+        node = this.readCollection("vector", "]");
+      } else if (char === "{") {
+        this.index += 1;
+        node = this.readCollection("map", "}");
+      } else if (char === '"') {
+        node = this.readString();
+      } else if (char === "^") {
+        this.index += 1;
+        const metadata = this.readForm();
+        const value = this.readForm();
+        node = { type: "metadata", metadata, value };
+      } else if (char === "'") {
+        this.index += 1;
+        node = { type: "quote", value: this.readForm() };
+      } else if (")]}".includes(char)) {
+        this.fail(`Unexpected closing delimiter ${char}`);
+      } else if (char === "#") {
+        this.fail("Unsupported reader macro");
+      } else {
+        node = this.readAtom();
+      }
     }
 
-    const char = this.peek();
-    if (char === "(") {
-      this.index += 1;
-      return this.readCollection("list", ")");
+    if (this.positions) {
+      node.start = start;
+      node.end = this.index;
     }
-    if (char === "[") {
-      this.index += 1;
-      return this.readCollection("vector", "]");
-    }
-    if (char === "{") {
-      this.index += 1;
-      return this.readCollection("map", "}");
-    }
-    if (char === '"') {
-      return this.readString();
-    }
-    if (char === "^") {
-      this.index += 1;
-      const metadata = this.readForm();
-      const value = this.readForm();
-      return { type: "metadata", metadata, value };
-    }
-    if (char === "'") {
-      this.index += 1;
-      return { type: "quote", value: this.readForm() };
-    }
-    if (")]}".includes(char)) {
-      this.fail(`Unexpected closing delimiter ${char}`);
-    }
-    if (char === "#") {
-      this.fail("Unsupported reader macro");
-    }
-    return this.readAtom();
+    return node;
   }
 
   readCollection(type, closing) {

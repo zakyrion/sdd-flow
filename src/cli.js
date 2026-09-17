@@ -6,6 +6,7 @@ import {
   unlinkProject,
   updateProject,
 } from "./core.js";
+import { lint } from "./analyzer.js";
 
 const HELP = `Usage:
   sdd-flow init [project] --tools codex,claude [--force]
@@ -14,6 +15,7 @@ const HELP = `Usage:
   sdd-flow diff [project] [--file path]...
   sdd-flow unlink [project] [--file path]...
   sdd-flow uninstall [project]
+  sdd-flow lint <path> [--text]
 
 Commands:
   init       Install the shared contract and selected native adapters.
@@ -22,6 +24,7 @@ Commands:
   diff       Compare a project's copy of the canon against the installed version.
   unlink     Strip sdd-flow marked blocks from documents the project owns.
   uninstall  Remove only unmodified managed artifacts; preserve config and FLOWs.
+  lint       Report diagnostics for a task folder, artifact file, or living S2.
 
 Notes:
   init never touches AGENTS.md or CLAUDE.md. Writing into a document the project
@@ -72,6 +75,19 @@ export async function main(argv) {
       throw new Error("uninstall does not accept --force or --tools");
     }
     result = await uninstallProject(parsed.project);
+  } else if (parsed.command === "lint") {
+    if (parsed.force || parsed.tools) {
+      throw new Error("lint does not accept --force or --tools");
+    }
+    const lintResult = await lint(parsed.project, { text: parsed.text });
+    console.log(formatResult(lintResult));
+    const errorCount = lintResult.diagnostics.filter(
+      (diagnostic) => diagnostic.severity === ":error",
+    ).length;
+    if (errorCount > 0) {
+      throw new Error(`lint found ${errorCount} error(s)`);
+    }
+    return;
   } else {
     throw new Error(`unknown command: ${parsed.command}\n\n${HELP}`);
   }
@@ -87,6 +103,7 @@ export function parseArguments(argv) {
   let project = ".";
   let tools = null;
   let force = false;
+  let text = false;
   let projectSet = false;
   const files = [];
 
@@ -94,6 +111,8 @@ export function parseArguments(argv) {
     const argument = argv[index];
     if (argument === "--force") {
       force = true;
+    } else if (argument === "--text") {
+      text = true;
     } else if (argument === "--tools") {
       index += 1;
       if (index >= argv.length) {
@@ -122,7 +141,10 @@ export function parseArguments(argv) {
   if (files.length > 0 && command !== "diff" && command !== "unlink") {
     throw new Error(`${command} does not accept --file`);
   }
-  return { command, project, tools, force, files, help: false };
+  if (text && command !== "lint") {
+    throw new Error(`${command} does not accept --text`);
+  }
+  return { command, project, tools, force, files, text, help: false };
 }
 
 function formatResult(result) {
@@ -140,6 +162,9 @@ function formatResult(result) {
   }
   if (result.action === "uninstalled") {
     return `uninstalled: ${result.root} (${result.removed.length} managed files removed; config and FLOWs preserved)`;
+  }
+  if (result.action === "linted") {
+    return result.report;
   }
   return `doctor: ${result.root} clean (${result.managedFiles} managed files)`;
 }
