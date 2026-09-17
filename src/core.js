@@ -87,6 +87,22 @@ const CODEX_FILES = [
     "templates/skills/sdd-cascade/agents/openai.yaml",
     ".agents/skills/sdd-cascade/agents/openai.yaml",
   ],
+  [
+    "templates/skills/sdd-algorithm-sketch/SKILL.md",
+    ".agents/skills/sdd-algorithm-sketch/SKILL.md",
+  ],
+  [
+    "templates/skills/sdd-algorithm-sketch/agents/openai.yaml",
+    ".agents/skills/sdd-algorithm-sketch/agents/openai.yaml",
+  ],
+  [
+    "templates/skills/sdd-algorithm-lift/SKILL.md",
+    ".agents/skills/sdd-algorithm-lift/SKILL.md",
+  ],
+  [
+    "templates/skills/sdd-algorithm-lift/agents/openai.yaml",
+    ".agents/skills/sdd-algorithm-lift/agents/openai.yaml",
+  ],
 ];
 const CLAUDE_FILES = [
   [
@@ -132,6 +148,22 @@ const CLAUDE_FILES = [
   [
     "templates/claude/commands/sdd-cascade.md",
     ".claude/commands/sdd-cascade.md",
+  ],
+  [
+    "templates/skills/sdd-algorithm-sketch/SKILL.md",
+    ".claude/skills/sdd-algorithm-sketch/SKILL.md",
+  ],
+  [
+    "templates/claude/commands/sdd-sketch.md",
+    ".claude/commands/sdd-sketch.md",
+  ],
+  [
+    "templates/skills/sdd-algorithm-lift/SKILL.md",
+    ".claude/skills/sdd-algorithm-lift/SKILL.md",
+  ],
+  [
+    "templates/claude/commands/sdd-lift.md",
+    ".claude/commands/sdd-lift.md",
   ],
 ];
 
@@ -669,6 +701,10 @@ async function removeEmptyManagedDirectories(root) {
     ".agents/skills/sdd-project-init",
     ".agents/skills/sdd-cascade/agents",
     ".agents/skills/sdd-cascade",
+    ".agents/skills/sdd-algorithm-sketch/agents",
+    ".agents/skills/sdd-algorithm-sketch",
+    ".agents/skills/sdd-algorithm-lift/agents",
+    ".agents/skills/sdd-algorithm-lift",
     ".agents/skills",
     ".agents",
     ".claude/commands/sdd-flow",
@@ -677,6 +713,8 @@ async function removeEmptyManagedDirectories(root) {
     ".claude/skills/sdd-deep-research",
     ".claude/skills/sdd-project-init",
     ".claude/skills/sdd-cascade",
+    ".claude/skills/sdd-algorithm-sketch",
+    ".claude/skills/sdd-algorithm-lift",
     ".claude/skills",
     ".claude",
     ".sdd-flow/references",

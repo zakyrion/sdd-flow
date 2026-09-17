@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Algorithm Lift"
+  short_description: "Lift the algorithm out of code that does not read"
+  default_prompt: "Use $sdd-algorithm-lift to lift the algorithm of this code into a Clojure document a person can read."

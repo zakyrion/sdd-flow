@@ -114,6 +114,28 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
  :never "running a stage in this conversation — a stage runs only in its runner"}
 ```
 
+```clojure
+{:when (small-algorithm-worth-stating-first? task)
+ :do (:then (say-so!)
+            (ask-permission-to-sketch!)
+            (wait-for-go!))
+ :skill "sdd-algorithm-sketch — a small algorithm as one Clojure document, worked out in this session; also reachable as /sdd-sketch"
+ :rule "only the user switches it on"
+ :returns "Flows/<TASK>/ALGO_<NAME>.md; its closing question may hand a :direct or a :cascade task map back to this lifecycle — shown and gated like any other"
+ :standalone "a bare sketch request needs no FLOW — the document is the whole deliverable"}
+```
+
+```clojure
+{:when (existing-code-does-not-read? task)
+ :do (:then (say-so!)
+            (ask-permission-to-lift!)
+            (wait-for-go!))
+ :skill "sdd-algorithm-lift — the algorithm of existing code as one Clojure document for a human reader, bound to the code or clean; also reachable as /sdd-lift"
+ :rule "only the user switches it on"
+ :returns "Flows/<TASK>/ALGO_<NAME>.md, linked from # Findings and archived with the FLOW"
+ :standalone "a bare lift request needs no FLOW — the document is the whole deliverable"}
+```
+
 # Execute
 
 ```clojure

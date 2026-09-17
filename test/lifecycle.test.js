@@ -725,6 +725,119 @@ test("uninstall leaves no cascade directories behind", async () => {
   });
 });
 
+const ALGORITHM_SKILLS = [
+  {
+    skill: "sdd-algorithm-sketch",
+    command: "sdd-sketch",
+    markers: [
+      "name: sdd-algorithm-sketch",
+      "# Draft",
+      "# Form",
+      "# Step",
+      "# Tally",
+      "# Contra",
+      "# Discuss",
+      "# Next",
+      "# Other form",
+      "(def <Name>",
+      ":continue-as-a-cascade",
+      "code written from this skill",
+    ],
+  },
+  {
+    skill: "sdd-algorithm-lift",
+    command: "sdd-lift",
+    markers: [
+      "name: sdd-algorithm-lift",
+      "# Mode",
+      "# Read",
+      "# Form",
+      "# Level",
+      "# Scale",
+      "# Fidelity",
+      "# Flags",
+      "# Code map",
+      "# Deliver",
+      "# Other form",
+      "(def <Name>",
+      ":axis [:bound :clean]",
+      "the code respelled in Clojure",
+    ],
+  },
+];
+
+for (const { skill, command, markers } of ALGORITHM_SKILLS) {
+  test(`installed ${skill} skill carries its procedure and reads the glossary alone`, async () => {
+    await withFixture(async (root) => {
+      await initProject(root, ["codex", "claude"]);
+      const text = await fs.readFile(
+        path.join(root, `.claude/skills/${skill}/SKILL.md`),
+        "utf8",
+      );
+      for (const marker of markers) {
+        assert.ok(text.includes(marker), `${skill} SKILL.md missing ${marker}`);
+      }
+      assert.ok(
+        text.includes(':requires [".sdd-flow/references/CLOJURE_NOTATION.md"]'),
+        `${skill} is a light skill — its # Load requires the glossary and nothing else`,
+      );
+      assert.equal(
+        text,
+        await fs.readFile(path.join(root, `.agents/skills/${skill}/SKILL.md`), "utf8"),
+        "both adapters must install the same skill text",
+      );
+
+      const commandText = await fs.readFile(
+        path.join(root, `.claude/commands/${command}.md`),
+        "utf8",
+      );
+      assert.ok(commandText.includes(`:command :${command}`));
+      assert.ok(commandText.includes(`.claude/skills/${skill}/SKILL.md`));
+
+      const metadata = await fs.readFile(
+        path.join(root, `.agents/skills/${skill}/agents/openai.yaml`),
+        "utf8",
+      );
+      const shortDescription = /short_description: "([^"]*)"/u.exec(metadata)?.[1] ?? "";
+      assert.ok(
+        shortDescription.length >= 25 && shortDescription.length <= 64,
+        `Codex short_description must be 25-64 characters, got ${shortDescription.length}`,
+      );
+
+      const contract = await fs.readFile(path.join(root, ".sdd-flow/FLOW_CONTRACT.md"), "utf8");
+      assert.ok(
+        contract.includes(`(def ${skill.replace("sdd-", "")}`),
+        `FLOW_CONTRACT.md must mirror the policy of ${skill}`,
+      );
+      const lifecycle = await fs.readFile(
+        path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+        "utf8",
+      );
+      assert.ok(lifecycle.includes(`/${command}`), `the lifecycle's # Hand over must name /${command}`);
+    });
+  });
+
+  test(`uninstall leaves no ${skill} directories behind`, async () => {
+    await withFixture(async (root) => {
+      await initProject(root, ["codex", "claude"]);
+      await fs.access(path.join(root, `.claude/skills/${skill}`));
+      await fs.access(path.join(root, `.agents/skills/${skill}/agents`));
+
+      await uninstallProject(root);
+
+      for (const stray of [
+        `.claude/skills/${skill}`,
+        `.agents/skills/${skill}/agents`,
+        `.agents/skills/${skill}`,
+        ".claude",
+        ".agents",
+      ]) {
+        await assertMissing(path.join(root, stray));
+      }
+    });
+  });
+}
+
 test("the project adapter is the project's own file and survives an update", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);

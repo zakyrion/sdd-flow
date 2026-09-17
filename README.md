@@ -81,7 +81,7 @@ That promise belongs to the CLI. Writing into a document your project owns is a 
 
 ## Using it with Claude Code
 
-With `--tools claude`, your project gets four skills and seven slash commands:
+With `--tools claude`, your project gets six skills and nine slash commands:
 
 | Command | What it does |
 | --- | --- |
@@ -91,6 +91,8 @@ With `--tools claude`, your project gets four skills and seven slash commands:
 | `/sdd-flow:promote <rule>` | Lift a rule that matured in this project into the canon, delta first. |
 | `/sdd-research <question>` | Run a source-verified research pass and return a trade-off map. |
 | `/sdd-cascade [stage\|auto]` | Launch one stage of the cascade in a fresh runner; `auto` runs the cascade to a limit and returns a narrative; with no argument, propose the next stage. |
+| `/sdd-sketch <what it is about>` | Work out a small algorithm as one Clojure document, in this session; when you agree to it, ask what happens next. |
+| `/sdd-lift [bound\|clean] <what to lift>` | Lift the algorithm out of existing code into a Clojure document a person can read — with a code map beside it, or without. |
 | `/sdd-project-init` | Survey this project and integrate the framework with what it already has. |
 
 The skills also trigger implicitly: describe an engineering task in normal conversation and Claude Code picks the workflow up on its own.
@@ -99,7 +101,7 @@ The skills also trigger implicitly: describe an engineering task in normal conve
 
 With `--tools codex`, your project gets the same skills in Codex's native format (`.agents/skills/`):
 
-- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade s1`, or `$sdd-project-init`
+- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade s1`, `$sdd-algorithm-sketch how do we pick the next tile`, `$sdd-algorithm-lift clean the generated mesh builder`, or `$sdd-project-init`
 - **Implicit**: Codex selects the skill automatically when your task matches its description.
 
 ## What gets installed
@@ -130,15 +132,21 @@ your-project/
 │   ├── skills/sdd-deep-research/SKILL.md
 │   ├── skills/sdd-project-init/SKILL.md
 │   ├── skills/sdd-cascade/SKILL.md
+│   ├── skills/sdd-algorithm-sketch/SKILL.md
+│   ├── skills/sdd-algorithm-lift/SKILL.md
 │   ├── commands/sdd-flow/{start,resume,close,promote}.md
 │   ├── commands/sdd-research.md
 │   ├── commands/sdd-cascade.md
+│   ├── commands/sdd-sketch.md
+│   ├── commands/sdd-lift.md
 │   └── commands/sdd-project-init.md
 ├── .agents/                        # only with --tools codex
 │   ├── skills/sdd-clojure-flow/{SKILL.md, agents/openai.yaml}
 │   ├── skills/sdd-deep-research/{SKILL.md, agents/openai.yaml}
 │   ├── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
-│   └── skills/sdd-cascade/{SKILL.md, agents/openai.yaml}
+│   ├── skills/sdd-cascade/{SKILL.md, agents/openai.yaml}
+│   ├── skills/sdd-algorithm-sketch/{SKILL.md, agents/openai.yaml}
+│   └── skills/sdd-algorithm-lift/{SKILL.md, agents/openai.yaml}
 └── Flows/                          # one folder per task
     ├── <TASK>/
     │   ├── FLOW.md                 #   every task
@@ -261,6 +269,16 @@ A stage runner does not read the skill. `sdd-flow init` and `update` cut one **c
 
 What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
 
+## When the algorithm is small — or already written
+
+Two lighter tools stand beside the cascade. Both run in your session — no runner, no stages — and both end in one Clojure document, `ALGO_<NAME>.md`: a file from its first version, so it opens in a Clojure editor and survives a compacted context.
+
+`/sdd-sketch <what the algorithm is about>` (or `$sdd-algorithm-sketch`) works out a small algorithm before any code: what is made, by which rule, with which structures, and what each step reads and changes — the form of the cascade's s1, without method names. The agent tallies the draft by eye (a step that leaves no named state, a structure nobody uses), attacks it with a contra — why this will *not* work, with rated fixes — and amends the file as you talk. When you say the algorithm is agreed, it asks one question: keep the document, write the code, continue as a cascade, or derive another form. Code and cascade both go back through the lifecycle as an ordinary task map with the document named as a decision; the sketch itself never writes code, so it is not a way around your gates.
+
+`/sdd-lift [bound|clean] <what to lift>` (or `$sdd-algorithm-lift`) goes the other way: code that exists — machine-generated, tangled, or just foreign — and does not read. The agent reads it whole and lifts the algorithm it actually carries out, in the words of the task: not the code respelled in Clojure, no step per method. It is lifted *as it is*; bugs, inaccuracies and dangling tails are flagged in a list of their own, never repaired on the way up. **Bound** adds a code map beside the algorithm — every method accounted for, the step it serves restated in place — for when you want to see how the explanation meets the real code. **Clean** leaves the map out, for when the badly written code is exactly what you want to stop looking at. The algorithm reads the same in both. The priority is you as a reader: every value is one phrase, and a detail that does not fit goes into a note or stays out. The result is the document itself — it names the revision the code was read at and promises nothing after it.
+
+In both, Clojure stays the only source. Ask for another form — a UML activity diagram, a flowchart, a table of steps — and you get a view derived from the document; edit the view, and the agent carries the edit back into the Clojure and derives the view again.
+
 ## The lifecycle
 
 ```clojure
@@ -289,7 +307,7 @@ cd sdd-flow
 npm test
 ```
 
-39 tests cover the Clojure reader, document validation, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
+171 tests cover the Clojure reader, document validation, the analyzer, the cards, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
 
 ## License
 

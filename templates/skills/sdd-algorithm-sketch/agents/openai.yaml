@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Algorithm Sketch"
+  short_description: "Work out a small algorithm in Clojure form"
+  default_prompt: "Use $sdd-algorithm-sketch to work out this algorithm as a Clojure document before any code."

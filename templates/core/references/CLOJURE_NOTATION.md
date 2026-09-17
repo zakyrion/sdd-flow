@@ -195,6 +195,28 @@
    :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
 ```
 
+# Algorithm fields
+
+```clojure
+(def algorithm-fields
+  {:document "Flows/<TASK>/ALGO_<NAME>.md or Flows/ALGO_<NAME>.md — one algorithm; the :s1 keys of (def cascade-fields) read the same here"
+   :note "on any entry: a detail that does not fit the entry's one phrase"
+   :contra-outcome ":outcome on a contra entry — what the owner chose, once chosen"
+   :lift-subject {:lifted-from "the files in scope"
+                  :mode "#{:bound :clean} — with the code map beside the algorithm, or without it"
+                  :at "the date of the reading"
+                  :commit "the revision the code was read at"}
+   :flag {:flag "an :f- keyword"
+          :kind "#{:bug :inaccuracy :dangling-tail :unclear}"
+          :where "the place in the code — a string, never a bare symbol"
+          :what "what is wrong, in one phrase"
+          :touches "the phrase of the step it touches, restated in place, or :none"}
+   :code-map-entry {:code "the unit — file and member, a string"
+                    :serves "the phrase of the step the unit serves, restated in place; a vector when it serves several; :none when it serves no step"
+                    :verdict "#{:serves :plumbing :dangling :unclear}"}
+   :authority "the sdd-algorithm-sketch and sdd-algorithm-lift skills define the rules; this map is the reading of the keys"})
+```
+
 # Field laws
 
 ```clojure

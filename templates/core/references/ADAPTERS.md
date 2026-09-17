@@ -5,9 +5,11 @@
   {:canonical-source {:lifecycle "templates/skills/sdd-clojure-flow/SKILL.md"
                       :deep-research "templates/skills/sdd-deep-research/SKILL.md"
                       :project-init "templates/skills/sdd-project-init/SKILL.md"
-                      :cascade "templates/skills/sdd-cascade/SKILL.md"}
+                      :cascade "templates/skills/sdd-cascade/SKILL.md"
+                      :algorithm-sketch "templates/skills/sdd-algorithm-sketch/SKILL.md"
+                      :algorithm-lift "templates/skills/sdd-algorithm-lift/SKILL.md"}
    :entry-point :lifecycle ;; the other skills are reached through it, or called by name
-   :handoff "the lifecycle skill asks permission before switching the research skill on"
+   :handoff "the lifecycle skill asks permission before switching the research, the sketch or the lift skill on"
    :project-core ".sdd-flow/"
    :read-order [".sdd-flow/references/CLOJURE_NOTATION.md"
                 ".sdd-flow/references/EXAMPLES.md"
@@ -56,13 +58,18 @@
  :adapter #{".agents/skills/sdd-clojure-flow/SKILL.md"
             ".agents/skills/sdd-deep-research/SKILL.md"
             ".agents/skills/sdd-project-init/SKILL.md"
-            ".agents/skills/sdd-cascade/SKILL.md"}
+            ".agents/skills/sdd-cascade/SKILL.md"
+            ".agents/skills/sdd-algorithm-sketch/SKILL.md"
+            ".agents/skills/sdd-algorithm-lift/SKILL.md"}
  :interface #{".agents/skills/sdd-clojure-flow/agents/openai.yaml"
               ".agents/skills/sdd-deep-research/agents/openai.yaml"
               ".agents/skills/sdd-project-init/agents/openai.yaml"
-              ".agents/skills/sdd-cascade/agents/openai.yaml"}
+              ".agents/skills/sdd-cascade/agents/openai.yaml"
+              ".agents/skills/sdd-algorithm-sketch/agents/openai.yaml"
+              ".agents/skills/sdd-algorithm-lift/agents/openai.yaml"}
  :invocation {:implicit "skill auto-invocation by description"
-              :explicit #{"$sdd-clojure-flow" "$sdd-deep-research" "$sdd-project-init" "$sdd-cascade"}}
+              :explicit #{"$sdd-clojure-flow" "$sdd-deep-research" "$sdd-project-init" "$sdd-cascade"
+                          "$sdd-algorithm-sketch" "$sdd-algorithm-lift"}}
  :commands :not-required}
 ```
 
@@ -73,17 +80,22 @@
  :skill #{".claude/skills/sdd-clojure-flow/SKILL.md"
           ".claude/skills/sdd-deep-research/SKILL.md"
           ".claude/skills/sdd-project-init/SKILL.md"
-          ".claude/skills/sdd-cascade/SKILL.md"}
+          ".claude/skills/sdd-cascade/SKILL.md"
+          ".claude/skills/sdd-algorithm-sketch/SKILL.md"
+          ".claude/skills/sdd-algorithm-lift/SKILL.md"}
  :commands #{".claude/commands/sdd-flow/start.md"
              ".claude/commands/sdd-flow/resume.md"
              ".claude/commands/sdd-flow/close.md"
              ".claude/commands/sdd-flow/promote.md"
              ".claude/commands/sdd-research.md"
              ".claude/commands/sdd-project-init.md"
-             ".claude/commands/sdd-cascade.md"}
+             ".claude/commands/sdd-cascade.md"
+             ".claude/commands/sdd-sketch.md"
+             ".claude/commands/sdd-lift.md"}
  :invocation {:implicit "skill auto-invocation by description"
               :explicit #{"/sdd-flow:start" "/sdd-flow:resume" "/sdd-flow:close"
-                          "/sdd-flow:promote" "/sdd-research" "/sdd-project-init" "/sdd-cascade"}}
+                          "/sdd-flow:promote" "/sdd-research" "/sdd-project-init" "/sdd-cascade"
+                          "/sdd-sketch" "/sdd-lift"}}
  :narrowed (when (adapter-declares? :exclusive)
              (:then (drop-implicit-invocation!)
                     (keep-explicit-only!)))}

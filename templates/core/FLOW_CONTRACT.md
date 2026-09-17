@@ -397,6 +397,46 @@
    :no-alternative "having no alternative is still a decision — state it before acting, not report it after"})
 ```
 
+# Algorithm
+
+```clojure
+(def algorithm-sketch
+  {:is "a small algorithm worked out as one Clojure document — the algorithm and its data, amended in discussion until the owner agrees; lighter than the cascade and never a stage of it"
+   :skill "sdd-algorithm-sketch — also reachable as /sdd-sketch and $sdd-algorithm-sketch"
+   :activated-by #{"the user, directly"
+                   "the agent asking permission the moment it sees a task turn on an algorithm worth stating first"}
+   :rule "only the user switches it on"
+   :standalone "runs without a FLOW; then the algorithm document is the whole deliverable"
+   :artifact "Flows/<TASK>/ALGO_<NAME>.md inside a task; Flows/ALGO_<NAME>.md when standalone — a file from its first version"
+   :runs-in "the current session — no runner"
+   :ends-with "one question to the owner: keep the document, write the code, continue as a cascade, or derive another form"
+   :to-code "a task map with :path :direct and the document named in :decided, handed to this lifecycle — shown and gated like any other (def go-contract)"
+   :to-cascade "a task map with :path :cascade and the document named in :decided — the context stage names the file and the s1 stage adopts the algorithm; no stage and no gate changes (def cascade)"
+   :other-form "the Clojure document stays the only source; another form is a view derived from it, named by the owner in the moment"
+   :never #{"code written from the sketch skill itself"
+            "a sketch standing in for the cascade on a change that cannot be made minimally"}})
+```
+
+```clojure
+(def algorithm-lift
+  {:is "the algorithm of existing code lifted into one Clojure document for a human reader — as the code performs it, in the words of the task, with bugs, inaccuracies and dangling tails flagged"
+   :skill "sdd-algorithm-lift — also reachable as /sdd-lift and $sdd-algorithm-lift"
+   :activated-by #{"the user, directly"
+                   "the agent asking permission the moment it sees a task stall on code nobody can read"}
+   :rule "only the user switches it on"
+   :standalone "runs without a FLOW; then the lifted algorithm is the whole deliverable"
+   :artifact "Flows/<TASK>/ALGO_<NAME>.md inside a task, linked from the # Findings of its FLOW; Flows/ALGO_<NAME>.md when standalone"
+   :runs-in "the current session — no runner"
+   :modes "bound adds a code map beside the algorithm, clean goes without it; the algorithm reads the same in both; an unnamed mode is asked of the owner"
+   :priority "human perception — every value one phrase, the code's names kept out of the algorithm"
+   :result "the lifted algorithm itself — nothing follows it; by a separate invocation it may feed the cascade or the sketch"
+   :is-not "a living document — it names the revision the code was read at and promises nothing after it (def living-s2)"
+   :other-form "the Clojure document stays the only source; another form is a view derived from it, named by the owner in the moment"
+   :never #{"a change to the code"
+            "the code respelled in Clojure"
+            "an algorithm repaired on the way up"}})
+```
+
 # Cascade
 
 ```clojure
