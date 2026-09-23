@@ -8,8 +8,6 @@ import {
   validateNotationCoverage,
 } from "./document-validator.js";
 
-import { CARD_DIRECTORY, buildCards } from "./cards.js";
-
 import {
   ADAPTER_PATH,
   adapterFileSets,
@@ -49,10 +47,23 @@ const CORE_FILES = [
   ["templates/core/templates/FLOW.md", ".sdd-flow/templates/FLOW.md"],
   ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
   ["templates/core/templates/PROJECT.md", ".sdd-flow/templates/PROJECT.md"],
-  ["templates/core/templates/CONTEXT.md", ".sdd-flow/templates/CONTEXT.md"],
-  ["templates/core/templates/S1.md", ".sdd-flow/templates/S1.md"],
-  ["templates/core/templates/S2.md", ".sdd-flow/templates/S2.md"],
-  ["templates/core/templates/CALIBRATION.md", ".sdd-flow/templates/CALIBRATION.md"],
+];
+// The skills of the cascade's chain that are new in 0.5.0: each is standalone,
+// installed for both agents, and reached by its own command.
+const CODE_SKILLS = [
+  "sdd-code-survey",
+  "sdd-code-structure",
+  "sdd-code-translation",
+  "sdd-code-review",
+  "sdd-tool-skills",
+];
+const CODE_COMMANDS = [
+  "sdd-survey",
+  "sdd-sources",
+  "sdd-structure",
+  "sdd-translate",
+  "sdd-review",
+  "sdd-tools",
 ];
 const CODEX_FILES = [
   [
@@ -103,6 +114,13 @@ const CODEX_FILES = [
     "templates/skills/sdd-algorithm-lift/agents/openai.yaml",
     ".agents/skills/sdd-algorithm-lift/agents/openai.yaml",
   ],
+  ...CODE_SKILLS.flatMap((skill) => [
+    [`templates/skills/${skill}/SKILL.md`, `.agents/skills/${skill}/SKILL.md`],
+    [
+      `templates/skills/${skill}/agents/openai.yaml`,
+      `.agents/skills/${skill}/agents/openai.yaml`,
+    ],
+  ]),
 ];
 const CLAUDE_FILES = [
   [
@@ -165,6 +183,14 @@ const CLAUDE_FILES = [
     "templates/claude/commands/sdd-lift.md",
     ".claude/commands/sdd-lift.md",
   ],
+  ...CODE_SKILLS.map((skill) => [
+    `templates/skills/${skill}/SKILL.md`,
+    `.claude/skills/${skill}/SKILL.md`,
+  ]),
+  ...CODE_COMMANDS.map((command) => [
+    `templates/claude/commands/${command}.md`,
+    `.claude/commands/${command}.md`,
+  ]),
 ];
 
 export function normalizeTools(value) {
@@ -501,21 +527,6 @@ async function desiredFiles(tools) {
     );
     desired.set(targetPath, { content, hash: sha256(content), sourcePath });
   }
-
-  // A runner reads a card, not the skill: one managed file per stage, cut from
-  // the one skill file so that no rule is ever written twice.
-  const skillSource = "templates/skills/sdd-cascade/SKILL.md";
-  const cards = buildCards(
-    await fs.readFile(resolveInside(PACKAGE_ROOT, skillSource), "utf8"),
-    await fs.readFile(resolveInside(PACKAGE_ROOT, "templates/core/FLOW_CONTRACT.md"), "utf8"),
-  );
-  for (const [stage, content] of cards) {
-    desired.set(`${CARD_DIRECTORY}/${stage}.md`, {
-      content,
-      hash: sha256(content),
-      sourcePath: skillSource,
-    });
-  }
   return desired;
 }
 
@@ -705,6 +716,10 @@ async function removeEmptyManagedDirectories(root) {
     ".agents/skills/sdd-algorithm-sketch",
     ".agents/skills/sdd-algorithm-lift/agents",
     ".agents/skills/sdd-algorithm-lift",
+    ...CODE_SKILLS.flatMap((skill) => [
+      `.agents/skills/${skill}/agents`,
+      `.agents/skills/${skill}`,
+    ]),
     ".agents/skills",
     ".agents",
     ".claude/commands/sdd-flow",
@@ -715,11 +730,12 @@ async function removeEmptyManagedDirectories(root) {
     ".claude/skills/sdd-cascade",
     ".claude/skills/sdd-algorithm-sketch",
     ".claude/skills/sdd-algorithm-lift",
+    ...CODE_SKILLS.map((skill) => `.claude/skills/${skill}`),
     ".claude/skills",
     ".claude",
     ".sdd-flow/references",
     ".sdd-flow/templates",
-    ".sdd-flow/cards",
+    ".sdd-flow/cards", // left behind by 0.3.5–0.4.x installs, emptied by update
     ".sdd-flow",
   ];
   for (const relativePath of directories) {

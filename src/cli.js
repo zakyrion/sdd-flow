@@ -24,7 +24,7 @@ Commands:
   diff       Compare a project's copy of the canon against the installed version.
   unlink     Strip sdd-flow marked blocks from documents the project owns.
   uninstall  Remove only unmodified managed artifacts; preserve config and FLOWs.
-  lint       Report diagnostics for a task folder, artifact file, or living S2.
+  lint       Report form diagnostics for a task folder or one document.
 
 Notes:
   init never touches AGENTS.md or CLAUDE.md. Writing into a document the project

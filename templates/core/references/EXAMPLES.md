@@ -119,10 +119,13 @@
 # Rated options
 
 ```clojure
-{:question "how should the district view be spawned?"
- :options [{:option "a reactive system on the built event" :confidence 70}
-           {:option "spawn inside the build action itself" :confidence 30}]
- :rule "the number rates the option as a decision — never the certainty of a fact"}
+{:id 3
+ :asked "how should the district view be spawned?"
+ :status :open
+ :options [{:id :a :option "a reactive system on the built event" :confidence 70}
+           {:id :b :option "spawn inside the build action itself — the simplest that works" :confidence 30}]
+ :told "3. How should the district view be spawned? A (70) — a reactive system on the built event. B (30) — inside the build action itself, the simplest."
+ :rule "the rating judges the option as a decision — never the certainty of a fact; the owner answers with the question's number and the option's letter — «3A», or «3 — as you propose» for the top-rated"}
 ```
 
 # Recorded with provenance

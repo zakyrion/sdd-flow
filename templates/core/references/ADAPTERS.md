@@ -7,9 +7,14 @@
                       :project-init "templates/skills/sdd-project-init/SKILL.md"
                       :cascade "templates/skills/sdd-cascade/SKILL.md"
                       :algorithm-sketch "templates/skills/sdd-algorithm-sketch/SKILL.md"
-                      :algorithm-lift "templates/skills/sdd-algorithm-lift/SKILL.md"}
+                      :algorithm-lift "templates/skills/sdd-algorithm-lift/SKILL.md"
+                      :code-survey "templates/skills/sdd-code-survey/SKILL.md"
+                      :code-structure "templates/skills/sdd-code-structure/SKILL.md"
+                      :code-translation "templates/skills/sdd-code-translation/SKILL.md"
+                      :code-review "templates/skills/sdd-code-review/SKILL.md"
+                      :tool-skills "templates/skills/sdd-tool-skills/SKILL.md"}
    :entry-point :lifecycle ;; the other skills are reached through it, or called by name
-   :handoff "the lifecycle skill asks permission before switching the research, the sketch or the lift skill on"
+   :handoff "the lifecycle skill asks permission before switching the research, the sketch or the lift skill on; the survey is the research's own first leg; the cascade runs its chain of skills in order"
    :project-core ".sdd-flow/"
    :read-order [".sdd-flow/references/CLOJURE_NOTATION.md"
                 ".sdd-flow/references/EXAMPLES.md"
@@ -60,17 +65,30 @@
             ".agents/skills/sdd-project-init/SKILL.md"
             ".agents/skills/sdd-cascade/SKILL.md"
             ".agents/skills/sdd-algorithm-sketch/SKILL.md"
-            ".agents/skills/sdd-algorithm-lift/SKILL.md"}
+            ".agents/skills/sdd-algorithm-lift/SKILL.md"
+            ".agents/skills/sdd-code-survey/SKILL.md"
+            ".agents/skills/sdd-code-structure/SKILL.md"
+            ".agents/skills/sdd-code-translation/SKILL.md"
+            ".agents/skills/sdd-code-review/SKILL.md"
+            ".agents/skills/sdd-tool-skills/SKILL.md"}
  :interface #{".agents/skills/sdd-clojure-flow/agents/openai.yaml"
               ".agents/skills/sdd-deep-research/agents/openai.yaml"
               ".agents/skills/sdd-project-init/agents/openai.yaml"
               ".agents/skills/sdd-cascade/agents/openai.yaml"
               ".agents/skills/sdd-algorithm-sketch/agents/openai.yaml"
-              ".agents/skills/sdd-algorithm-lift/agents/openai.yaml"}
+              ".agents/skills/sdd-algorithm-lift/agents/openai.yaml"
+              ".agents/skills/sdd-code-survey/agents/openai.yaml"
+              ".agents/skills/sdd-code-structure/agents/openai.yaml"
+              ".agents/skills/sdd-code-translation/agents/openai.yaml"
+              ".agents/skills/sdd-code-review/agents/openai.yaml"
+              ".agents/skills/sdd-tool-skills/agents/openai.yaml"}
  :invocation {:implicit "skill auto-invocation by description"
               :explicit #{"$sdd-clojure-flow" "$sdd-deep-research" "$sdd-project-init" "$sdd-cascade"
-                          "$sdd-algorithm-sketch" "$sdd-algorithm-lift"}}
- :commands :not-required}
+                          "$sdd-algorithm-sketch" "$sdd-algorithm-lift"
+                          "$sdd-code-survey" "$sdd-code-structure" "$sdd-code-translation" "$sdd-code-review"
+                          "$sdd-tool-skills"}}
+ :commands :not-required
+ :choice-dialog "request_user_input when the turn lists it — Plan mode today — up to three questions per call; without it, the numbered questions in prose"}
 ```
 
 # Claude Code
@@ -82,7 +100,12 @@
           ".claude/skills/sdd-project-init/SKILL.md"
           ".claude/skills/sdd-cascade/SKILL.md"
           ".claude/skills/sdd-algorithm-sketch/SKILL.md"
-          ".claude/skills/sdd-algorithm-lift/SKILL.md"}
+          ".claude/skills/sdd-algorithm-lift/SKILL.md"
+          ".claude/skills/sdd-code-survey/SKILL.md"
+          ".claude/skills/sdd-code-structure/SKILL.md"
+          ".claude/skills/sdd-code-translation/SKILL.md"
+          ".claude/skills/sdd-code-review/SKILL.md"
+          ".claude/skills/sdd-tool-skills/SKILL.md"}
  :commands #{".claude/commands/sdd-flow/start.md"
              ".claude/commands/sdd-flow/resume.md"
              ".claude/commands/sdd-flow/close.md"
@@ -91,11 +114,19 @@
              ".claude/commands/sdd-project-init.md"
              ".claude/commands/sdd-cascade.md"
              ".claude/commands/sdd-sketch.md"
-             ".claude/commands/sdd-lift.md"}
+             ".claude/commands/sdd-lift.md"
+             ".claude/commands/sdd-survey.md"
+             ".claude/commands/sdd-sources.md"
+             ".claude/commands/sdd-structure.md"
+             ".claude/commands/sdd-translate.md"
+             ".claude/commands/sdd-review.md"
+             ".claude/commands/sdd-tools.md"}
  :invocation {:implicit "skill auto-invocation by description"
               :explicit #{"/sdd-flow:start" "/sdd-flow:resume" "/sdd-flow:close"
                           "/sdd-flow:promote" "/sdd-research" "/sdd-project-init" "/sdd-cascade"
-                          "/sdd-sketch" "/sdd-lift"}}
+                          "/sdd-sketch" "/sdd-lift" "/sdd-survey" "/sdd-sources"
+                          "/sdd-structure" "/sdd-translate" "/sdd-review" "/sdd-tools"}}
+ :choice-dialog "AskUserQuestion — one to four questions per call, two to four options each, a free «Other» added by the harness; the letter and the rating in each option's label"
  :narrowed (when (adapter-declares? :exclusive)
              (:then (drop-implicit-invocation!)
                     (keep-explicit-only!)))}

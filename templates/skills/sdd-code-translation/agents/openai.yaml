@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Code Translation"
+  short_description: "Write the code from a structure document alone"
+  default_prompt: "Use $sdd-code-translation to write the code from this structure document in a fresh agent."

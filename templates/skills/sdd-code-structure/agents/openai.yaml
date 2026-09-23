@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Code Structure"
+  short_description: "Turn an agreed algorithm into the code's structure"
+  default_prompt: "Use $sdd-code-structure to turn this agreed algorithm into the structure of the code, the one document a translator reads."

@@ -55,7 +55,10 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 ```clojure
 {:options {:carry "an integer 0-100 on every option — how likely it is the right decision, estimated before the set reaches the user"
            :recurrence "an approach already in # Attempted or # Disproven is named as a return, never offered as a new idea"
+           :handle "questions carry the register's number, running through the flow; options carry a letter — the owner answers «1A, 2B, 3 — as you propose»"
            :never "an unrated set of options"}
+ :brief "every stop for the owner's word is one screen of prose — what changes for whoever uses it, what changes in the code, what is uncertain — then the numbered questions, through the harness's choice dialog where it offers one (def owner-brief)"
+ :register "inside a FLOW the register is read before any question and written before it is asked; after the answer, read back and linted, and the owner reads one line of what it now says (def decision-register)"
  :questions {:batch "all known open decisions in one pass"
              :follow-up "several iterations of discussion earn pointed questions, not silence"
              :stop-rule "the user says enough → questions end and the task is carried out"}
@@ -108,10 +111,21 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 
 ```clojure
 {:when (= :cascade path)
- :skill "sdd-cascade — CONTEXT, s1, s2, code, read-back, converge; also reachable as /sdd-cascade"
- :opens "the implementation go names the mode and launches the first runner, or the curator in auto mode — never the code (def cascade)"
- :handoff "write the mode and the next stage into # Progress of FLOW.md, ask the owner which model, launch the runner and wait; the gates are the owner's word in this session (def stage-runner)"
- :never "running a stage in this conversation — a stage runs only in its runner"}
+ :skill "sdd-cascade — survey, sources in the extended variant, algorithm, structure, translation, review; also reachable as /sdd-cascade"
+ :opens "the implementation go names the variant and the mode and starts the survey — never the code (def cascade)"
+ :handoff "write the variant and the mode into # Progress of FLOW.md and run the chain in this session; only the translation goes to a fresh agent"
+ :never "code before the structure is agreed"}
+```
+
+```clojure
+{:research-first-leg "the survey — sdd-code-survey, /sdd-survey — is the first leg of every research pass: the project's tool skills and registered tools first (def tools-first); it runs inside the research go already given"
+ :alone {"/sdd-survey" "survey the code, the project's tool skills first"
+         "/sdd-tools" "turn the project's search tools into generated skills, one per kind of question, with their registry"
+         "/sdd-sources" "the primary source of every rule a design leans on, and whether a ready solution exists"
+         "/sdd-structure" "the structure of the code for an agreed algorithm"
+         "/sdd-translate" "the code from a structure document, in a fresh agent"
+         "/sdd-review" "a change checked by the project's meters and checks"}
+ :rule "each is reachable from a direct task too; the agent may propose one with a rating, the owner switches it on"}
 ```
 
 ```clojure
@@ -142,7 +156,8 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 {:research-go {:only "research and planning"
                :first-write "Flows/<TASK>/FLOW.md"
                :passes "two — search, come back with findings and the questions they opened, wait; the second pass is what the answers open"
-               :findings-gate "no plan is written before the user has seen the findings and answered"
+               :tools-first "the project's registered tools before any search or read — a grep where a tool answers says why (def tools-first)"
+               :findings-gate "no plan is written before the user has seen the findings and answered — told as the owner's brief"
                :prior-art "look outside this project too — how the same problem is already solved; framed by the task, never by a fixed list"
                :outbound-gate "a web search or another repository is named and confirmed first; documentation and context7 are open"
                :record "research findings and the plan live in the active FLOW, each finding carrying :verified-by and :at"
@@ -155,7 +170,6 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
                       (stop!)
                       (request-fresh-go!))
  :done {:requires #{:result :acceptance :diagnostic}
-        :read-back :when-cascaded
-        :verdict :when-cascaded
+        :review :when-cascaded
         :then (move-flow! "Flows/Archive/<TASK>/")}}
 ```

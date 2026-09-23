@@ -1,6 +1,6 @@
 ---
 name: sdd-algorithm-sketch
-description: Work out a small algorithm in Clojure instruction notation without the cascade — the algorithm and its data as one document, amended in discussion until the owner agrees, then one question about what happens next — keep it, write the code, continue as a cascade, or derive another form. Use when the user invokes sdd-algorithm-sketch or /sdd-sketch, or asks outright to sketch, draft or think through an algorithm before any code exists.
+description: Work out an algorithm in Clojure instruction notation — a spine of one-phrase steps and its data as one document, amended in discussion until the owner agrees, then one question about what happens next — keep it, write the code, continue as a cascade, or derive another form. Standalone, and the cascade's algorithm step. Use when the user invokes sdd-algorithm-sketch or /sdd-sketch, when the cascade reaches its algorithm step, or when the user asks outright to sketch, draft or think through an algorithm before any code exists.
 ---
 
 # Load
@@ -20,12 +20,13 @@ description: Work out a small algorithm in Clojure instruction notation without 
 ```clojure
 {:fits "a small algorithm the owner wants to think through in Clojure form before any code — smaller than a cascade, larger than a sentence"
  :by #{"the user invokes the skill or the command directly"
-       "the agent asks permission the moment it sees a task turn on an algorithm worth stating first"}
+       "the agent asks permission the moment it sees a task turn on an algorithm worth stating first"
+       "the cascade, as its algorithm step — after the survey's findings gate"}
  :rule "only the user switches it on — the agent asks, never assumes"
  :standalone "no FLOW required; then the algorithm document is the whole deliverable"
  :inside-a-flow "the document lives in the task folder and archives with it"
  :runs-in "this session — no runner, no fresh agent, no stage"
- :is-not "the cascade: no CONTEXT, no s2, no read-back, no converge; a change that cannot be made minimally still takes sdd-cascade"}
+ :is-not "the cascade: no survey, no structure, no code; a large refactoring or a new system still takes sdd-cascade, which uses this skill as one of its steps"}
 ```
 
 # Draft
@@ -33,7 +34,7 @@ description: Work out a small algorithm in Clojure instruction notation without 
 ```clojure
 {:file "Flows/<TASK>/ALGO_<NAME>.md inside a task, Flows/ALGO_<NAME>.md standalone"
  :name "the agent proposes <NAME> from the subject of the algorithm; the owner may rename"
- :first-write "the first version is written to the file before it is discussed — the owner reads the file, in an editor when that is handier, never a form that exists in the chat alone"
+ :first-write "the first version is written to the file before it is discussed — the file is the source, the owner is told in prose what it says and opens it when they want to; never a form that exists in the chat alone"
  :every-change "an amendment agreed in discussion lands in the file at once; the file is always the current algorithm"
  :sections ["# s1" "# Contra"]
  :check "sdd-flow lint <file> reads syntax and form — a parse error, a duplicate key, a malformed cond; the tallies of this skill stay by eye"
@@ -48,9 +49,10 @@ description: Work out a small algorithm in Clojure instruction notation without 
  :criterion "the selection rule without which the result stops being itself"
  :data {:asks "which structures the algorithm works with"
         :rule "the type is the one the code will have — the real type as one symbol, never a placeholder schema"}
- :flow {:asks "in which order, what each step reads and what it changes"
-        :loop "a cond in place of the phrase: (:flow-1 \"while condition\") (:conclusion-1 \"body — and back here\") (:flow-2 \"otherwise\") (:conclusion-2 \"exit\")"
-        :world "a step that touches the world carries :world :read or :world :write — the algorithm lives between them"}
+ :flow {:asks "in which order — one completed action per step, one phrase each"
+        :spine "the spine is the chain of phrases; the eye reads it top to bottom like a table of contents"
+        :branch "only where the algorithm really branches: a cond in place of the phrase, short tests and results as strings — (cond \"condition\" \"what happens\" :else \"otherwise\"); a loop says «and back here» in its result"
+        :detail "an optional map after the phrase — {:reads #{} :writes #{} :state \"what now exists\" :world :read} — only where the phrase alone hides what the step changes or where it touches the world"}
  :exits {:asks "conditions under which the task is not performed"
          :occasion "every exit names its own occasion in the same string — where such input really comes from; an exit without an occasion is removed"}
  :numbers {:asks "the numbers of the task with formulas and thresholds"
@@ -68,19 +70,13 @@ description: Work out a small algorithm in Clojure instruction notation without 
    :data {:<structure-1> {:type <RealType> :holds "<what lies in it>" :from "<where it comes from>"}
           :<structure-2> {:type <RealType> :holds "<what lies in it>" :from "<where it comes from>"}}
 
-   :flow (-> (:step-1 "<take what we work with>"
-                      {:reads #{} :writes #{:<structure-1>} :state "<what now exists>" :world :read})
-
-             (:step-2 "<a completed action>"
+   :flow (-> (:step-1 "<take what we work with>")
+             (:step-2 "<a completed action>")
+             (:step-3 (cond "<while condition>" "<body — and back here>"
+                            :else "<exit>"))
+             (:step-4 "<a step whose phrase hides what it changes>"
                       {:reads #{:<structure-1>} :writes #{:<structure-2>} :state "<what now exists>"})
-
-             (:step-3 (cond
-                        (:flow-1 "while <condition>")  (:conclusion-1 "<body — and back here>")
-                        (:flow-2 "otherwise")          (:conclusion-2 "<exit>"))
-                      {:reads #{:<structure-1>} :writes #{:<structure-2>} :state "<what now exists>"})
-
-             (:step-4 "<give the result to the world>"
-                      {:reads #{:<structure-2>} :writes #{} :state "<what now exists>" :world :write}))
+             (:step-5 "<give the result to the world>"))
 
    :exits #{"<condition> — <the occasion: where such input really comes from>"}
 
@@ -103,12 +99,13 @@ description: Work out a small algorithm in Clojure instruction notation without 
 
 ```clojure
 {:when "before the draft is shown, and again after every amendment"
- :by "eye — four counts, each with target 0"
- :state-unnamed "a step whose :state is missing, or does not name what now exists"
- :hollow-step "a step without :writes and without a decision — an invention or a guard; a guard moves to :exits"
- :undeclared "a key in :reads or :writes without an entry in :data"
- :orphan "a structure in :data that no step reads or writes"
- :report "the four counts stand beside the draft whenever it is shown; a count above 0 is fixed, or named as an open question"}
+ :by "eye — each count with target 0"
+ :long-phrase "a step, an exit or a :holds that is more than one phrase — the detail goes to a :note or is not part of the algorithm"
+ :hollow-step "a step that changes nothing and decides nothing — an invention or a guard; a guard moves to :exits"
+ :method-name "a method or class name inside the algorithm"
+ :undeclared "a key in a step's :reads or :writes without an entry in :data — counted only where steps carry the detail map"
+ :orphan "a structure in :data that no step's phrase or detail touches"
+ :report "the counts stand beside the draft whenever it is shown; a count above 0 is fixed, or named as an open question"}
 ```
 
 # Contra
@@ -117,7 +114,7 @@ description: Work out a small algorithm in Clojure instruction notation without 
 {:when "before the owner is asked to agree, and again when an amendment changes the algorithm"
  :what "why this will NOT work, and what to do about it"
  :target "this algorithm — not code that exists somewhere, not the owner's wording"
- :fix "every option carries its :id, what it is, what it costs, and a 0-100 rating — how likely it is the right decision"
+ :fix "every option carries its :id, what it is, what it costs, and a 0-100 rating — how likely it is the right decision; one option is always the simplest that works, and a layer with no second consumer is rated down"
  :resolved "the owner picks a fix or rejects the entry; the algorithm is amended and the entry records the outcome"
  :empty-is-valid "empty is more honest than invented"
  :skeleton "the fence after this one"}
@@ -142,6 +139,9 @@ description: Work out a small algorithm in Clojure instruction notation without 
            (:step-4 "back to the tally and the contra, until the owner says the algorithm is agreed"))
  :subject "the algorithm: is this how we compute, are these the structures, are these the conditions"
  :questions "a choice offered to the owner carries a 0-100 rating on every option; a missing fact is asked, never invented"
+ :owner {:brief "one screen of prose: what changes for whoever uses it, what changes in the code in plain words, what is uncertain"
+         :questions "numbered — inside a FLOW by the register, the numbers running through the flow; options lettered and rated, one the simplest; the owner answers «1A, 2B, 3 — as you propose», through the harness's choice dialog where it offers one"
+         :never "a file, a keyword or an entry id the owner has not seen"}
  :answers "prose — the form is in the file, the chat explains it"
  :never #{"code before the owner's agreement"
           "an amendment that lives only in the conversation"
@@ -155,7 +155,8 @@ description: Work out a small algorithm in Clojure instruction notation without 
  :ask "one question — what happens next — offering these equal choices; the owner may name another"
  :keep "the document stays where it is as the s1 artifact of this algorithm; nothing else happens"
  :write-the-code "hand sdd-clojure-flow a task map with :path :direct and the document named in :decided — the lifecycle shows it, waits for its go, and its gates stand"
- :continue-as-a-cascade "hand sdd-clojure-flow a task map with :path :cascade and the document named in :decided — the context stage names the file, the s1 stage adopts the algorithm and proves every exit's occasion; no stage and no gate changes"
+ :continue-as-a-cascade "hand sdd-clojure-flow a task map with :path :cascade and the document named in :decided — the survey reads the file, and the cascade's algorithm step adopts it"
+ :inside-the-cascade "when the cascade runs this skill, the owner's agreement is the algorithm gate — the question of this section is not asked, and the cascade goes on to the structure"
  :another-form "derive the form the owner names, by the rules of # Other form"
  :never #{"choosing for the owner"
           "code written from this skill"

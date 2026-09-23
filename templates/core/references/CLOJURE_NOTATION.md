@@ -119,87 +119,68 @@
 
 ```clojure
 (def cascade-fields
-  {:subject {:mode "#{:step :auto} — how the stages are driven"
-             :auto-to "#{:s2 :code} — where auto mode stops"
-             :models "{:stage Model …} — the owner's answer per stage"
-             :artifact-kind ":class, or a free keyword for a subject that is not a class"
-             :adapted "how a non-class kind adapted the class keys; absent for :class"
-             :living-s2 "Flows/Specs/<Subject>.md when it exists, else :none"}
-   :s1 {:makes "the result in one phrase"
-        :criterion "the selection rule"
-        :data "structures: {:key {:type RealType :holds \"what lies in it\" :from \"where it comes from\"}}"
-        :flow "steps: (:step-N \"action\" {:reads #{} :writes #{} :state \"what now exists\" :world :read})"
-        :exits "conditions with a proven occasion"
-        :numbers "named numbers with formulas"}
-   :s2-method {:does "what, in one phrase"
-               :in "keys the method reads"
-               :out "the key it returns, or :none"
-               :writes "keys it changes"
-               :scratch "keys local to the method"
-               :how "the mechanism of one deed"
-               :flow "steps inside; in the entry point each carries {:calls Method :out :key}"
-               :calls "helpers that are not steps"
-               :exits "guards with a proven occasion"
-               :ends-with "what it finishes with"
-               :numbers "named numbers with formulas"
-               :note "a fact not visible otherwise"
-               :from-code "what the code discovered and why s2 lacked it — only on an entry born in the code or amended from it"}
-   :s2-data {:from-s1 "the key of the same structure in s1"
-             :type "the real type, repeated from s1 beside :from-s1 — S2.md alone must translate into code"
-             :shape "^:new Type for a structure born in s2"
-             :fields "{FieldInCode :key} — what the record consists of"
-             :as "the name in code, a bare symbol"
-             :lives "where it lives, see :lives below"
-             :holds "what lies in it"
-             :paired-with "which structure it shares an index with"
-             :grows "how it changes over the run"
-             :note "a fact not visible otherwise"
-             :from-code "what the code discovered and why s2 lacked it — only on an entry born in the code or amended from it"}
+  {:finding {:verified-by "what established it — the tool and its call, or the read and the file; a search or whole-file read where a registered tool answers says why the tool could not"}
+   :structure {:subject "what the structure is of — a class, a module, a set of systems; when it is not a class, how the keys adapted"
+               :from "the algorithm document it derives from"}
+   :method {:does "what, in one phrase"
+            :in "keys the method reads — a key with :lives Method or EntryPoint arrives as a parameter"
+            :out "the key it returns, or :none"
+            :writes "keys it changes"
+            :flow "steps inside; in the entry point each carries {:calls Method :out :key}"
+            :calls "helpers that are not steps"
+            :exits "guards, each with its occasion"
+            :numbers "named numbers with formulas"
+            :note "a fact not visible otherwise"}
+   :data {:type "the real type — the structure document alone must translate into code"
+          :shape "^:new Type for a record born in the structure"
+          :fields "{FieldInCode :key} — what the record consists of"
+          :as "the name in code, a bare symbol"
+          :lives "where it lives, see :lives"
+          :holds "what lies in it"
+          :note "a fact not visible otherwise"}
    :lives {:run "a noun written by two or more spine steps — a field of the owner"
            :external "borrowed — released by whoever gave it"
            EntryPoint "a bare symbol: a local of the entry point"
            Method "a bare symbol: a local of that method"}
-   :auto-decided {:id "an :ad- keyword"
-                  :auto-decided true
-                  :confidence "0-100 for the chosen option"
-                  :chosen "the option taken"
-                  :options "rated alternatives"
-                  :because "why the rating"
-                  :answers "the contra entry it closes, optional"}
-   :slice {:slice "the slice's name"
-           :writes "the files this slice alone writes"
-           :carries "the s2 methods, data or parts it translates"
-           :after "the slices this one waits for — it launches in the wave after them"
-           :confidence "0-100 as a decision, rated against :one-runner"}
-   :delta-marks {:added "^:added on the value map of an entry born in this task"
-                 :changed "^:changed on the value map of an entry whose body changed"
-                 :removed "^:removed on the value map of an entry deleted; the body says what it was"}
-   :report {:artifact "the path" :contra "the count" :gate "the questions" :lint "the counts sdd-flow lint leaves" :missing "what the stage guessed or could not find"
-            :from-code "in a wave of more than one slice: the entries the code needs, for the one writer of S2.md"}
    :build {:language "the language and its version" :runtime "what runs the code" :modules "how files import each other"
            :tests "{:runner :command :style}" :conventions "where the project states its code conventions, or :none"}
-   :gotcha {:trap "what misbehaves" :where "file, symbol or library" :avoid "what to do instead" :verified-by "how it was established"}
-   :converge-entry {:s2 "the method or data key" :code "where in the code"
-                    :verdict "#{:present :partial :absent :contradicts :unrequested :deferred}"
-                    :level "#{:context :s1 :s2 :code} — where an entry that is not :present returns"
-                    :note "what differs"}
-   :read-back-finding {:finding "what the story-test caught" :asks "the question it answers" :verdict "#{:fixed :kept-because}" :level "where it returns when not fixed" :because "why kept"}
-   :verdict {:conformance "#{:clean :drifted} — from the last converge :whole"
-             :behavior "#{:met :failed :pending} — from FLOW.md # Acceptance"
-             :failures "[{:what :level :returns-to :decision}] — every failure and the level to revisit; :decision names the rated decision it traces to, when one does"
-             :deferred "[{:entry :amendment}] — every entry left out by amendment"}
-   :deferred-mark "^:deferred on the value map of an entry left out of this task's code; :deferred-by inside names the amendment"
-   :amendment {:amendment "an :a- keyword" :received-at "the date" :raw-request "verbatim" :normalized "the IR" :confirmed "the owner's word" :defers "the s2 entries it leaves out, when it does"}
-   :ledger-row [:task :at :run-shape :contra-noise :invented-at-translation :read-back-findings :converge :context-gaps :owner-verdict :verdicts :deferred :options]
-   :ledger-options "[{:decision :id :top-rated 70 :held? true :failed? false}] — every decision of the task that carried rated :options: did its top-rated option hold, and did a behavioral failure trace to it"
-   :authority "the sdd-cascade skill defines the rules; this map is the reading of the keys"})
+   :trap {:trap "what misbehaves" :where "file, symbol or library" :avoid "what to do instead" :verified-by "how it was established"}
+   :part {:part "the part's name"
+          :writes "the files this part alone writes"
+          :carries "the methods and data it translates"
+          :after "the parts this one waits for — it launches in the wave after them"
+          :confidence "0-100 as a decision, rated against one agent for the whole"}
+   :translation-report {:written "the files written"
+                        :ran "the build and tests run, with their readings"
+                        :added "what the code added beyond the structure, and why the structure lacked it"
+                        :missing "what the structure did not say and the agent had to guess"}
+   :review-failure {:what "what failed"
+                    :level "#{:survey :algorithm :structure :code} — where the fault lives"
+                    :returns-to "the step the chain runs again from"}
+   :auto-decided {:id "the register's next number"
+                  :auto-decided true
+                  :status :auto
+                  :confidence "0-100 for the chosen option"
+                  :chosen "the letter of the option taken"
+                  :options "rated alternatives, each with its letter :id"
+                  :because "why the rating"}
+   :amendment {:amendment "an :a- keyword" :received-at "the date" :raw-request "verbatim" :normalized "the IR" :confirmed "the owner's word" :defers "the structure entries it leaves out, when it does"}
+   :authority "sdd-cascade and the code skills define the rules; this map is the reading of the keys"})
 ```
 
 # Algorithm fields
 
 ```clojure
 (def algorithm-fields
-  {:document "Flows/<TASK>/ALGO_<NAME>.md or Flows/ALGO_<NAME>.md — one algorithm; the :s1 keys of (def cascade-fields) read the same here"
+  {:document "Flows/<TASK>/ALGO_<NAME>.md or Flows/ALGO_<NAME>.md — one algorithm"
+   :makes "the result in one phrase"
+   :criterion "the selection rule"
+   :data "structures: {:key {:type RealType :holds \"what lies in it\" :from \"where it comes from\"}}"
+   :flow "the spine: (-> (:step-N \"one phrase\") …) — one completed action per step"
+   :branch "a step that really branches: (:step-N (cond \"condition\" \"what happens\" :else \"otherwise\")) — a loop says «and back here» in its result"
+   :step-detail "an optional map after the phrase — {:reads #{} :writes #{} :state \"what now exists\" :world :read} — only where the phrase alone hides what the step changes"
+   :exits "conditions under which the task is not performed, each with its occasion"
+   :numbers "named numbers with formulas"
    :note "on any entry: a detail that does not fit the entry's one phrase"
    :contra-outcome ":outcome on a contra entry — what the owner chose, once chosen"
    :lift-subject {:lifted-from "the files in scope"

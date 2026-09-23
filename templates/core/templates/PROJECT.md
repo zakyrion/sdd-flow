@@ -21,10 +21,21 @@
 ```clojure
 [{:tool ?
   :is ?               ;; what the thing is, in one line
-  :answers ?          ;; the question it settles
-  :prefer-when ?      ;; when it beats reading files
+  :answers ?          ;; the questions it settles
+  :use-when ?         ;; the situation in which it MUST be used — an order
+  :because ?          ;; why it beats reading files there
+  :instead-of ?       ;; the search or reading it replaces
   :never-for ?        ;; what it must not be used for
   :invoke ?}]         ;; the literal command or tool name
+```
+
+# Traps
+
+```clojure
+[{:trap ?             ;; what misbehaves
+  :where ?            ;; file, symbol or library
+  :avoid ?            ;; what to do instead
+  :verified-by ?}]    ;; how it was established
 ```
 
 # Meters

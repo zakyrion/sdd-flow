@@ -51,14 +51,11 @@
   {:axis [:direct :cascade]
    :applies-to :mutation ;; an answer or a plan has no path
    :direct "the change can be made minimally — the FLOW alone carries it"
-   :cascade "the change cannot be made minimally — the task takes the cascade (def cascade)"
+   :cascade "a large refactoring, or a new system whose algorithm must be invented — the task takes the cascade (def cascade)"
    :assessed-by "the agent, at normalization: it rates the size of the change and proposes :path with its confidence; the owner confirms at the ordinary gate"
-   :candidates #{"multi-step refactoring"
-                 "a large amount of generated code"
-                 "heavy systems"
-                 "complex tasks"
-                 "algorithms that need detailing"
-                 "data mutation under stated requirements"}
+   :candidates #{"a large refactoring"
+                 "a new system whose algorithm must be invented"}
+   :not-cascade "integrating what already exists — an engine feature, a library, a framework's own mechanism — goes :direct, however large; the skills of the cascade stay callable one by one from a direct task"
    :tiers "an answer is answered; a direct task is carried by its FLOW; a cascaded task is carried by its folder"
    :escalation "a direct task that turns out not to be minimal records an amendment and asks for the cascade — it never slides into it"
    :never #{"the agent taking the cascade without the owner's word"
@@ -100,12 +97,13 @@
 
 ```clojure
 (def agent-output
-  {:artifacts "Clojure only for artifacts: normalized task maps for confirmation, FLOW records, contract drafts — always framed by prose stating what the form means"
+  {:artifacts "Clojure in the chat only for the small normalized task map at confirmation, framed by prose; FLOW records and contract drafts live in files and reach the chat only when the owner asks"
    :answers "prose for everything else: explanations, diagnoses, statuses, answers to questions"
+   :stops "every stop for the owner's word is an owner's brief (def owner-brief)"
    :forms "small: nesting ≤ 2, readable strings over invented keyword chains"
    :options "an offered set of options is never bare — every option carries its confidence (def option-confidence)"
    :never #{"answer a question with a Clojure form"
-            "reference a previously introduced label bare (:s2, :d-4) — restate its content in place"}})
+            "reference a previously introduced label bare (:d-4, :c-2) — restate its content in place"}})
 ```
 
 ```clojure
@@ -116,9 +114,32 @@
    :is-not "certainty that a fact is true — the ground under a claim is stated by :verified-by instead"
    :estimated-before "the options reach the user, not after the user picks"
    :survives "the numbers are written into the FLOW with the option they rated, so an estimate can later be read against what actually happened"
+   :handle "every option carries a letter :id within its question, and the question carries the register's number — the owner answers «3A» (def owner-brief)"
+   :simplest "every set holds the simplest option that works, rated like the others; a layer with no second consumer is rated down, never up"
    :never #{"an unrated set of options"
             "a number the agent would not defend"
             "collapsing likelihood and evidence quality into one figure"}})
+```
+
+```clojure
+(def owner-brief  ;; the owner reads the chat; the files are for agents
+  {:when "every stop where the owner's word is awaited — the task confirmation, the findings gate, the plan gate, the gates of the cascade, a skill's closing question"
+   :fits "one screen — about twenty lines of prose before the questions"
+   :parts ["what will change for whoever uses the product — for a game, in the game"
+           "what will change in the code, in plain words — a type or a file named only when the owner needs it to answer"
+           "what the agent is not sure of — the reason the questions exist"]
+   :questions {:number "the register's :id — numbers run through the whole flow and never restart at a stop (def decision-register)"
+               :options "lettered A, B, C within the question, each with its rating (def option-confidence) and one line of what it leads to"
+               :answer "«1A, 2B, 3 — as you propose»; «as you propose» takes the top-rated option"}
+   :dialog (cond
+             (harness-offers-a-choice-dialog?) "the brief is written as text and the questions go through the dialog — as many per call as it holds, several calls in a row; a question with more options than the dialog holds stays in prose; the letter and the rating stand in each option's label (ADAPTERS.md names the dialog per harness)"
+             :else "the questions in prose, numbered and lettered")
+   :revisit "«in question 3 you chose A — now Y is known; keep A?» — the old answer, the new fact, the question; never a fresh question (def decision-revisit)"
+   :recorded "after the answer, one line composed from the register read back — «recorded: 1 — A, 2 — B»"
+   :files "the owner never needs a file to answer; a document may be named as where the detail lives, never as something to read first"
+   :never #{"a label the owner has not seen — a keyword, an entry id, a section or a stage name"
+            "a question the register already answers"
+            "a copied document, a wall of findings, a Clojure map past the task confirmation"}})
 ```
 
 # Answer lane
@@ -157,9 +178,9 @@
                                   "file edits"
                                   "external mutations"}}
    :findings-gate {:when "the first research pass is done"
-                   :present "the findings and the pointed questions they opened — never a plan yet"
+                   :present "the findings and the pointed questions they opened, told as an owner's brief (def owner-brief) — never a plan yet"
                    :then "stop and wait"}
-   :after-research {:requires "present findings, decisions, and a complete implementation map"
+   :after-research {:requires "the plan told as an owner's brief (def owner-brief); the complete implementation map written into the FLOW, shown in the chat only when the owner asks"
                     :then "stop and wait for fresh go"}
    :questions {:priority :higher-than-speed
                :batch "all known open decisions in one pass"
@@ -171,7 +192,7 @@
 
 ```clojure
 (def flow-document
-  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds CONTEXT.md, S1.md and S2.md beside it; the subject's living S2 lives in Flows/Specs/ (def living-s2) and the project's ledger in Flows/CALIBRATION.md (def calibration-ledger)"
+  {:home "Flows/<TASK>/FLOW.md — one folder per task; a cascaded task adds its algorithm and structure documents beside it (def cascade)"
    :archive "Flows/Archive/<TASK>/ — the folder moves whole"
    :legacy "Flows/FLOW_<TASK>.md is read as a folder of one file; resume and close discover both shapes"
    :first-write "create immediately after the confirmed task statement (research go) and before any research artifacts"
@@ -244,10 +265,33 @@
   {:trigger (or (new-details?)
                 (new-request?)
                 (outcome-contradicts-the-decision?))
-   :form "a new dated entry naming the decision it supersedes, showing what was checked, what came out then, and what is new now"
-   :leaves "the superseded entry exactly as it was written"
+   :form "a new dated entry under the same :id with the next :round and the :new-fact, showing what was checked, what came out then, and what is new now"
+   :asked "as the owner's brief says — the old answer, the new fact, the question (def owner-brief)"
+   :leaves "the earlier round exactly as it was written"
    :never #{"editing a confirmed decision in place"
             "re-deciding without saying what changed"}})
+```
+
+```clojure
+(def decision-register  ;; the single source of what the owner decided
+  {:home "# Decisions of the active FLOW"
+   :id "an integer — the number the owner sees and answers with; numbers run through the whole flow; the options inside an entry are lettered :a :b :c"
+   :entry "{:id :asked :status :at :options :chosen :value :verified-by} — :asked in the words the owner saw, :chosen the letter; templates/FLOW.md shows the shape"
+   :before-asking (:then (read-the-register!)
+                         (when (already-answered? question)
+                           (:then (use-the-answer!)))
+                         (write-an-open-entry!))
+   :open "a question gets its :open entry, with its options and their ratings, before it reaches the owner; the brief's questions are composed from the entries read back from the file — a question missing from the file is not asked"
+   :answered "the owner's words close it — :status :confirmed, :chosen the letter, the answer quoted in :verified-by; a decision the owner states unasked takes the next number and is quoted the same way"
+   :write (-> "the entries are written"
+              "read back from the file"
+              "sdd-flow lint runs on the FLOW — a :register or :form finding is fixed before anything goes on"
+              "the owner reads one line composed from what was read back (def owner-brief)")
+   :no-lint "when the CLI cannot run, the read-back alone — and the owner is told the lint did not run"
+   :re-ask "only as a revisit under the same number, naming the new fact (def decision-revisit); an answered question is never asked again as if new"
+   :reads "every skill that asks the owner inside a FLOW reads the register before it asks"
+   :legacy "an older entry keyed by :decision is read as it stands; new entries are numbered"
+   :why "a decision that lives only in the chat is lost at the first compaction or the first boundary — one run lost fifteen"})
 ```
 
 # Research and plan
@@ -255,7 +299,7 @@
 ```clojure
 (def research
   {:goal "replace assumptions with verified facts"
-   :method (-> "project-native knowledge tools"
+   :method (-> "project-native knowledge tools, by order (def tools-first)"
                "targeted source reads"
                "prior art beyond this project (def prior-art)"
                "distilled findings")
@@ -275,6 +319,20 @@
             "edit implementation"
             "confirm a replacement on an unverified 'the new thing already does what is needed'"
             "record a finding without saying how it was established"}})
+```
+
+```clojure
+(def tools-first  ;; a registered tool is an order, not a suggestion
+  {:registry "the generated tool skills listed in .sdd-flow/tool-skills.md (def tool-skills), and the project adapter's # Tools — each says what the tool answers, when it MUST be used, why, and what reading it replaces (PROJECT_ADAPTER.md (def tool-orders))"
+   :order (-> "the generated tool skill whose question matches"
+              "the registered tool whose :answers covers the question"
+              "the document the project names as the source of that truth"
+              "a targeted read — a search to locate, then the lines needed")
+   :reason "a search or a whole-file read for a question a registered tool answers states why the tool could not — in the finding's :verified-by"
+   :ground "every finding names what established it — the tool and its call, or the read and the file"
+   :binds #{"the lifecycle's research" "sdd-code-survey" "the first leg of sdd-deep-research"}
+   :missing-registry "no tool skills yet, or tools the registry does not know: the survey asks the owner whether to run sdd-tool-skills (/sdd-tools) before it reads"
+   :never #{"a tool name written into canon" "grep first because it is familiar"}})
 ```
 
 ```clojure
@@ -331,7 +389,20 @@
    :map "option → forces → when it applies → known uses → evidence and what weakens it → confidence → what it buys → cost to build against cost to adopt → reversibility"
    :conditions "our own regime is written before anything is read — applicability is an axis of its own, not a shade of truth"
    :no-verdict "returning a map without a recommendation is a valid result"
+   :sources-mode "(def sources-mode) — the light version, reachable as /sdd-sources"
    :never "manufacturing a recommendation the sources do not carry"})
+```
+
+```clojure
+(def sources-mode
+  {:is "the light mode of sdd-deep-research: for every rule a design leans on, its primary source; for the problem itself, whether a ready solution exists"
+   :activated-by #{"the user, directly — /sdd-sources" "the cascade's extended variant, named by the owner at the start"}
+   :rule-source "author, title and section — or the official document and its place; what it says, in one phrase; whether it applies here and under which condition — never «the common understanding of» a principle"
+   :ready-solution "an engine feature, a library or a framework mechanism that already solves the problem — with its cost to adopt against the cost to build"
+   :gate "the outbound gate stands (def outbound-gate); the project's own documents and tools come first (def tools-first)"
+   :stop "every rule has a primary source, or says plainly that none was found and the ground is the agent's knowledge"
+   :artifact "rows in # Findings of the active FLOW, each with its :source; standalone, the list is the deliverable — Flows/SOURCES_<TOPIC>.md"
+   :is-not "a trade-off map — a question with no fast right answer still takes the full pass"})
 ```
 
 ```clojure
@@ -380,7 +451,7 @@
               "diagnostic reread"
               "FLOW close")
    :scope "only the confirmed map"
-   :cascade "when the confirmed map carries :path :cascade, execution is the cascade's stages under its own gates (def cascade): the go names the mode and launches the first runner, or the curator in auto mode, never the code; the code stage comes only after s2 is approved"
+   :cascade "when the confirmed map carries :path :cascade, execution is the cascade's chain under its own gates (def cascade): the go names the variant and the mode and starts the survey, never the code; the translation comes only after the structure is agreed"
    :emergent "a choice absent from the confirmed map is a late-discovered ? (def emergent-decision)"
    :when (scope-materially-changes?)
    :then (:then (record-change!)
@@ -401,7 +472,7 @@
 
 ```clojure
 (def algorithm-sketch
-  {:is "a small algorithm worked out as one Clojure document — the algorithm and its data, amended in discussion until the owner agrees; lighter than the cascade and never a stage of it"
+  {:is "a small algorithm worked out as one Clojure document — the algorithm and its data, amended in discussion until the owner agrees; standalone, and the algorithm step of the cascade (def cascade)"
    :skill "sdd-algorithm-sketch — also reachable as /sdd-sketch and $sdd-algorithm-sketch"
    :activated-by #{"the user, directly"
                    "the agent asking permission the moment it sees a task turn on an algorithm worth stating first"}
@@ -411,10 +482,10 @@
    :runs-in "the current session — no runner"
    :ends-with "one question to the owner: keep the document, write the code, continue as a cascade, or derive another form"
    :to-code "a task map with :path :direct and the document named in :decided, handed to this lifecycle — shown and gated like any other (def go-contract)"
-   :to-cascade "a task map with :path :cascade and the document named in :decided — the context stage names the file and the s1 stage adopts the algorithm; no stage and no gate changes (def cascade)"
+   :to-cascade "a task map with :path :cascade and the document named in :decided — the survey reads it, and the algorithm step of the cascade adopts it (def cascade)"
    :other-form "the Clojure document stays the only source; another form is a view derived from it, named by the owner in the moment"
    :never #{"code written from the sketch skill itself"
-            "a sketch standing in for the cascade on a change that cannot be made minimally"}})
+            "a sketch standing in for the cascade on a large refactoring or a new system"}})
 ```
 
 ```clojure
@@ -430,146 +501,114 @@
    :modes "bound adds a code map beside the algorithm, clean goes without it; the algorithm reads the same in both; an unnamed mode is asked of the owner"
    :priority "human perception — every value one phrase, the code's names kept out of the algorithm"
    :result "the lifted algorithm itself — nothing follows it; by a separate invocation it may feed the cascade or the sketch"
-   :is-not "a living document — it names the revision the code was read at and promises nothing after it (def living-s2)"
+   :is-not "a living document — it names the revision the code was read at and promises nothing after it"
    :other-form "the Clojure document stays the only source; another form is a view derived from it, named by the owner in the moment"
    :never #{"a change to the code"
             "the code respelled in Clojure"
             "an algorithm repaired on the way up"}})
 ```
 
+# Code skills
+
+```clojure
+(def code-survey
+  {:is "what the code and the project already say about the task — found with the project's own tools first, stopped when every question of the task has an answer or has become a question for the owner"
+   :skill "sdd-code-survey — also reachable as /sdd-survey and $sdd-code-survey"
+   :tools "(def tools-first) — the generated tool skills first; it never writes a tool skill itself (def tool-skills)"
+   :writes-adapter "one entry at a time into # Traps of .sdd-flow/project.md — only what is expensive to rediscover, each confirmed (PROJECT_ADAPTER.md (def adapter-writers))"
+   :runs-in "the current session — no runner"
+   :artifact "# Findings of the active FLOW; standalone, the findings are told and saved only when the owner asks"
+   :ends-with "the findings and the questions they opened — in the cascade, the findings gate"
+   :never #{"reading everything for completeness" "a finding without its ground"}})
+```
+
+```clojure
+(def tool-skills
+  {:is "a project's search tools turned into small generated skills, one per kind of question — each an order with its reason and a checked call — so the agent meets the tool at the moment it chooses how to search"
+   :skill "sdd-tool-skills — also reachable as /sdd-tools and $sdd-tool-skills"
+   :why "a tool listed in a file read once is a suggestion; a skill description stands in the agent's context every turn"
+   :generated "tool-<question> skills in .claude/skills and .agents/skills, five to eight per project, hidden from the / menu where the agent reads that flag"
+   :registry ".sdd-flow/tool-skills.md — every generated skill, its question, the tools it orders, its files, the date and the call of its last check, :active or :stale"
+   :owned-by "the project — outside sdd-flow's manifest; update and uninstall never touch them"
+   :operations #{"build" "refresh" "change one" "remove one" "check all"}
+   :confirmed "the owner confirms the set of questions before a file is written, and every change or removal"
+   :no-hook "no hook enforces the order yet — if the survey's tally shows grep staying, a PreToolUse hook is its own task"
+   :never #{"one skill per tool" "a skill whose call was never checked" "a tool name written into canon"}})
+```
+
+```clojure
+(def code-structure
+  {:is "the structure of the code an agreed algorithm becomes — the entry point as a table of contents, the methods, the data with its lifetime and types — and the one document written for another agent"
+   :skill "sdd-code-structure — also reachable as /sdd-structure and $sdd-code-structure"
+   :reads "the agreed algorithm, the findings, the register"
+   :runs-in "the current session — no runner"
+   :artifact "Flows/<TASK>/STRUCTURE_<NAME>.md — the structure, # Build and # Traps for the translator, the decisions it must honor restated in place, optional # Parts"
+   :gate "the owner's word on the structure, then one question: how the code is written — one agent or parts in parallel, and which model"
+   :never #{"code" "a structure that restates the algorithm"}})
+```
+
+```clojure
+(def code-translation
+  {:is "the code written from the structure document alone, by a fresh agent — in another session than the discussion"
+   :skill "sdd-code-translation — also reachable as /sdd-translate and $sdd-code-translation"
+   :reads "the structure document and the files it writes, whole — nothing of any conversation"
+   :parallel "an option: several agents for parts that write disjoint files, in waves"
+   :returns "a short report — files written, the build and tests run with their readings, what the code added beyond the structure and why, what the structure lacked; never the document again"
+   :never #{"a need the code discovers left out of the report" "code outside the files the structure names without saying so"}})
+```
+
+```clojure
+(def code-review
+  {:is "the check that the change does what the task asked — by running the project's meters and checks, not by rereading the code as a stranger"
+   :skill "sdd-code-review — also reachable as /sdd-review and $sdd-code-review"
+   :runs "the adapter's meters and check tools, the build and tests the structure names, every row of # Acceptance, the translation report's additions and gaps"
+   :verdict "behavior — met, failed or pending; a failure names its level: :survey (a false fact), :algorithm (the wrong thing computed), :structure (it cannot carry the algorithm), :code (the translation slipped); the level is amended and the chain runs again from there"
+   :runs-in "the current session"
+   :never #{"a green that rests on a deferral" "a failure without a level"}})
+```
+
 # Cascade
 
 ```clojure
 (def cascade
-  {:skill "sdd-cascade — the procedure and the rules; also reachable as /sdd-cascade and $sdd-cascade"
-   :chain (-> FLOW.md CONTEXT.md S1.md S2.md code)
-   :derivation "each artifact derives from the previous one with no context beyond the document; code to read is referenced from the document, or the document names what to search for"
-   :artifacts {CONTEXT.md "everything the next stage needs: code references, search targets, facts with provenance, decisions to honor, out of scope, verification"
-               S1.md "the algorithm and its data with no method names; its contra; the s1 gate"
-               S2.md "the pseudocode of the future class, every structure with its type; its contra; the slices; the s2 gate; read-back, converge, calibration"
-               "Flows/Specs/<Subject>.md" "the living S2 of the subject — one per class or system, outside the task folders (def living-s2)"}
-   :gates "the findings gate before s1; the owner's word after s1 (the algorithm) and after s2 (the structure); read-back before done — in auto mode the gates up to the limit are replaced by :auto-decided entries (def cascade-mode)"
-   :opened-by "the implementation go on a map carrying :path :cascade — it names the mode and launches the first runner, or the curator, never the code"
-   :runner "(def stage-runner)"
-   :card "a runner reads a card cut from the skill, never the whole skill (def cards in the skill); the skill stays the one place a rule is edited"
-   :lint "sdd-flow lint takes the tallies a machine can take — a stage runs it before it reports, the launching session before a gate, merge on its result"
+  {:skill "sdd-cascade — the composer; also reachable as /sdd-cascade and $sdd-cascade"
+   :is "a sequence of standalone skills for a large refactoring or a new system whose algorithm must be invented (def path)"
+   :chain (-> "sdd-code-survey" "sdd-deep-research in sources mode — the extended variant" "sdd-algorithm-sketch" "sdd-code-structure" "sdd-code-translation" "sdd-code-review")
+   :where "every step in the owner's session except the translation, which runs in a fresh agent — parallel agents for disjoint parts as an option; the owner may name another shape for a run"
+   :gates "three, each the owner's word: after the survey (the findings and their questions), after the algorithm (agreed), after the structure (the structure, and how the code is written); the review ends with the behavior verdict"
+   :folder "Flows/<TASK>/ — FLOW.md, ALGO_<NAME>.md, STRUCTURE_<NAME>.md, and SOURCES_ or RESEARCH_ documents when they were run"
+   :handoff "the structure document is the only document written for another agent; everything before it lives in the session, the FLOW and the algorithm document"
+   :register "(def decision-register) — every step reads it before it asks"
    :mode "(def cascade-mode)"
-   :isolation "(def stage-isolation)"
-   :drift "converge — every s2 entry classified against the code as present, partial, absent, contradicts, unrequested or deferred; clean when every entry is classified and only present and deferred remain; runnable at any time"
-   :verdict "(def verdict) — conformance and behavior side by side at close; every failure names its level"
-   :merge "(def living-s2) — after a clean converge the task's delta folds into the living S2, deferred entries left out (def deferral); a stage of its own, run at close"
-   :home "the task folder (def flow-document); archived with it; a later task on the same subject starts from the subject's living S2 (def living-s2)"
-   :legacy "a folder holding CASCADE.md is read as S1.md and S2.md in one file; converge on such a task writes there"
-   :invariant "what must survive a regeneration is the algorithmic, structural and behavioral requirements — never the text"
-   :never "a stage that reads the previous stage's conversation"})
-```
-
-```clojure
-(def stage-isolation
-  {:rule "a stage begins in a fresh context and reads its input artifact and the files that artifact names; nothing from any conversation"
-   :mechanism "a stage runner — a fresh agent launched for that one stage (def stage-runner); where the harness offers no such agent, the owner's hand: a new session or a cleared one"
-   :handoff "a stage ends by writing its artifact and the next stage into # Progress of FLOW.md; the runner reports where it wrote and what waits at the gate — the launching session reads the artifact from the file"
-   :test "the input artifact is complete when it names every file the stage may read, every decision it must honor, and what is out of scope"
-   :why "a derivation colored by the reasoning that produced its input is not a derivation; context that is not in the artifact is context the next stage will not have"})
-```
-
-```clojure
-(def stage-runner
-  {:is "a fresh agent launched from the session that carries the task, for exactly one stage: it reads the stage's input artifact and the files that artifact names, runs the stage, writes the stage's artifact and # Progress, and reports back"
-   :launched-by "the owner's session in step mode; the curator in auto mode"
-   :model "asked of the owner before every launch — never assumed; in auto mode asked for every stage up to the limit in one batch before the curator starts; skipped where the harness offers no choice"
-   :prompt "the task folder, the stage, the mode, the chosen model, and the order: read the stage's card — .sdd-flow/cards/<stage>.md, cut from the skill — and the glossary, then only what the stage reads; never the launching session's reasoning"
-   :report "the path of the artifact, the count of contra entries, the questions that wait at the gate, the counts sdd-flow lint leaves after the stage fixed its own, and :missing — what the stage had to guess or could not find in its input artifact; the artifact itself is read from the file, never repeated in the report"
-   :missing "the meter of (def stage-isolation :test): the launching session writes it into # Progress; calibration counts it as :context-gaps; a CONTEXT section that is short run after run is a template to fix"
-   :parallel "only code slices run side by side (def slices in the skill); every other stage runs alone; in a wave of more than one slice a runner writes its own files and nothing shared — FLOW.md and S2.md have one writer, the launching session or the curator, after the wave"
-   :never #{"a runner that runs two stages"
-            "a runner told what its input artifact does not say"
-            "a report that stands in for the artifact"}})
+   :opened-by "the implementation go on a map carrying :path :cascade — it names the variant and the mode and starts the survey, never the code"
+   :legacy "a folder from the staged cascade (CONTEXT.md, S1.md, S2.md, CASCADE.md) is read as history; an unfinished one is not resumed — the owner restarts it from the survey"
+   :never #{"code before the structure is agreed"
+            "a document written for the owner in place of telling the owner"
+            "a step run in a fresh agent other than the translation, unless the owner named it for this run"}})
 ```
 
 ```clojure
 (def cascade-mode
   {:axis [:step :auto]
    :named-at "the implementation go on a :path :cascade map; unnamed = :step"
-   :step "one runner per stage, launched from the owner's session; every gate is the owner's word in that session before the next runner starts"
-   :auto "a curator — itself a fresh agent — launches one runner per stage in order up to the limit, with no owner's gate between them; a disputed place is closed by an :auto-decided entry (def auto-decided); at the limit the curator returns the narrative (def auto-narrative)"
-   :auto-to {:s2 "context → s1 → s2, then the narrative and the owner's choice of how the code is written — the default"
-             :code "also code, read-back and converge; the code stage takes the highest-rated option among one runner and the slices s2 proposed"}
-   :models "in auto mode the owner names the model for every stage up to the limit in one batch before the curator starts — the curator cannot ask mid-run"
-   :escalate "an :auto-decided whose top rating is below 60, or whose top two ratings lie within 10 of each other, does not decide: the curator stops and the narrative arrives early with that entry as the open question; the owner may name other numbers when naming the mode"
-   :owner-sees "in step mode every artifact at its gate; in auto mode the narrative and S2.md — and the code, read-back and converge when the limit is :code"
-   :never #{"auto mode chosen by the agent"
-            "a curator that runs a stage itself instead of launching a runner"}})
+   :step "the owner's word at every gate"
+   :auto "the survey, the algorithm and the structure run on without stopping; a place that would have asked the owner is closed by an :auto-decided entry (def auto-decided); the run stops at the structure gate, where the owner reads what was decided"
+   :escalate "an :auto-decided whose top rating is below 60, or whose top two ratings lie within 10 of each other, does not decide: the run stops and asks; the owner may name other numbers when naming the mode"
+   :never "auto mode chosen by the agent"})
 ```
 
 ```clojure
 (def auto-decided
-  {:is "a decision a stage makes in auto mode where step mode would have asked the owner"
-   :entry {:id :ad-name :auto-decided true :confidence 70
-           :chosen "the option taken"
-           :options [{:option "the option taken" :confidence 70} {:option "the other" :confidence 30}]
-           :because "why the rating"
-           :answers ^:optional :c-1}
-   :rule "the highest-rated option wins; the entry stands in the artifact where the decision was made"
-   :collected "every entry into # Decisions of FLOW.md with :status :auto, so a resume and the narrative retell them"
-   :owner "may veto any entry at the next gate — the veto amends the artifact as a dated decision (def decision-revisit)"
+  {:is "a decision a step makes in auto mode where step mode would have asked the owner"
+   :entry {:id 7 :auto-decided true :status :auto :confidence 70
+           :chosen :a
+           :options [{:id :a :option "the option taken" :confidence 70} {:id :b :option "the other" :confidence 30}]
+           :because "why the rating"}
+   :id "the register's next number, like any other entry"
+   :rule "the highest-rated option wins — :chosen names its letter"
+   :collected "every entry into # Decisions of FLOW.md with :status :auto"
+   :owner "may veto any entry at the structure gate by its number — «veto 7»; the veto is a revisit (def decision-revisit)"
    :never "a decision taken silently, without an entry"})
-```
-
-```clojure
-(def auto-narrative
-  {:told "in the owner's session, in prose: the facts the context stage established, the algorithm s1 chose, the structure s2 chose, every :auto-decided with its rating, how the result will look in the code, and the question that ends it — how is the code written: one runner or the slices s2 proposed, and which models"
-   :then "the owner's answer is the s2 gate: a veto amends S2.md, a yes launches the code stage as chosen"
-   :never "a narrative that replaces reading the artifact — S2.md remains the subject of the gate"})
-```
-
-```clojure
-(def living-s2
-  {:is "one S2 per subject — a class or a system — that lives outside the task folders and is the level the code regenerates from"
-   :home "Flows/Specs/<Subject>.md; created by the first merge, never by hand"
-   :born "the first cascade on a subject writes its S2 whole; at close, after a clean converge, it becomes the living S2"
-   :delta "a cascade on a subject with a living S2 reads it at the s2 stage and writes its S2 as a delta: every method and data entry it adds, changes or removes carries ^:added, ^:changed or ^:removed on the entry's value map; an untouched entry is not repeated; the spine is written whole"
-   :merge "a stage after a clean converge, at close: added entries are inserted in call order, changed entries replace their namesake, removed entries are deleted, deferred entries stay out (def deferral), the marks fall away; the task folder archives with the delta"
-   :converge "measures the code against the living S2 once it exists — the standing drift meter of the subject; a task's converge before merge reads the delta over the living S2"
-   :rot "a living S2 that converge cannot verify is the same as none; it exists only for subjects that went through the cascade — never a documentation effort"
-   :never #{"a living S2 written by hand"
-            "a merge before converge is clean"
-            "a second living S2 for one subject"}})
-```
-
-```clojure
-(def calibration-ledger
-  {:home "Flows/CALIBRATION.md — the project's own file, written from the template at the first close of a cascaded task; absent from the manifest, untouched by update and uninstall"
-   :row "one per closed cascaded task: the run shape, contra-noise, invented-at-translation, read-back findings, converge, context-gaps, the owner's verdict, the two verdicts (def verdict), the count of deferred entries, and every decision that carried rated :options with whether its top-rated option held and whether a failure traced to it"
-   :held "a decision's top-rated option held when it was chosen and no later decision superseded it; overturned otherwise"
-   :failed "a decision's option failed when S2.md # Verdict traces a behavioral failure to it — persistence and outcome are two columns, never one"
-   :reads "the two-runs rule (def cascade-calibration :rule-changes-when) and the promise of (def option-confidence :survives) are checked here, by reading one file"
-   :never "a row written before the task is closed"})
-```
-
-```clojure
-(def verdict
-  {:two "conformance — the code derives from the approved S2, the living S2 once it exists: converge :whole is clean; behavior — the task's acceptance holds: every row of FLOW.md # Acceptance at target, and the owner's check when CONTEXT.md names one"
-   :independent "neither implies the other: a faithful translation of a flawed algorithm is clean and fails; a translation patched to pass a meter is met and drifted"
-   :record "S2.md # Verdict, written by the session that closes the task, after converge :whole and the acceptance check, before merge; both verdicts side by side, and every failure with the level to revisit"
-   :levels #{:context :s1 :s2 :code}
-   :returns "a failure returns to its level and the cascade re-runs from that stage: a false fact to CONTEXT, a wrong algorithm to s1, a wrong structure to s2, a slipped translation to the code"
-   :boundary "a behavioral failure on a clean conformance is never fixed in the code — the level named is amended, then translated again"
-   :never #{"one verdict read as the other"
-            "a failure without a level"
-            "a green that rests on a deferral"}})
-```
-
-```clojure
-(def deferral
-  {:is "an s2 entry the owner leaves out of this task's code — a scope amendment, never a verdict"
-   :how "a row in FLOW.md # Amendments with its :amendment id, confirmed by the owner; the entry in S2.md carries ^:deferred on its value map and :deferred-by naming that row"
-   :converge "a deferred entry is accounted for and classified :deferred — outside the tally that decides clean"
-   :merge "a deferred entry does not enter the living S2 — the living S2 says what the code is; the archived S2.md and the amendment say what waits"
-   :ledger "the row counts :deferred"
-   :never #{"a deferral without a confirmed amendment"
-            "an entry deferred by the agent"
-            "a deferral that turns a red converge green"}})
 ```
 
 # Done
@@ -579,18 +618,14 @@
   {:result :required
    :accept :when-present
    :diagnostic :when-code-changed
-   :read-back :when-cascaded
-   :verdict :when-cascaded
-   :merge :when-cascaded-on-a-living-subject
-   :ledger :when-cascaded
+   :review :when-cascaded
    :runtime :when-only-user-can-verify
    :commit :only-when-requested
    :research-document "archived together with the FLOW that links it"
    :never #{"edited files alone"
             "unchecked boxes"
             "almost passing acceptance"
-            "a failure without a level"
-            "a deferral without an amendment"}})
+            "a failure without a level"}})
 ```
 
 ```clojure
@@ -608,7 +643,7 @@
 (def resume-contract
   {:read-first "the active FLOW selected by the user or discovered from Flows/ — a folder Flows/<TASK>/FLOW.md, or the legacy Flows/FLOW_<TASK>.md"
    :reconstruct #{:confirmed-contract :findings :research-document :decisions :disproven :attempted :progress :acceptance}
-   :cascaded "on a :path :cascade task, also the mode, the stage the folder is at and the next stage, from # Progress; a runner that died leaves its stage unfinished — the stage runs again from its input artifact"
+   :cascaded "on a :path :cascade task, also the variant, the mode and the step the chain is at, from # Progress; a translation agent that died leaves its parts unfinished — they run again from the structure document"
    :validate "check current project state against FLOW claims"
    :never "repeat completed work"
    :then (cond

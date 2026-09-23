@@ -55,7 +55,8 @@ description: Survey a project that already has its own documents, tools, ceremon
 
 ```clojure
 (-> (:read-1 "what the project says an agent must read, and in what order")
-    (:read-2 "what tools it already owns — and what each one is FOR, and what it must not be used for")
+    (:read-2 "what tools it already owns — for each, the situation in which it MUST be used and why, the search it replaces, and what it must not be used for (PROJECT_ADAPTER.md (def tool-orders)); each checked by one real call")
+    (:read-2b "what traps its code and libraries hold that are expensive to rediscover")
     (:read-3 "what commands mean done here")
     (:read-4 "what must never be run, read, or written")
     (:read-5 "what named procedures already exist and when they run")

@@ -1,5 +1,5 @@
 ---
-description: Work out a small algorithm in Clojure form, without the cascade
+description: Work out an algorithm as a spine of one-phrase steps, alone or as the cascade's algorithm step
 ---
 
 ```clojure

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Tool Skills"
+  short_description: "Generate skills that order the project's search tools"
+  default_prompt: "Use $sdd-tool-skills to turn this project's search tools into generated skills, one per kind of question, and keep their registry."

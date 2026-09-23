@@ -45,22 +45,34 @@
 # Decisions
 
 ```clojure
-[{:decision :decision-id
+;; :id is the number the owner answers with — it runs through the whole flow
+[{:id 1
+  :asked "the question in the words the owner saw"
   :status :confirmed
   :at "YYYY-MM-DD"
-  :value ?
-  :verified-by "how this was established, in prose"
-  :reason "why"}
- {:decision :open-decision
+  :options [{:id :a :option "the first option" :confidence 70}
+            {:id :b :option "the simplest that works" :confidence 30}]
+  :chosen :a
+  :value "what was decided, in words"
+  :verified-by "the owner's answer, quoted — «1A»"
+  :reason "why — when it is not plain from the answer"}
+ {:id 2
+  :asked "a question not answered yet"
   :status :open
   :at "YYYY-MM-DD"
-  :value ?}
- {:decision :revisited-decision
+  :options [{:id :a :option "an option" :confidence 60}
+            {:id :b :option "the simplest that works" :confidence 40}]}
+ {:id 1
+  :round 2
+  :new-fact "what became known that reopened question 1"
+  :asked "in question 1 you chose A — now the new fact is known; keep A?"
   :status :confirmed
-  :supersedes :decision-id
   :at "YYYY-MM-DD"
-  :value ?
-  :verified-by "the new detail that reopened it"
+  :options [{:id :a :option "keep the first option" :confidence 60}
+            {:id :b :option "switch to the simplest" :confidence 40}]
+  :chosen :a
+  :value "what stands now"
+  :verified-by "the owner's answer, quoted"
   :reason "what was checked before, what came out, and what is new now"}]
 ```
 
@@ -102,7 +114,7 @@
   :target "required reading"
   :actual ?
   :status :pending
-  :level ^:optional #{:context :s1 :s2 :code}}]   ;; when :status is :failed on a cascaded task — the level to revisit
+  :level ^:optional #{:survey :algorithm :structure :code}}]   ;; when :status is :failed on a cascaded task — the level to revisit
 ```
 
 # Amendments
@@ -113,5 +125,5 @@
   :raw-request "verbatim amendment"
   :normalized ?
   :confirmed false
-  :defers ^:optional #{}}]   ;; the s2 entries this amendment leaves out of the task's code
+  :defers ^:optional #{}}]   ;; the structure entries this amendment leaves out of the task's code
 ```

@@ -1,32 +1,17 @@
 ---
-description: Run one stage of the cascade in a fresh runner, or the whole cascade to a limit in auto mode
+description: Carry a large refactoring or a new system through the chain of survey, algorithm, structure, translation and review
 ---
 
 ```clojure
 {:command :sdd-cascade
  :requires ".claude/skills/sdd-cascade/SKILL.md"
- :input "$ARGUMENTS"   ;; "<stage> [task]", "auto [task]" or empty
+ :input "$ARGUMENTS"   ;; the task folder, or empty
  :then (:then (invoke-skill!)
               (discover-task-folder!)
               (cond
-                (launched-as-runner?) (:then (read-card-and-glossary! ".sdd-flow/cards/<stage>.md")
-                                             (read-only-what-the-stage-reads!)
-                                             (run-stage!)
-                                             (write-artifact!)
-                                             (lint-the-task-folder!)
-                                             (write-progress!)
-                                             (report-pointer!))
-                (auto-named?) (:then (ask-limit-and-models!)
-                                     (launch-curator!)
-                                     (wait!)
-                                     (tell-narrative!)
-                                     (ask-how-code-is-written!))
-                (stage-named?) (:then (ask-model!)
-                                      (launch-runner!)
-                                      (wait!)
-                                      (read-artifact-from-file!)
-                                      (lint-the-task-folder!)
-                                      (present-gate!))
-                :else (:then (propose-next-stage!)
-                             (ask-user!))))}
+                (task-in-progress?) (:then (read-progress-and-register!)
+                                           (go-on-from-the-named-step!))
+                (legacy-folder?) (:then (say-it-is-history!)
+                                        (offer-restart-from-survey!))
+                :else (:then (offer-to-start-through-the-lifecycle!))))}
 ```

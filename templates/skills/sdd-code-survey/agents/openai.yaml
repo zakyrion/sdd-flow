@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Code Survey"
+  short_description: "Survey the code with the project's own tools first"
+  default_prompt: "Use $sdd-code-survey to find what the code and the project already say about this task, with the project's own tools first."

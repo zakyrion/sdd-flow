@@ -1,6 +1,6 @@
 ---
 name: sdd-deep-research
-description: Run a source-verified research pass on questions with no fast right answer — trade-off spaces such as terrain generation, netcode synchronization, or service architecture. Search real sources, establish the conditions each solution holds under, weigh claims by verified evidence instead of the agent's priors, and deliver a trade-off map. Use when the user invokes sdd-deep-research or /sdd-research, when a solution search is requested outright, or when the lifecycle reaches a question it cannot answer quickly.
+description: Run a source-verified research pass on questions with no fast right answer — trade-off spaces such as terrain generation, netcode synchronization, or service architecture. Search real sources, establish the conditions each solution holds under, weigh claims by verified evidence instead of the agent's priors, and deliver a trade-off map. A light sources mode finds the primary source of every rule a design leans on and whether a ready solution exists. Use when the user invokes sdd-deep-research, /sdd-research or /sdd-sources, when a solution search is requested outright, or when the lifecycle reaches a question it cannot answer quickly.
 ---
 
 # Load
@@ -14,7 +14,7 @@ description: Run a source-verified research pass on questions with no fast right
                  (tell-user! "run sdd-flow doctor ."))
  :project (when (project-adapter-present? ".sdd-flow/project.md")
             (:then (read-last! ".sdd-flow/project.md")))
- :adapter-gives "the project's own knowledge tools and entry documents — the first leg of the search, before anything outbound"}
+ :adapter-gives "the project's own knowledge tools and entry documents — the first leg of the search, before anything outbound; a registered tool is an order (FLOW_CONTRACT.md (def tools-first))"}
 ```
 
 # Activate
@@ -29,6 +29,31 @@ description: Run a source-verified research pass on questions with no fast right
  :inside-a-flow (:then (write-research-document!)
                        (link-it-from-the-findings!)
                        (archive-both-together!))}
+```
+
+# Mode
+
+```clojure
+{:axis [:full :sources]
+ :full "the pass this file describes from # Conditions on — a trade-off map for a question with no fast right answer; /sdd-research"
+ :sources "the light mode — /sdd-sources, or the cascade's extended variant (def sources-pass)"
+ :unnamed "the invocation names no mode — /sdd-research is :full, /sdd-sources is :sources"}
+```
+
+```clojure
+(def sources-pass
+  {:asks #{"for every rule the design leans on — its primary source: author, title and section, or the official document and its place"
+           "what that source says, in one phrase, and whether it applies here and under which condition"
+           "whether an engine feature, a library or a framework mechanism already solves the problem, and its cost to adopt against the cost to build"}
+   :order (-> "the project's own documents and registered tools"
+              "the official documentation of what the task already names — ungated"
+              "the web, after the outbound gate — one confirmation for the pass")
+   :cite "a rule is cited from its source, never from «the common understanding of» a principle"
+   :one-kill "the leading ready solution gets one search for its known failures — nothing more"
+   :stop "every rule has a primary source, or says plainly that none was found and the ground is the agent's knowledge"
+   :deliver {:inside-a-flow "one row per rule or solution in # Findings, each with :source and :verified-by"
+             :standalone "Flows/SOURCES_<TOPIC>.md — the list is the deliverable"}
+   :is-not "a trade-off map — a question with no fast right answer still takes the full pass, and the agent says so"})
 ```
 
 # Conditions
@@ -105,5 +130,9 @@ description: Run a source-verified research pass on questions with no fast right
  :adoption "building a solution and taking a ready one are different numbers — fifty people who invented it is not one person integrating it in three days"
  :evidence-bar "a one-way door demands strong evidence; a two-way door tolerates thin"
  :no-verdict "returning without a recommendation is allowed — the map is then the deliverable, and it is still worth having"
+ :told "the document is for agents and for the record; the owner is told the answer in the chat"
+ :owner {:brief "one screen of prose: what changes for whoever uses it, what changes in the code in plain words, what is uncertain"
+         :questions "numbered — inside a FLOW by the register, the numbers running through the flow; options lettered and rated, one the simplest; the owner answers «1A, 2B, 3 — as you propose», through the harness's choice dialog where it offers one"
+         :never "a file, a keyword or an entry id the owner has not seen"}
  :never "manufacturing a recommendation the sources do not carry"}
 ```

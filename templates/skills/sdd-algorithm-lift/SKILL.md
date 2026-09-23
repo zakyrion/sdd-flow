@@ -44,8 +44,8 @@ description: Lift the algorithm out of existing code that does not read — mach
 
 ```clojure
 {:scope "the owner names what is lifted — a method, a class, several files; a scope left open is asked, never guessed"
- :whole "every file in scope is read whole, and what it calls is followed as far as the algorithm needs — no cap on how many files are opened"
- :tools "the project's own knowledge tools first when an adapter names them, targeted reads second"
+ :whole "every file in scope is read whole — it is the subject; what it calls is followed as far as the algorithm needs, no further"
+ :tools "the project's registered tools first — callers, references, writers of a component come from the tool, not from a search (FLOW_CONTRACT.md (def tools-first)); targeted reads second"
  :outside "a callee outside the scope is one phrase inside a step — what it gives back — never a lifted algorithm of its own"
  :never "lifting from names, comments or documentation instead of from what the code does"}
 ```
@@ -58,9 +58,10 @@ description: Lift the algorithm out of existing code that does not read — mach
  :criterion "the selection rule the code applies — without it the result would be something else"
  :data {:asks "which structures the algorithm works with"
         :rule "the type is the one the code has — the real type as one symbol"}
- :flow {:asks "in which order, what each step reads and what it changes"
-        :loop "a cond in place of the phrase: (:flow-1 \"while condition\") (:conclusion-1 \"body — and back here\") (:flow-2 \"otherwise\") (:conclusion-2 \"exit\")"
-        :world "a step that touches the world carries :world :read or :world :write — the algorithm lives between them"}
+ :flow {:asks "in which order — one completed action per step, one phrase each"
+        :spine "the spine is the chain of phrases; the eye reads it top to bottom like a table of contents"
+        :branch "only where the code really branches: a cond in place of the phrase, short tests and results as strings — (cond \"condition\" \"what happens\" :else \"otherwise\"); a loop says «and back here» in its result"
+        :detail "an optional map after the phrase — {:reads #{} :writes #{} :state \"what now exists\" :world :read} — only where the phrase alone hides what the step changes or where it touches the world"}
  :exits {:asks "conditions under which the code does not perform the task"
          :as-is "every guard the code has, as it stands; a guard whose occasion cannot be found is kept and flagged"}
  :numbers {:asks "the numbers the code computes with — a magic number gets the name of what it is"
@@ -76,19 +77,13 @@ description: Lift the algorithm out of existing code that does not read — mach
    :data {:<structure-1> {:type <RealType> :holds "<what lies in it>" :from "<where it comes from>"}
           :<structure-2> {:type <RealType> :holds "<what lies in it>" :from "<where it comes from>"}}
 
-   :flow (-> (:step-1 "<take what the code works with>"
-                      {:reads #{} :writes #{:<structure-1>} :state "<what now exists>" :world :read})
-
-             (:step-2 "<a completed action>"
+   :flow (-> (:step-1 "<take what the code works with>")
+             (:step-2 "<a completed action>")
+             (:step-3 (cond "<while condition>" "<body — and back here>"
+                            :else "<exit>"))
+             (:step-4 "<a step whose phrase hides what it changes>"
                       {:reads #{:<structure-1>} :writes #{:<structure-2>} :state "<what now exists>"})
-
-             (:step-3 (cond
-                        (:flow-1 "while <condition>")  (:conclusion-1 "<body — and back here>")
-                        (:flow-2 "otherwise")          (:conclusion-2 "<exit>"))
-                      {:reads #{:<structure-1>} :writes #{:<structure-2>} :state "<what now exists>"})
-
-             (:step-4 "<give the result to the world>"
-                      {:reads #{:<structure-2>} :writes #{} :state "<what now exists>" :world :write}))
+             (:step-5 "<give the result to the world>"))
 
    :exits #{"<condition> — <what the code does then>"}
 
@@ -127,7 +122,7 @@ description: Lift the algorithm out of existing code that does not read — mach
  :detail "a detail that does not fit the phrase goes to a :note on the same entry, or it is not part of the algorithm"
  :long-holds "a :holds that needs a second sentence means the structure is two structures"
  :steps "an algorithm past about two dozen steps is more than one algorithm — say so and ask the owner where to cut"
- :layout "a step's phrase stands on its own line and its map on the next — the eye reads the phrases first"
+ :layout "a step is its phrase on one line; a detail map, where one is needed, stands on the next — the eye reads the phrases first"
  :why "the form reads well exactly where a value is one phrase"}
 ```
 
@@ -195,10 +190,9 @@ description: Lift the algorithm out of existing code that does not read — mach
 ```clojure
 {:when "before the document is shown, and again after every amendment"
  :by "eye — each count with target 0"
- :state-unnamed "a step whose :state is missing, or does not name what now exists"
- :hollow-step "a step without :writes and without a decision — a guard moves to :exits"
- :undeclared "a key in :reads or :writes without an entry in :data"
- :orphan "a structure in :data that no step reads or writes"
+ :hollow-step "a step that changes nothing and decides nothing — a guard moves to :exits"
+ :undeclared "a key in a step's :reads or :writes without an entry in :data — counted only where steps carry the detail map"
+ :orphan "a structure in :data that no step's phrase or detail touches"
  :long-string "a string that is more than one phrase"
  :code-name "a method or class name inside the algorithm"
  :unaccounted "in :bound mode — a unit in scope without an entry in the code map"
@@ -212,10 +206,13 @@ description: Lift the algorithm out of existing code that does not read — mach
  :first-write "the document is a file from its first version — the owner reads the file, never a form that exists in the chat alone"
  :sections ["# Subject" "# s1" "# Flags" "# Code map — in :bound mode only"]
  :subject "the fence after this one — what was read, in which mode, and at which revision; the document promises nothing about the code after that revision"
- :tell "in prose: what the algorithm does, what surprised, how many flags of which kind — then the owner reads the file"
+ :tell "in prose: what the algorithm does, what surprised, how many flags of which kind — the file holds the detail for whoever wants it"
+ :owner {:brief "one screen of prose: what changes for whoever uses it, what changes in the code in plain words, what is uncertain"
+         :questions "numbered — inside a FLOW by the register, the numbers running through the flow; options lettered and rated, one the simplest; the owner answers «1A, 2B, 3 — as you propose», through the harness's choice dialog where it offers one"
+         :never "a file, a keyword or an entry id the owner has not seen"}
  :amend "the owner's questions and corrections amend the file; a correction that contradicts the code is checked against the code first"
  :result "the algorithm is the result — nothing is asked about what happens next"
- :feeds "by a separate invocation: the cascade takes the document as a decision to honor, sdd-algorithm-sketch takes it as a first version"
+ :feeds "by a separate invocation: the cascade's survey reads it and its algorithm step takes it as a first version, as sdd-algorithm-sketch does"
  :check "sdd-flow lint <file> reads syntax and form — a parse error, a duplicate key, a malformed cond"}
 ```
 

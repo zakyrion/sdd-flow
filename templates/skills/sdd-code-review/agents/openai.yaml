@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Code Review"
+  short_description: "Check a change by running the project's own checks"
+  default_prompt: "Use $sdd-code-review to check this change against its acceptance by running the project's meters and checks."

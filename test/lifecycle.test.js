@@ -325,6 +325,9 @@ test("installed deep research skill carries its procedure", async () => {
       ":agent-knowledge :lowest-weight",
       "(def outbound-gate)",
       "cost to build against cost to adopt",
+      "# Mode",
+      "(def sources-pass",
+      "/sdd-sources",
     ]) {
       assert.ok(skill.includes(marker), `deep research SKILL.md missing ${marker}`);
     }
@@ -343,6 +346,26 @@ test("installed deep research skill carries its procedure", async () => {
     );
     assert.ok(command.includes(":command :sdd-research"));
     assert.ok(command.includes(".claude/skills/sdd-deep-research/SKILL.md"));
+
+    const sources = await fs.readFile(path.join(root, ".claude/commands/sdd-sources.md"), "utf8");
+    assert.ok(sources.includes(":command :sdd-sources"));
+    assert.ok(sources.includes(":mode :sources"));
+    assert.ok(sources.includes(".claude/skills/sdd-deep-research/SKILL.md"));
+  });
+});
+
+test("the adapter registers tools as orders and traps, and names its writers", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const contract = await fs.readFile(path.join(root, ".sdd-flow/references/PROJECT_ADAPTER.md"), "utf8");
+    for (const marker of ["(def tool-orders", "(def adapter-writers", ":slot :traps", ":use-when", ":because", ":instead-of", ":older", ":checked", ":sdd-code-survey", ":sdd-tool-skills", ":at-the-point-of-choice"]) {
+      assert.ok(contract.includes(marker), `PROJECT_ADAPTER.md missing ${marker}`);
+    }
+    const skeleton = await fs.readFile(path.join(root, ".sdd-flow/templates/PROJECT.md"), "utf8");
+    for (const marker of ["# Tools", "# Traps", ":use-when", ":because", ":instead-of"]) {
+      assert.ok(skeleton.includes(marker), `PROJECT.md skeleton missing ${marker}`);
+    }
+    assert.ok(!skeleton.includes(":prefer-when"), "the skeleton must write orders, not preferences");
   });
 });
 
@@ -433,7 +456,7 @@ test("uninstall leaves no deep research directories behind", async () => {
 });
 
 
-test("installed cascade skill carries its stages and rules", async () => {
+test("installed cascade skill is a short composer of standalone skills", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["codex", "claude"]);
     const skill = await fs.readFile(
@@ -442,64 +465,28 @@ test("installed cascade skill carries its stages and rules", async () => {
     );
     for (const marker of [
       "name: sdd-cascade",
-      "# Stages",
-      "# Isolation",
+      "# Nature",
+      "# Start",
+      "# Chain",
+      "# Register",
+      "# Progress",
+      "# Return",
       "# Invoke",
-      "# Runner",
-      "# Auto",
-      "# Code stage",
-      "# Merge",
-      "# Context stage",
-      "# Story",
-      "# Cascade",
-      "# s1",
-      "# s2",
-      "# Translation",
-      "# Read-back",
-      "# Converge",
-      "# Meters",
-      "# Calibration",
-      "(def stage-isolation",
-      "(def stage-runner",
-      "(def runner-launch",
-      "(def runner-inside",
-      "(def cascade-mode",
-      "(def curator",
-      "(def auto-decided",
-      "(def auto-narrative",
-      "(def slices",
-      "(def code-stage",
-      "(def delta",
-      "(def merge",
-      "# Cards",
-      "(def cards",
-      "(def from-code",
-      "(def context-stage",
-      ":single-writer",
-      "sdd-flow lint",
-      "# Verdict",
-      "(def verdict",
-      "(def deferral)",
-      ":absent",
-      ":deferred",
-      ":accounted",
-      ":clean",
-      ":escalate",
-      ":missing",
-      ":scope  \"#{:slice :whole}",
-      ":after",
-      ":artifact-kind",
-      "(def data-coverage",
-      "(def story-test",
-      ":status :hypothesis",
-      ":invented-at-translation 0",
-      "a stage runner — a fresh agent launched for that one stage",
+      "sdd-code-survey",
+      "sources mode",
+      "sdd-algorithm-sketch",
+      "sdd-code-structure",
+      "sdd-code-translation",
+      "sdd-code-review",
+      "(def decision-register)",
+      ":legacy",
     ]) {
       assert.ok(skill.includes(marker), `cascade SKILL.md missing ${marker}`);
     }
-    for (const retired of ["subagents are not the mechanism", "CASCADE.md # s1", "CASCADE.md # s2"]) {
+    for (const retired of ["(def stage-runner", "(def cards", "(def converge", "(def merge", "(def living-s2", "(def curator", "# Read-back"]) {
       assert.ok(!skill.includes(retired), `cascade SKILL.md still carries ${retired}`);
     }
+    assert.ok(skill.length <= 10 * 1024, `the composer must stay under 10 KB, it is ${skill.length} bytes`);
     assert.equal(
       skill,
       await fs.readFile(
@@ -528,94 +515,18 @@ test("installed cascade skill carries its stages and rules", async () => {
   });
 });
 
-test("installed cascade templates carry every section", async () => {
+test("the staged cascade's templates and cards are no longer installed", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["claude"]);
-    await assertMissing(path.join(root, ".sdd-flow/templates/CASCADE.md"));
-    const s1 = await fs.readFile(
-      path.join(root, ".sdd-flow/templates/S1.md"),
-      "utf8",
-    );
-    for (const section of ["# Subject", "# s1", "# Contra", "# Gate"]) {
-      assert.ok(s1.includes(section), `S1.md missing ${section}`);
-    }
-    for (const field of [":mode", ":auto-to", ":models", ":artifact-kind", ":living-s2", ":s1-tally", ":auto-decided", ":gate-after-s1", ":owner-verdict"]) {
-      assert.ok(s1.includes(field), `S1.md missing ${field}`);
-    }
-    const s2 = await fs.readFile(
-      path.join(root, ".sdd-flow/templates/S2.md"),
-      "utf8",
-    );
-    for (const section of [
-      "# Subject",
-      "# s2",
-      "# Contra",
-      "# Slices",
-      "# Gate",
-      "# Read-back",
-      "# Converge",
-      "# Verdict",
-      "# Calibration",
+    await initProject(root, ["codex", "claude"]);
+    for (const retired of [
+      ".sdd-flow/templates/CONTEXT.md",
+      ".sdd-flow/templates/S1.md",
+      ".sdd-flow/templates/S2.md",
+      ".sdd-flow/templates/CALIBRATION.md",
+      ".sdd-flow/cards",
     ]) {
-      assert.ok(s2.includes(section), `S2.md missing ${section}`);
+      await assertMissing(path.join(root, retired));
     }
-    for (const field of [
-      ":from-s1",
-      ":type <RealType>",
-      ":lives",
-      ":spine-reads",
-      ":typed",
-      ":slice",
-      ":one-runner",
-      ":code-as",
-      ":owner-verdict",
-      ":unrequested",
-      ":run-shape",
-      ":after",
-      ":context-gaps",
-      "^:added",
-      "^:deferred",
-      ":absent",
-      ":level",
-      ":accounted",
-      ":conformance",
-      ":behavior",
-    ]) {
-      assert.ok(s2.includes(field), `S2.md missing ${field}`);
-    }
-    const ledger = await fs.readFile(
-      path.join(root, ".sdd-flow/templates/CALIBRATION.md"),
-      "utf8",
-    );
-    assert.ok(ledger.includes("# Ledger"), "CALIBRATION.md missing # Ledger");
-    for (const field of [":run-shape", ":context-gaps", ":held?", ":top-rated", ":verdicts", ":deferred", ":failed?"]) {
-      assert.ok(ledger.includes(field), `CALIBRATION.md missing ${field}`);
-    }
-    const context = await fs.readFile(
-      path.join(root, ".sdd-flow/templates/CONTEXT.md"),
-      "utf8",
-    );
-    for (const section of [
-      "# Task",
-      "# Reads",
-      "# Search",
-      "# Facts",
-      "# Occasions",
-      "# Gotchas",
-      "# Verification",
-      "# Complete",
-    ]) {
-      assert.ok(context.includes(section), `CONTEXT.md missing ${section}`);
-    }
-    assert.ok(context.includes("# Build"), "CONTEXT.md missing # Build");
-    for (const field of [":artifact-kind", ":living-s2", ":trap", ":avoid", ":names-artifact-kind", ":names-build-facts", ":modules", ":tests"]) {
-      assert.ok(context.includes(field), `CONTEXT.md missing ${field}`);
-    }
-    assert.ok(context.includes(":verified-by"), "CONTEXT.md facts must carry provenance");
-    assert.ok(
-      context.includes(":names-every-file-the-next-stage-may-read"),
-      "CONTEXT.md must carry the self-containment check",
-    );
   });
 });
 
@@ -628,38 +539,39 @@ test("installed contract carries the cascade path", async () => {
     );
     for (const marker of [
       "(def path",
+      ":not-cascade",
       "(def cascade",
-      "(def stage-isolation",
-      "(def stage-runner",
       "(def cascade-mode",
       "(def auto-decided",
-      "(def auto-narrative",
-      "(def living-s2",
-      "(def calibration-ledger",
-      ":card \"a runner reads a card",
-      ":lint \"sdd-flow lint",
-      "(def verdict",
-      "(def deferral",
-      ":verdict :when-cascaded",
-      ":escalate",
-      ":merge :when-cascaded-on-a-living-subject",
-      "(-> FLOW.md CONTEXT.md S1.md S2.md code)",
+      "(def decision-register",
+      "(def tools-first",
+      "(def sources-mode",
+      "(def code-survey",
+      "(def code-structure",
+      "(def code-translation",
+      "(def code-review",
+      "(def tool-skills",
+      "(def owner-brief",
+      "«1A, 2B, 3 — as you propose»",
+      "sdd-flow lint runs on the FLOW",
+      ":new-fact",
+      ":review :when-cascaded",
+      ":handle",
+      ":simplest",
       "Flows/<TASK>/FLOW.md",
       ":legacy",
-      ":read-back :when-cascaded",
     ]) {
       assert.ok(contract.includes(marker), `FLOW_CONTRACT.md missing ${marker}`);
     }
-    assert.ok(
-      !contract.includes("subagents are not the mechanism"),
-      "FLOW_CONTRACT.md still names the owner's hand as the only mechanism",
-    );
+    for (const retired of ["(def stage-isolation", "(def stage-runner", "(def living-s2", "(def calibration-ledger", "(def verdict", "(def deferral", "(def auto-narrative"]) {
+      assert.ok(!contract.includes(retired), `FLOW_CONTRACT.md still carries ${retired}`);
+    }
     const flowTemplate = await fs.readFile(
       path.join(root, ".sdd-flow/templates/FLOW.md"),
       "utf8",
     );
     assert.ok(flowTemplate.includes(":path #{:direct :cascade}"));
-    for (const field of [":amendment :a-1", ":defers", ":level"]) {
+    for (const field of [":amendment :a-1", ":defers", ":level", ":survey :algorithm :structure :code", ":asked", ":chosen :a", ":round 2", ":new-fact"]) {
       assert.ok(flowTemplate.includes(field), `FLOW.md template missing ${field}`);
     }
     const notation = await fs.readFile(
@@ -667,7 +579,7 @@ test("installed contract carries the cascade path", async () => {
       "utf8",
     );
     assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
-    for (const reading of [":auto-decided", ":slice", ":type \"the real type", ":delta-marks", ":gotcha", ":ledger-row", ":after", ":converge-entry", ":verdict", ":deferred-mark", ":amendment", ":failed?", ":from-code", ":build", ":lint"]) {
+    for (const reading of [":auto-decided", ":part", ":type \"the real type", ":trap", ":after", ":amendment", ":build", ":lives", ":translation-report", ":review-failure", ":branch", ":step-detail"]) {
       assert.ok(notation.includes(reading), `glossary missing the ${reading} reading`);
     }
     assert.ok(notation.includes(":name :data-reference"), "glossary missing the data-reference reading");
@@ -676,30 +588,36 @@ test("installed contract carries the cascade path", async () => {
       "utf8",
     );
     assert.ok(lifecycle.includes("(hand-over-to-sdd-cascade!)"), "lifecycle skill must hand over to the cascade");
-    assert.ok(lifecycle.includes("(def stage-runner)"), "lifecycle skill must launch the runner at the handoff");
-    assert.ok(lifecycle.includes(":verdict :when-cascaded"), "lifecycle skill must mirror the verdict in done");
+    assert.ok(lifecycle.includes(":review :when-cascaded"), "lifecycle skill must mirror the review in done");
+    assert.ok(lifecycle.includes(":tools-first"), "lifecycle research must put the registered tools first");
   });
 });
 
-test("update removes the retired CASCADE.md template an older install left behind", async () => {
+test("update removes what the staged cascade installed", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
-    const retired = ".sdd-flow/templates/CASCADE.md";
-    const content = "# Subject\n\n```clojure\n{:stage :s1}\n```\n";
-    await fs.writeFile(path.join(root, retired), content);
     const manifestPath = path.join(root, ".sdd-flow/manifest.json");
     const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
-    manifest.managedFiles[retired] = createHash("sha256").update(content).digest("hex");
+    const retired = [".sdd-flow/templates/S1.md", ".sdd-flow/cards/s1.md"];
+    for (const file of retired) {
+      const content = "# s1\n\n```clojure\n{:stage :s1}\n```\n";
+      await fs.mkdir(path.dirname(path.join(root, file)), { recursive: true });
+      await fs.writeFile(path.join(root, file), content);
+      manifest.managedFiles[file] = createHash("sha256").update(content).digest("hex");
+    }
     await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
     const report = await updateProject(root);
 
-    assert.ok(report.removed.includes(retired), "update must report the retired template");
-    await assertMissing(path.join(root, retired));
+    for (const file of retired) {
+      assert.ok(report.removed.includes(file), `update must report ${file}`);
+      await assertMissing(path.join(root, file));
+    }
+    await assertMissing(path.join(root, ".sdd-flow/cards"));
     const refreshed = JSON.parse(await fs.readFile(manifestPath, "utf8"));
-    assert.ok(!(retired in refreshed.managedFiles));
-    await fs.access(path.join(root, ".sdd-flow/templates/S1.md"));
-    await fs.access(path.join(root, ".sdd-flow/templates/S2.md"));
+    for (const file of retired) {
+      assert.ok(!(file in refreshed.managedFiles));
+    }
     const health = await doctorProject(root);
     assert.deepEqual(health.issues, []);
   });
@@ -762,9 +680,51 @@ const ALGORITHM_SKILLS = [
       "(def <Name>",
       ":axis [:bound :clean]",
       "the code respelled in Clojure",
+      ":branch",
     ],
   },
+  {
+    skill: "sdd-code-survey",
+    command: "sdd-survey",
+    markers: ["name: sdd-code-survey", "# Tools", "# Questions", "# Search", "# Stop", "# Findings", "# Report", "(def search-order", ":no-registry", "(tool-skill-answers? question)"],
+  },
+  {
+    skill: "sdd-tool-skills",
+    command: "sdd-tools",
+    markers: ["name: sdd-tool-skills", "# Scan", "# Questions", "# Generate", "# Registry", "# Report", ".sdd-flow/tool-skills.md", ":user-invocable", "never one per tool", ":stale"],
+  },
+  {
+    skill: "sdd-code-structure",
+    command: "sdd-structure",
+    markers: ["name: sdd-code-structure", "# Document", "# Structure", "# Parts", "# Contra", "# Tally", "# Gate", "(def laws", ":lives"],
+  },
+  {
+    skill: "sdd-code-translation",
+    command: "sdd-translate",
+    markers: ["name: sdd-code-translation", "# Launch", "# Agent", "# Translation", "(def launch", "(def agent", ":single-writer", ":status :hypothesis", ":why-fresh"],
+  },
+  {
+    skill: "sdd-code-review",
+    command: "sdd-review",
+    markers: ["name: sdd-code-review", "# Run", "# Verdict", "# Report", ":levels", ":boundary"],
+  },
 ];
+
+// Every skill that stops for the owner's word carries its own short copy of
+// the owner's brief; the lifecycle and the cascade cite the contract's.
+test("every skill that stops for the owner tells it as the owner's brief", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["claude"]);
+    const read = (skill) => fs.readFile(path.join(root, `.claude/skills/${skill}/SKILL.md`), "utf8");
+    for (const skill of ["sdd-code-survey", "sdd-algorithm-sketch", "sdd-algorithm-lift", "sdd-code-structure", "sdd-tool-skills", "sdd-deep-research"]) {
+      const text = await read(skill);
+      assert.ok(text.includes(":owner {:brief"), `${skill} carries no copy of the owner's brief`);
+      assert.ok(text.includes("«1A, 2B, 3 — as you propose»"), `${skill} does not state the answer form`);
+    }
+    assert.ok((await read("sdd-clojure-flow")).includes("(def owner-brief)"));
+    assert.ok((await read("sdd-cascade")).includes("(def owner-brief)"));
+  });
+});
 
 for (const { skill, command, markers } of ALGORITHM_SKILLS) {
   test(`installed ${skill} skill carries its procedure and reads the glossary alone`, async () => {
@@ -781,6 +741,7 @@ for (const { skill, command, markers } of ALGORITHM_SKILLS) {
         text.includes(':requires [".sdd-flow/references/CLOJURE_NOTATION.md"]'),
         `${skill} is a light skill — its # Load requires the glossary and nothing else`,
       );
+      assert.ok(text.length <= 15 * 1024, `${skill} must stay under 15 KB, it is ${text.length} bytes`);
       assert.equal(
         text,
         await fs.readFile(path.join(root, `.agents/skills/${skill}/SKILL.md`), "utf8"),

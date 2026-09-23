@@ -28,8 +28,9 @@ Anyone who works with coding agents keeps hitting the same failure modes:
 4. **A persistent FLOW.** Every task lives in its own folder, `Flows/<TASK>/FLOW.md`: raw request, confirmed contract, research findings, plan, decisions, disproven hypotheses, attempted-and-dropped approaches, progress, acceptance checks. Any future session resumes from that file instead of from memory.
 5. **Nothing is recorded without its ground.** Every finding and every decision carries a dated `:verified-by` line saying how it was established — ran it and watched, read the source, the documentation says so, or nothing but a hunch. On the second pass a guess no longer reads like a measurement.
 6. **Options come rated.** Whenever the agent offers you a choice, each option carries a confidence number: how likely *it* is the right decision. Evidence quality is a separate axis, and the two are never collapsed into one figure.
-7. **Deep research when there is no fast answer.** For questions that only have trade-offs, a second skill runs a source-verified pass: real sources first, the agent's own knowledge last, and a trade-off map instead of a manufactured recommendation.
-8. **A cascade when the change is not small.** A task the agent cannot carry out minimally takes a longer road: a self-contained context document, then the algorithm and its data with no method names, then the pseudocode of the future class, and only then code — as a translation. Every stage runs in a fresh agent from the task folder alone; in step mode each artifact is approved before the next one exists, in auto mode the agent runs to a limit and comes back with a narrative of what it decided.
+7. **You read the chat, not the files.** Every stop that waits for your word is one screen of prose — what will change for whoever uses the product, what will change in the code in plain words, and what the agent is not sure of — followed by numbered questions with lettered, rated options. You answer `1A, 2B, 3 — as you propose`, or through your harness's own choice dialog where it has one. The numbers run through the whole task and are the ids of the decision register, so `3A` means the same thing a week later; a question already answered comes back only as *"in question 3 you chose A — now Y is known; keep A?"*. After every answer the agent reads the register back from the file and tells you in one line what it now says. The files are for the agents.
+8. **Deep research when there is no fast answer.** For questions that only have trade-offs, a second skill runs a source-verified pass: real sources first, the agent's own knowledge last, and a trade-off map instead of a manufactured recommendation.
+9. **A cascade for a large refactoring or a new system.** When the algorithm has to be invented, or a large body of code restructured, the task takes a short chain of standalone skills: survey the code with the project's own tools, optionally source the rules from their primary texts, agree the algorithm, agree the structure of the code, translate it in a fresh agent, review by running the project's checks. Each skill also works alone.
 
 ## What a session looks like
 
@@ -81,7 +82,7 @@ That promise belongs to the CLI. Writing into a document your project owns is a 
 
 ## Using it with Claude Code
 
-With `--tools claude`, your project gets six skills and nine slash commands:
+With `--tools claude`, your project gets eleven skills and fifteen slash commands:
 
 | Command | What it does |
 | --- | --- |
@@ -90,7 +91,13 @@ With `--tools claude`, your project gets six skills and nine slash commands:
 | `/sdd-flow:close` | Check every acceptance meter; archive the FLOW only when all of them pass. |
 | `/sdd-flow:promote <rule>` | Lift a rule that matured in this project into the canon, delta first. |
 | `/sdd-research <question>` | Run a source-verified research pass and return a trade-off map. |
-| `/sdd-cascade [stage\|auto]` | Launch one stage of the cascade in a fresh runner; `auto` runs the cascade to a limit and returns a narrative; with no argument, propose the next stage. |
+| `/sdd-sources <rules or problem>` | The light research: the primary source of every rule a design leans on, and whether a ready solution exists. |
+| `/sdd-cascade [task]` | Carry a large refactoring or a new system through survey, algorithm, structure, translation and review; resume one in progress. |
+| `/sdd-survey <task>` | Survey the code with the project's own tools first — through its generated tool skills — grep last and only with a reason. |
+| `/sdd-tools [change\|remove\|check]` | Turn the project's search tools into generated skills, one per kind of question, and keep their registry. |
+| `/sdd-structure <algorithm>` | Turn an agreed algorithm into the structure of the code — the one document a translator reads. |
+| `/sdd-translate <structure>` | Write the code from a structure document in a fresh agent, alone or in parallel parts. |
+| `/sdd-review <change>` | Check a change by running the project's meters and checks against every acceptance row. |
 | `/sdd-sketch <what it is about>` | Work out a small algorithm as one Clojure document, in this session; when you agree to it, ask what happens next. |
 | `/sdd-lift [bound\|clean] <what to lift>` | Lift the algorithm out of existing code into a Clojure document a person can read — with a code map beside it, or without. |
 | `/sdd-project-init` | Survey this project and integrate the framework with what it already has. |
@@ -101,7 +108,7 @@ The skills also trigger implicitly: describe an engineering task in normal conve
 
 With `--tools codex`, your project gets the same skills in Codex's native format (`.agents/skills/`):
 
-- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade s1`, `$sdd-algorithm-sketch how do we pick the next tile`, `$sdd-algorithm-lift clean the generated mesh builder`, or `$sdd-project-init`
+- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade`, `$sdd-code-survey`, `$sdd-tool-skills`, `$sdd-code-structure`, `$sdd-code-translation`, `$sdd-code-review`, `$sdd-algorithm-sketch how do we pick the next tile`, `$sdd-algorithm-lift clean the generated mesh builder`, or `$sdd-project-init`
 - **Implicit**: Codex selects the skill automatically when your task matches its description.
 
 ## What gets installed
@@ -118,13 +125,9 @@ your-project/
 │   ├── templates/
 │   │   ├── FLOW.md                 #   template for new FLOW documents
 │   │   ├── RESEARCH.md             #   template for a trade-off research document
-│   │   ├── CONTEXT.md              #   template for the cascade's self-contained context
-│   │   ├── S1.md                   #   template for s1: the algorithm and its data
-│   │   ├── S2.md                   #   template for s2: the class pseudocode, slices, read-back, converge, verdict
-│   │   ├── CALIBRATION.md          #   skeleton for the project's calibration ledger
 │   │   └── PROJECT.md              #   skeleton for your project adapter
-│   ├── cards/                      #   one card per cascade stage, cut from the skill — what a stage runner reads
-│   ├── project.md                  #   YOUR adapter (yours; unmanaged, optional)
+│   ├── project.md                  #   YOUR adapter — tools as orders, traps (yours; unmanaged, optional)
+│   ├── tool-skills.md              #   YOUR registry of generated tool skills (yours; unmanaged)
 │   ├── config.json                 #   your settings (yours; never overwritten)
 │   └── manifest.json               #   checksums of managed files
 ├── .claude/                        # only with --tools claude
@@ -134,11 +137,11 @@ your-project/
 │   ├── skills/sdd-cascade/SKILL.md
 │   ├── skills/sdd-algorithm-sketch/SKILL.md
 │   ├── skills/sdd-algorithm-lift/SKILL.md
+│   ├── skills/sdd-code-{survey,structure,translation,review}/SKILL.md
+│   ├── skills/sdd-tool-skills/SKILL.md
+│   ├── skills/tool-<question>/SKILL.md  #   YOUR generated tool skills (yours; unmanaged)
 │   ├── commands/sdd-flow/{start,resume,close,promote}.md
-│   ├── commands/sdd-research.md
-│   ├── commands/sdd-cascade.md
-│   ├── commands/sdd-sketch.md
-│   ├── commands/sdd-lift.md
+│   ├── commands/sdd-{research,sources,cascade,survey,tools,sketch,structure,translate,review,lift}.md
 │   └── commands/sdd-project-init.md
 ├── .agents/                        # only with --tools codex
 │   ├── skills/sdd-clojure-flow/{SKILL.md, agents/openai.yaml}
@@ -146,15 +149,14 @@ your-project/
 │   ├── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
 │   ├── skills/sdd-cascade/{SKILL.md, agents/openai.yaml}
 │   ├── skills/sdd-algorithm-sketch/{SKILL.md, agents/openai.yaml}
-│   └── skills/sdd-algorithm-lift/{SKILL.md, agents/openai.yaml}
+│   ├── skills/sdd-algorithm-lift/{SKILL.md, agents/openai.yaml}
+│   ├── skills/sdd-code-{survey,structure,translation,review}/{SKILL.md, agents/openai.yaml}
+│   └── skills/sdd-tool-skills/{SKILL.md, agents/openai.yaml}
 └── Flows/                          # one folder per task
     ├── <TASK>/
-    │   ├── FLOW.md                 #   every task
-    │   ├── CONTEXT.md              #   a cascaded task: what the next stage reads
-    │   ├── S1.md                   #   a cascaded task: the algorithm, approved before s2 exists
-    │   └── S2.md                   #   a cascaded task: the class pseudocode, slices, read-back, converge, verdict
-    ├── Specs/<Subject>.md          #   the living S2 of a subject — the level its code regenerates from
-    ├── CALIBRATION.md              #   the project's ledger: one row per closed cascaded task (yours)
+    │   ├── FLOW.md                 #   every task — the contract, findings, the decision register
+    │   ├── ALGO_<NAME>.md          #   a cascaded task: the agreed algorithm
+    │   └── STRUCTURE_<NAME>.md     #   a cascaded task: the structure — the one document a translator reads
     └── Archive/                    #   completed task folders
 ```
 
@@ -168,7 +170,7 @@ your-project/
 | `sdd-flow diff [dir] [--file path]` | Compare your copy of the canon against the installed version. |
 | `sdd-flow unlink [dir] [--file path]` | Strip sdd-flow marked blocks from documents you own. |
 | `sdd-flow uninstall [dir]` | Remove unmodified managed files; keep your config and FLOWs. |
-| `sdd-flow lint <path> [--text]` | Lint a task folder, artifact file, or living S2 into its diagnostics and report. |
+| `sdd-flow lint <path> [--text]` | Check the Clojure forms of a task folder or one document: parse errors, duplicate keys, open values, malformed conditionals — and the decision register: an option without a letter or a rating, a chosen letter no option carries, a confirmed answer without your words, a revisit without its new fact. |
 
 `update` and `init` fail loudly if you modified a managed file, and `--force` is the explicit way to overwrite. `uninstall` is atomic: if anything was modified, nothing is removed.
 
@@ -239,41 +241,34 @@ Some questions have no correct answer, only a pool of trade-offs: how to generat
 
 The result is a `RESEARCH_<TOPIC>.md` document in the task folder (or under `Flows/` when nothing asked for it), linked from the FLOW that asked for it and archived alongside it. Reaching outside stays gated: the search area is named and confirmed first, and after the second confirmed pass the agent asks whether it may keep searching without checking in each time.
 
+`/sdd-sources` is the light mode of the same skill. It draws no map: for every rule a design leans on it finds the primary source — the book and the chapter, the official document and its section, never "the common understanding of" a principle — and for the problem itself, whether an engine feature or a library already solves it, with the cost to adopt set against the cost to build.
+
 ## When the change is not small
 
-Some changes cannot be made minimally: a multi-step refactoring, a system with a real algorithm inside, a large body of generated code, a data mutation under stated requirements. For those the agent proposes the **cascade** at normalization — a `:path :cascade` on the task map, rated like any other option — and you confirm it at the ordinary gate.
+A large refactoring, or a new system whose algorithm has to be invented, takes the **cascade** — proposed at normalization as `:path :cascade`, rated like any other option, confirmed by you at the ordinary gate. Integrating something that already exists — an engine feature, a library — stays a direct task however large it is.
 
-The cascade is a chain of artifacts, each derived from the previous one **with no context beyond the document itself**:
+The cascade is not a monolith. It is a short chain of skills, each of which also works on its own:
 
 ```clojure
-(-> FLOW.md      ;; the goal, the contract, the plan — as for every task
-    CONTEXT.md   ;; everything the next stage needs: code references, search targets, facts with provenance, out of scope, verification
-    S1.md        ;; the algorithm and its data, no method names — approved
-    S2.md        ;; the pseudocode of the future class, every structure with its type — approved; then slices, read-back, converge, verdict
-    code)        ;; a translation of S2.md, and only a translation
+(-> survey      ;; /sdd-survey — what the code and the project already say, found with the project's own tools first
+    sources     ;; /sdd-sources — optional: the primary source of every rule the design leans on, and whether a ready solution exists
+    algorithm   ;; /sdd-sketch — the one-phrase spine of steps and its data, agreed with you
+    structure   ;; /sdd-structure — the entry point, methods, data with its lifetime; the one document written for another agent
+    translation ;; /sdd-translate — the code, written in a fresh agent from the structure alone; parallel parts as an option
+    review)     ;; /sdd-review — the project's meters and checks against every acceptance row; the behavior verdict
 ```
 
-Every stage runs in a **stage runner** — a fresh agent launched from your session for that one stage. It reads its input artifact and the files that artifact names, nothing from any conversation, writes its artifact, and reports back where it wrote and what waits at the gate. Before every launch the agent asks you which model runs the stage; it never assumes one. `/sdd-cascade s1`, `/sdd-cascade s2`, `/sdd-cascade code`, `/sdd-cascade read-back`; with no stage, `/sdd-cascade` reads the task folder and proposes the next one. Two gates are yours: after s1 the subject is the algorithm, after s2 the structure of the code. Read-back rereads every touched file as a stranger before anything is called done, and `converge` can be run at any later time to classify every s2 entry against the code as present, partial, contradicting or unrequested — the drift meter that tells you whether the product still derives from this level.
+Everything up to the structure runs in your session: the survey, the algorithm and the structure are discussions, and a discussion that crosses agent boundaries loses decisions. Only the code is written in another session, where every edit carries the structure document instead of the whole conversation. Three gates are yours — after the survey's findings, after the algorithm, after the structure — and a failed review names the level it returns to: the survey, the algorithm, the structure or the code.
 
-`/sdd-cascade auto` is the other mode. You name the limit — s2 by default, or code — and the model for every stage in one batch; a curator agent then launches one runner per stage in order, without stopping at your gates. Wherever a gate would have asked you, the stage closes the question itself with a rated entry marked `:auto-decided`, the highest rating winning. At the limit the curator comes back and your session tells you the story: what the context stage established, which algorithm s1 chose, which structure s2 chose, every decision it took and how it rated the alternatives, how the result will look — and then asks how the code should be written. Your answer is the s2 gate: any decision can be vetoed there.
+Two things hold the chain together. The **decision register** — `# Decisions` of the task's FLOW — gives every question its number before it is asked, and every step reads it first, so an answered question is never asked again as if new; after each write it is read back and linted. The **tool skills** turn a project's own tools into orders the agent meets at the moment it chooses how to search. A tool listed in a file the agent read once is a suggestion; a skill's description stands in its context every turn. `/sdd-tools` scans what the session and the project offer — MCP servers, skills, the CLIs your documents name — asks you what it missed, checks every tool with one real call, and generates five to eight small skills, one per kind of question: *who calls this symbol*, *who writes this component*, *where is this asset used*. Each names the question, orders the tool, says why it beats grep, and shows the call that worked. They are listed in `.sdd-flow/tool-skills.md`, so any of them can be changed, re-checked or removed. The survey reaches for them first, says why whenever it greps instead, and reports how many findings the tools answered — the number that shows whether they are used. No hook enforces them yet; if the grep count stays high, that is the next step.
 
-The code stage has two shapes. One runner translates all of S2.md, or the translation is sliced: every s2 ends with a `# Slices` proposal, rated against the one-runner option, where no two slices write the same file. You choose at the s2 gate; the slices then run in waves by their declared dependencies, each a fresh agent with the model you named, every slice is checked against S2.md the moment it reports, the project's meters run once over all of them, and read-back is always one runner over every touched file — the story does not split.
-
-Once a subject has been through the cascade, its S2 outlives the task: at close, after converge reads clean, it becomes the subject's **living S2** in `Flows/Specs/<Subject>.md`. The next cascade on the same subject reads that file and writes only a delta — entries marked added, changed or removed — which a merge stage folds in at close, so converge from then on measures the code against one file, the level the subject regenerates from. Auto mode has a bar: a decision the stage cannot rate above sixty, or where two options sit within ten points, does not decide on its own; the curator stops and the story arrives early with that question. Every runner reports what it had to guess, the context document has a place for the traps of your codebase, and every closed task writes one row into `Flows/CALIBRATION.md` — the run's meters and whether each rated option held — so the rule "a signal twice in a row" is read from one file.
-
-Two verdicts close a cascaded task, never one. **Conformance** says the code still derives from the approved S2: converge classifies every entry as present, partial, absent, contradicting, unrequested or deferred, and it is clean only when every entry is accounted for and nothing but present and deferred remains. **Behavior** says the task's acceptance holds. The two are independent: a faithful translation of a flawed algorithm is clean and fails, and the fix returns to the algorithm, never to the code. Every failure names the level to revisit — context, s1, s2 or code. An entry you leave for later is a confirmed amendment the entry points at; merge skips it, so the living S2 always says what the code is, and the ledger records for every rated decision both whether it held and whether a failure traced to it.
-
-`sdd-flow lint <path>` reads a task folder, one artifact or a living S2 and computes what the skill otherwise asks an agent to tally by eye: a key a step reads that no data declares, data nobody uses, a spine step that calls a method that does not exist, two slices writing one file, a delta that changes an entry its base lacks, a converge run that does not account for every entry, a verdict that says clean over a run that is not. It evaluates nothing and judges no prose. An unknown key, section or artifact kind is reported as unverified, never as an error, and on a legacy `CASCADE.md` the rules born after it report as info — the distance from today's template, not a fault. The output is Clojure data an agent reads in the notation; `--text` prints one line per diagnostic; the exit status is 1 only when an error stands. It is plain code: running it costs no tokens.
-
-A stage runner does not read the skill. `sdd-flow init` and `update` cut one **card** per stage out of the one skill file — `.sdd-flow/cards/<stage>.md`, the defs that stage needs, byte for byte — and a runner reads its card, the glossary and the stage's template: a fifth to a third of what it read before, on every launch. The skill stays the only place a rule is edited; a card changed by hand is a modified managed file, and `doctor` says so. Before it reports, a stage runs `sdd-flow lint` on the task folder, fixes what is its own and reports the counts that remain; the counts stand beside the artifact at your gate, and a merge requires lint to exit 0 on the living S2. A need the code discovers enters S2 in one form — the key `:from-code "what the code discovered"` on the entry — so the meter that counts inventions at translation is a count. In a wave of parallel slices a runner writes its own files and nothing shared: FLOW.md and S2.md have one writer, after the wave. And the context document has a `# Build` section — the language, the runtime, how files import each other, the exact test command — so a code runner never guesses the module system from a neighbouring file.
-
-What must survive a regeneration from the artifacts is the algorithmic, structural and behavioral requirements — never the text. The translation rules the skill carries (file order is the order of the story, a step's result is returned rather than hidden in a field, every name is a word of the task, a method is a paragraph of human scale) are marked as hypotheses: a rule becomes a rule when the same signal appears in two runs in a row, and the skill records the calibration of every run.
+0.5.0 retired the staged cascade: the fresh agent per stage, the stage cards, the context document, converge, read-back, the living S2 and the calibration ledger. Their measured cost — runners at 150–270k tokens of context each, documents ten to twenty times the size of the code they produced, runs of several hours — did not pay for what they caught. A folder from the staged cascade is history; an unfinished one is restarted from the survey.
 
 ## When the algorithm is small — or already written
 
-Two lighter tools stand beside the cascade. Both run in your session — no runner, no stages — and both end in one Clojure document, `ALGO_<NAME>.md`: a file from its first version, so it opens in a Clojure editor and survives a compacted context.
+Two lighter tools stand beside the cascade — the first is also its algorithm step. Both run in your session and both end in one Clojure document, `ALGO_<NAME>.md`: a file from its first version, so it opens in a Clojure editor and survives a compacted context.
 
-`/sdd-sketch <what the algorithm is about>` (or `$sdd-algorithm-sketch`) works out a small algorithm before any code: what is made, by which rule, with which structures, and what each step reads and changes — the form of the cascade's s1, without method names. The agent tallies the draft by eye (a step that leaves no named state, a structure nobody uses), attacks it with a contra — why this will *not* work, with rated fixes — and amends the file as you talk. When you say the algorithm is agreed, it asks one question: keep the document, write the code, continue as a cascade, or derive another form. Code and cascade both go back through the lifecycle as an ordinary task map with the document named as a decision; the sketch itself never writes code, so it is not a way around your gates.
+`/sdd-sketch <what the algorithm is about>` (or `$sdd-algorithm-sketch`) works out a small algorithm before any code: what is made, by which rule, with which structures — a spine of one-phrase steps, a branch only where the algorithm really branches, and what a step reads and changes only where its phrase hides it. It is also the cascade's algorithm step. The agent tallies the draft by eye (a step that leaves no named state, a structure nobody uses), attacks it with a contra — why this will *not* work, with rated fixes — and amends the file as you talk. When you say the algorithm is agreed, it asks one question: keep the document, write the code, continue as a cascade, or derive another form. Code and cascade both go back through the lifecycle as an ordinary task map with the document named as a decision; the sketch itself never writes code, so it is not a way around your gates.
 
 `/sdd-lift [bound|clean] <what to lift>` (or `$sdd-algorithm-lift`) goes the other way: code that exists — machine-generated, tangled, or just foreign — and does not read. The agent reads it whole and lifts the algorithm it actually carries out, in the words of the task: not the code respelled in Clojure, no step per method. It is lifted *as it is*; bugs, inaccuracies and dangling tails are flagged in a list of their own, never repaired on the way up. **Bound** adds a code map beside the algorithm — every method accounted for, the step it serves restated in place — for when you want to see how the explanation meets the real code. **Clean** leaves the map out, for when the badly written code is exactly what you want to stop looking at. The algorithm reads the same in both. The priority is you as a reader: every value is one phrase, and a detail that does not fit goes into a note or stays out. The result is the document itself — it names the revision the code was read at and promises nothing after it.
 
@@ -292,7 +287,7 @@ In both, Clojure stays the only source. Ask for another form — a UML activity 
     (:confirm "your fresh go — implementation")
     (cond
       (:direct "only the confirmed scope")
-      (:cascade "CONTEXT, then s1 and its gate, then s2 and its gate, then code, read-back, converge — each stage in a fresh runner; or auto to a limit, then the narrative"))
+      (:cascade "survey and its gate, optional sources, the algorithm and its gate, the structure and its gate — in your session; the code in a fresh agent; then the review"))
     (:accept "every meter at its target")
     (:archive "the task folder moves to Flows/Archive/"))
 ```
@@ -307,7 +302,7 @@ cd sdd-flow
 npm test
 ```
 
-171 tests cover the Clojure reader, document validation, the analyzer, the cards, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
+111 tests cover the Clojure reader, document validation, the form and register checks of lint, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
 
 ## License
 
