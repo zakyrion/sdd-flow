@@ -75,14 +75,14 @@ description: Write the code from an agreed structure document alone, in a fresh 
    :why "derived from few runs; a rule becomes a rule when the same signal appears in two runs in a row"
    :language :neutral
    :order "the entry point first; then its steps in call order, each helper right after its first caller"
-   :plot "the entry point is the table of contents: one line per spine step — var <:as of :out> = <Method>(<its parameters>); no step hidden inside another's argument"
-   :returned "a step's result is returned as a value; a field only for a noun two or more steps write; a temporary is a local, never a field"
+   :plot "when the structure declares multiple spine methods, the entry point is the table of contents: one line per spine step — var <:as of :out> = <Method>(<its parameters>) with no step hidden inside another's argument; when the structure keeps a short linear flow inline, write one direct paragraph without inventing one-use pass-through helpers; for a state machine, branch on the state in the entry method (condition -> method) and never hide a state guard inside a callee"
+   :returned "a step's result is returned as a value; a field is only for state that survives across frames or calls — never store a single-frame hand-over in a field, never fetch a value in the caller only to pass it into one helper, and poll an injected contract's pollable operation directly instead of re-wrapping it"
    :names "every concept name comes from :as or :fields; mechanics names (i, current, next) are free"
-   :paragraph "a method is a paragraph of about forty lines; it splits only into heterogeneous steps; a phase inside a long one is marked by a heading comment"
+   :paragraph "a method is a paragraph of up to about forty lines; extract a helper only when reused, when naming a heterogeneous phase or state branch whose name says what its lines do not, or when the caller would pass forty lines; mark an internal phase of a long method with a heading comment"
    :primitive "a mechanic repeated three or more times becomes a named primitive; fewer stay inline"
    :guards "a branch the findings proved impossible does not exist; a guard that must exist throws with the invariant's text; a silent return only for the entry point's exits"
    :lifetime "one place of release per structure, chosen by :lives; release never drives indentation"
-   :comments "two-tier for RAG and symbol navigation: every declared type and public contract or entry-point method (except Dispose, Equals, one-line getters, and trivial interface overrides whose summary stands on the interface) carries a concise 1-2 sentence doc summary on the declaration stating its domain role, intent (# Subject :why), and contract (:does) — updated in the same diff, with no <param>/<returns> tag bloat; private methods and internal helpers carry a comment only for a non-obvious why or invariant the name and signature cannot show"})
+   :comments "two-tier for RAG and symbol navigation: every declared type and public contract or entry-point method (except Dispose, Equals, one-line getters, and trivial interface overrides whose summary stands on the interface) carries a concise 1-2 sentence doc summary on the declaration — sentence one states its purpose in the product (what callers or the domain get from it, from # Subject :why), sentence two states its mechanism and contract (:does), because mechanism alone never stands in for purpose; updated in the same diff with no <param>/<returns> tag bloat; private methods and internal helpers carry a comment only for a non-obvious why or invariant the name and signature cannot show"})
 ```
 
 ```clojure

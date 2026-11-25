@@ -369,6 +369,20 @@ function checkRegisterEntry(node, fence, diagnostics) {
       "a confirmed entry carries no :verified-by quoting the owner",
     );
   }
+  if (
+    status.type === "keyword" &&
+    status.value === ":open" &&
+    chosen !== null &&
+    !(chosen.type === "symbol" && chosen.value === "?")
+  ) {
+    addDiagnostic(
+      diagnostics,
+      ":register/chosen-open",
+      fence.document.path,
+      lineOf(fence, node),
+      "an :open register entry already carries :chosen — close :status to :confirmed or :auto",
+    );
+  }
 }
 
 function isRating(node) {

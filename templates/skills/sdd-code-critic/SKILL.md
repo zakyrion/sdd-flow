@@ -38,7 +38,7 @@ description: Audit written code in a fresh subagent against the 5W OPORD and neg
             :criteria "this skill's examples.md and .sdd-flow/rejections.md when present"}
    :checks #{"whether the code defeats :why with a local shortcut or touches :off-limits"
              "whether any changed block matches a :bad-code / :human-opinion pattern in .sdd-flow/rejections.md outside its :acceptable-when boundary"
-             "built-in code anti-patterns in examples.md — hidden spine steps, silent undeclared mutable fields, missing type/entry summaries or <param>/name-restatement doc bloat, swallowed errors"}
+             "built-in code anti-patterns in examples.md — artificial over-decomposition into one-use helpers, state-machine guards hidden inside callees, single-frame hand-over fields, hidden spine steps, silent undeclared mutable fields, missing or mechanism-only type/entry summaries (sentence one must state purpose) or <param>/name-restatement doc bloat, swallowed errors"}
    :boundary "always check :acceptable-when before flagging a match — flag real defects, never nitpick valid simple code"
    :never #{"editing product source files from the critic"
             "passing raw session chat history to the critic subagent"}})
@@ -47,10 +47,9 @@ description: Audit written code in a fresh subagent against the 5W OPORD and neg
 # Verdict
 
 ```clojure
-{:verdict #{:pass :reject}
- :findings "[{:file \"path\" :matched :r-1 :why-bad \"how it violates OPORD or the rejection criterion\" :level #{:code :structure :algorithm}}]"
- :on-reject "sdd-code-review marks a failure at :level and returns the task for fixing before troubling the human operator"
- :on-pass "sdd-code-review proceeds to the human operator check"}
+{:first-token "#{:pass :reject} — ALWAYS the very first token of the critic's response"
+ :on-pass "reply with the bare token :pass alone — zero findings, zero commentary, zero non-blocking nits; sdd-code-review proceeds to the human operator check"
+ :on-reject "start with the token :reject followed immediately by [{:file \"path\" :matched :r-1 :why-bad \"one sentence: how it violates OPORD or the rejection criterion\" :level #{:code :structure :algorithm}}] with no prose preamble; sdd-code-review marks a failure at :level and returns the task for fixing before troubling the human operator"}
 ```
 
 # Record

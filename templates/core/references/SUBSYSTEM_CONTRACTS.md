@@ -120,7 +120,7 @@
 
 ```clojure
 (def code-structure
-  {:is "the structure of the code an agreed algorithm becomes — the entry point as a table of contents, the methods, the data with its lifetime and types — and the one document written for another agent"
+  {:is "the structure of the code an agreed algorithm becomes — inline paragraphs for short linear flows, explicit state-branch or phase tables for multi-step flows, the data with its lifetime and types — and the one document written for another agent"
    :skill "sdd-code-structure — also reachable as /sdd-structure"
    :reads "the agreed algorithm, the findings, the register"
    :runs-in "the current session — no runner"
@@ -145,7 +145,7 @@
   {:is "an adversarial check run in a fresh subagent over the diff, the 5W OPORD, and the project's operator-rejection log — keeping negative examples out of the generator"
    :skill "sdd-code-critic — also reachable as /sdd-critic"
    :modes #{:audit :record :categorize}
-   :audit "runs in a fresh subagent before the human operator check in sdd-code-review: reads only the 5W OPORD, the diff, sdd-code-critic/examples.md, and .sdd-flow/rejections.md; returns {:verdict #{:pass :reject} :findings [...]}"
+   :audit "runs in a fresh subagent before the human operator check in sdd-code-review: reads only the 5W OPORD, the diff, sdd-code-critic/examples.md, and .sdd-flow/rejections.md; always starts its reply with the literal token :pass (bare, zero commentary) or :reject followed immediately by [{:file :matched :why-bad :level}]"
    :record "whenever the critic passed code that the human operator then rejects, appends {:id :at :category :opord {:why :goal :where} :details [{:human-opinion :bad-code :acceptable-when}]} to .sdd-flow/rejections.md"
    :categorize "clusters .sdd-flow/rejections.md by :category (when any category exceeds 4 entries or on /sdd-critic categorize), proposes deterministic lint promotion where possible, and narrows each semantic category to 3-4 canonical cases — never generic text compaction"
    :log ".sdd-flow/rejections.md — owned by the project outside manifest.json; update and uninstall never touch it"

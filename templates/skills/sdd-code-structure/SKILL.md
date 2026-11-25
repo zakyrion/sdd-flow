@@ -45,7 +45,7 @@ description: Turn an agreed algorithm into the structure of the code — the ent
 # Structure
 
 ```clojure
-{:spine "the entry point's :flow is the table of contents: one step per line, each {:calls Method :out :key}; guards and lifetime lines are not steps"
+{:spine "for a multi-phase algorithm, the entry point's :flow is the table of contents: one step per line, each {:calls Method :out :key}; for a short linear sequence (< ~35 lines, each step used once), keep the steps inline in the entry method instead of inventing one-use helpers; for a state machine, branch on the state in the entry method (condition -> method, one line per state) with zero state re-checks inside callees"
  :method {:does "what, in one phrase — one deed"
           :in "the keys it reads"
           :out "the key it returns, or :none"
@@ -61,12 +61,14 @@ description: Turn an agreed algorithm into the structure of the code — the ent
         :as "the name in code"
         :lives "#{:run :external EntryPoint Method} — (def cascade-fields :lives)"
         :holds "what lies in it"}
- :from-algorithm "every structure of the algorithm's :data has an entry here; a step of the algorithm is a method, a phase of one, or shares one — decided here, and the choice is visible in :does"}
+ :from-algorithm "every structure of the algorithm's :data has an entry here; a step of the algorithm is a method, a phase of one, or stays inline in the entry paragraph — decided here, and the choice is visible in :does"}
 ```
 
 ```clojure
 (def laws  ;; what made the structure pay in earlier runs
-  {:returned "a step gives its result as a value; several results are one record named from the task; a field only for a noun two or more steps write"
+  {:returned "a step gives its result as a value; several results are one record named from the task; a field only for state that survives across frames or calls"
+   :inline "extract a private method only when called from two or more places, when naming a state-machine branch or heterogeneous phase whose name says what its lines do not, or when the caller would pass about forty lines; never wrap a two-line assignment or an already pollable handle/task in a pass-through helper"
+   :locality "a value read by one step is fetched inside that step, never looked up in the caller just to pass down; a single-frame hand-over between two steps is a local or return value, never an instance field"
    :lifetime "every structure has exactly one place of release, chosen by :lives — the owner's constructor to its release for :run, the paragraph for a method's local, the entry point for what it received"
    :names "every concept name in the code comes from :as or :fields here — the translation invents no synonyms"
    :pair "two collections synchronous by index are an unborn record — born here"

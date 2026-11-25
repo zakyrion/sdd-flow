@@ -19,11 +19,17 @@
              :bad-code "RetryQueue imports SmtpAlertClient directly instead of publishing RetryExhaustedNotice"
              :acceptable-when "OPORD :decided explicitly chose inline synchronous delivery"}]}
 
+ {:id :builtin-over-decomposition
+  :category :over-decomposition
+  :details [{:human-opinion "Split a short 15-line linear entry method into one-use helpers whose names restate two lines of code, or hid state-machine guards ('if (_state != X) return;') inside callees instead of branching on state in the entry method."
+             :bad-code "public void Initialize() { var group = FindGroup(); ConnectGroup(group); } // each helper is 2-6 lines called once"
+             :acceptable-when "a helper is called from two or more places, names a branch of a visible state switch in the entry method (with zero state re-check inside the callee), or keeps the caller under ~40 lines"}]}
+
  {:id :builtin-summary-drift
   :category :doc-summary
-  :details [{:human-opinion "Either omitted the 1-2 sentence role+intent summary on a declared type / public entry point, or spammed <param>/<returns> tags and restated a trivial method's own name."
-             :bad-code "/// <summary>Evicts oldest when full.</summary>\n/// <param name=\"ring\">The ring.</param>"
-             :acceptable-when "concise 1-2 sentence role+intent summary on types and public contract entry points; no comment on self-evident private helpers or Dispose"}]}]
+  :details [{:human-opinion "Omitted the 1-2 sentence summary on a declared type / public entry point, wrote only mechanics without stating in sentence one what callers or the product get from it, or spammed <param>/<returns> tags and restated a method's own name."
+             :bad-code "/// <summary>Once every other worker is off, creates ReadySignal and disables the group.</summary>\n/// <param name=\"group\">The group.</param>"
+             :acceptable-when "sentence one states what callers or the domain get from the type/entry point and sentence two states how it works; no comment on self-evident private helpers or Dispose"}]}]
 ```
 
 # Example: operator rejection entry
@@ -46,9 +52,6 @@
 {:category :hot-path-allocation
  :kept-count 3
  :promoted-to-linter "ban .toArray() inside *System.Update via project arch-check"
- :verdict-sample {:verdict :reject
-                  :findings [{:file "src/Alerts/Dispatcher.ts"
-                              :matched :r-1
-                              :why-bad "allocates a temporary array via .filter() on every tick, violating OPORD :why zero-allocation steady load"
-                              :level :code}]}}
+ :pass-reply ":pass"
+ :reject-reply ":reject [{:file \"src/Alerts/Dispatcher.ts\" :matched :r-1 :why-bad \"allocates a temporary array via .filter() on every tick, violating OPORD :why zero-allocation steady load\" :level :code}]"}
 ```
