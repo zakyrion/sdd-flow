@@ -9,7 +9,7 @@ import {
 import { lint } from "./analyzer.js";
 
 const HELP = `Usage:
-  sdd-flow init [project] --tools codex,claude [--force]
+  sdd-flow init [project] --tools antigravity,claude [--force]
   sdd-flow update [project] [--force]
   sdd-flow doctor [project]
   sdd-flow diff [project] [--file path]...
@@ -42,7 +42,7 @@ export async function main(argv) {
   let result;
   if (parsed.command === "init") {
     if (!parsed.tools) {
-      throw new Error("init requires --tools codex,claude");
+      throw new Error("init requires --tools antigravity,claude");
     }
     result = await initProject(parsed.project, parsed.tools, {
       force: parsed.force,

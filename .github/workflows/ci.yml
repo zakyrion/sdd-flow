@@ -21,7 +21,7 @@ jobs:
       - name: Smoke-test the CLI lifecycle
         run: |
           SMOKE="$(mktemp -d)"
-          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" init "$SMOKE" --tools claude,codex
+          node "$GITHUB_WORKSPACE/bin/sdd-flow.js" init "$SMOKE" --tools claude,antigravity
           node "$GITHUB_WORKSPACE/bin/sdd-flow.js" doctor "$SMOKE"
           node "$GITHUB_WORKSPACE/bin/sdd-flow.js" update "$SMOKE"
           node "$GITHUB_WORKSPACE/bin/sdd-flow.js" uninstall "$SMOKE"

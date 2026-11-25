@@ -32,6 +32,14 @@ const CORE_FILES = [
     ".sdd-flow/references/CLOJURE_NOTATION.md",
   ],
   [
+    "templates/core/references/ARTIFACT_FIELDS.md",
+    ".sdd-flow/references/ARTIFACT_FIELDS.md",
+  ],
+  [
+    "templates/core/references/SUBSYSTEM_CONTRACTS.md",
+    ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md",
+  ],
+  [
     "templates/core/references/EXAMPLES.md",
     ".sdd-flow/references/EXAMPLES.md",
   ],
@@ -57,6 +65,15 @@ const CODE_SKILLS = [
   "sdd-code-review",
   "sdd-tool-skills",
 ];
+const ALL_SKILLS = [
+  "sdd-clojure-flow",
+  "sdd-deep-research",
+  "sdd-project-init",
+  "sdd-cascade",
+  "sdd-algorithm-sketch",
+  "sdd-algorithm-lift",
+  ...CODE_SKILLS,
+];
 const CODE_COMMANDS = [
   "sdd-survey",
   "sdd-sources",
@@ -65,133 +82,26 @@ const CODE_COMMANDS = [
   "sdd-review",
   "sdd-tools",
 ];
-const CODEX_FILES = [
-  [
-    "templates/skills/sdd-clojure-flow/SKILL.md",
-    ".agents/skills/sdd-clojure-flow/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-clojure-flow/agents/openai.yaml",
-    ".agents/skills/sdd-clojure-flow/agents/openai.yaml",
-  ],
-  [
-    "templates/skills/sdd-deep-research/SKILL.md",
-    ".agents/skills/sdd-deep-research/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-deep-research/agents/openai.yaml",
-    ".agents/skills/sdd-deep-research/agents/openai.yaml",
-  ],
-  [
-    "templates/skills/sdd-project-init/SKILL.md",
-    ".agents/skills/sdd-project-init/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-project-init/agents/openai.yaml",
-    ".agents/skills/sdd-project-init/agents/openai.yaml",
-  ],
-  [
-    "templates/skills/sdd-cascade/SKILL.md",
-    ".agents/skills/sdd-cascade/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-cascade/agents/openai.yaml",
-    ".agents/skills/sdd-cascade/agents/openai.yaml",
-  ],
-  [
-    "templates/skills/sdd-algorithm-sketch/SKILL.md",
-    ".agents/skills/sdd-algorithm-sketch/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-algorithm-sketch/agents/openai.yaml",
-    ".agents/skills/sdd-algorithm-sketch/agents/openai.yaml",
-  ],
-  [
-    "templates/skills/sdd-algorithm-lift/SKILL.md",
-    ".agents/skills/sdd-algorithm-lift/SKILL.md",
-  ],
-  [
-    "templates/skills/sdd-algorithm-lift/agents/openai.yaml",
-    ".agents/skills/sdd-algorithm-lift/agents/openai.yaml",
-  ],
-  ...CODE_SKILLS.flatMap((skill) => [
-    [`templates/skills/${skill}/SKILL.md`, `.agents/skills/${skill}/SKILL.md`],
-    [
-      `templates/skills/${skill}/agents/openai.yaml`,
-      `.agents/skills/${skill}/agents/openai.yaml`,
-    ],
-  ]),
-];
-const CLAUDE_FILES = [
-  [
-    "templates/skills/sdd-clojure-flow/SKILL.md",
-    ".claude/skills/sdd-clojure-flow/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-flow/start.md",
-    ".claude/commands/sdd-flow/start.md",
-  ],
-  [
-    "templates/claude/commands/sdd-flow/resume.md",
-    ".claude/commands/sdd-flow/resume.md",
-  ],
-  [
-    "templates/claude/commands/sdd-flow/close.md",
-    ".claude/commands/sdd-flow/close.md",
-  ],
-  [
-    "templates/skills/sdd-deep-research/SKILL.md",
-    ".claude/skills/sdd-deep-research/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-research.md",
-    ".claude/commands/sdd-research.md",
-  ],
-  [
-    "templates/skills/sdd-project-init/SKILL.md",
-    ".claude/skills/sdd-project-init/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-project-init.md",
-    ".claude/commands/sdd-project-init.md",
-  ],
-  [
-    "templates/claude/commands/sdd-flow/promote.md",
-    ".claude/commands/sdd-flow/promote.md",
-  ],
-  [
-    "templates/skills/sdd-cascade/SKILL.md",
-    ".claude/skills/sdd-cascade/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-cascade.md",
-    ".claude/commands/sdd-cascade.md",
-  ],
-  [
-    "templates/skills/sdd-algorithm-sketch/SKILL.md",
-    ".claude/skills/sdd-algorithm-sketch/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-sketch.md",
-    ".claude/commands/sdd-sketch.md",
-  ],
-  [
-    "templates/skills/sdd-algorithm-lift/SKILL.md",
-    ".claude/skills/sdd-algorithm-lift/SKILL.md",
-  ],
-  [
-    "templates/claude/commands/sdd-lift.md",
-    ".claude/commands/sdd-lift.md",
-  ],
-  ...CODE_SKILLS.map((skill) => [
-    `templates/skills/${skill}/SKILL.md`,
-    `.claude/skills/${skill}/SKILL.md`,
-  ]),
+const CLAUDE_COMMAND_FILES = [
+  ["templates/claude/commands/sdd-flow/start.md", ".claude/commands/sdd-flow/start.md"],
+  ["templates/claude/commands/sdd-flow/resume.md", ".claude/commands/sdd-flow/resume.md"],
+  ["templates/claude/commands/sdd-flow/close.md", ".claude/commands/sdd-flow/close.md"],
+  ["templates/claude/commands/sdd-flow/promote.md", ".claude/commands/sdd-flow/promote.md"],
+  ["templates/claude/commands/sdd-research.md", ".claude/commands/sdd-research.md"],
+  ["templates/claude/commands/sdd-project-init.md", ".claude/commands/sdd-project-init.md"],
+  ["templates/claude/commands/sdd-cascade.md", ".claude/commands/sdd-cascade.md"],
+  ["templates/claude/commands/sdd-sketch.md", ".claude/commands/sdd-sketch.md"],
+  ["templates/claude/commands/sdd-lift.md", ".claude/commands/sdd-lift.md"],
   ...CODE_COMMANDS.map((command) => [
     `templates/claude/commands/${command}.md`,
     `.claude/commands/${command}.md`,
   ]),
 ];
+const ANTIGRAVITY_SHARED_MANIFEST = [
+  "templates/antigravity/skills.json",
+  ".agents/skills.json",
+];
+const SKILL_COMPANION_FILES = ["examples.md"];
 
 export function normalizeTools(value) {
   const tools = Array.isArray(value) ? value : String(value).split(",");
@@ -199,10 +109,10 @@ export function normalizeTools(value) {
     .filter(Boolean)
     .sort();
   const unsupported = normalized.filter(
-    (tool) => tool !== "codex" && tool !== "claude",
+    (tool) => tool !== "antigravity" && tool !== "claude",
   );
   if (normalized.length === 0) {
-    throw new Error("--tools requires codex, claude, or both");
+    throw new Error("--tools requires antigravity, claude, or both");
   }
   if (unsupported.length > 0) {
     throw new Error(`unsupported tools: ${unsupported.join(", ")}`);
@@ -510,13 +420,37 @@ export async function desiredFilePaths(tools) {
   return [...(await desiredFiles(normalizeTools(tools))).keys()].sort();
 }
 
+async function skillMappings(targetPrefix) {
+  const mappings = [];
+  for (const skill of ALL_SKILLS) {
+    mappings.push([
+      `templates/skills/${skill}/SKILL.md`,
+      `${targetPrefix}/${skill}/SKILL.md`,
+    ]);
+    for (const companion of SKILL_COMPANION_FILES) {
+      const sourceRel = `templates/skills/${skill}/${companion}`;
+      if (await exists(resolveInside(PACKAGE_ROOT, sourceRel))) {
+        mappings.push([sourceRel, `${targetPrefix}/${skill}/${companion}`]);
+      }
+    }
+  }
+  return mappings;
+}
+
 async function desiredFiles(tools) {
   const mappings = [...CORE_FILES];
-  if (tools.includes("codex")) {
-    mappings.push(...CODEX_FILES);
+  const hasClaude = tools.includes("claude");
+  const hasAntigravity = tools.includes("antigravity");
+  if (hasClaude) {
+    mappings.push(...(await skillMappings(".claude/skills")));
+    mappings.push(...CLAUDE_COMMAND_FILES);
   }
-  if (tools.includes("claude")) {
-    mappings.push(...CLAUDE_FILES);
+  if (hasAntigravity) {
+    if (hasClaude) {
+      mappings.push(ANTIGRAVITY_SHARED_MANIFEST);
+    } else {
+      mappings.push(...(await skillMappings(".agents/skills")));
+    }
   }
 
   const desired = new Map();

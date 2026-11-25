@@ -18,8 +18,8 @@ test("every RULES row id is unique", () => {
   assert.equal(new Set(ids).size, ids.length);
 });
 
-test("RULES keeps the nineteen form and register rules and nothing of the retired schemas", () => {
-  assert.equal(RULES.length, 19);
+test("RULES keeps the twenty-two form, register, tally and provenance rules and nothing of the retired schemas", () => {
+  assert.equal(RULES.length, 22);
   for (const retired of [":schema/", ":s1/", ":s2/", ":spine/", ":slices/", ":delta/", ":converge/", ":verdict/", ":gate/unknown-contra"]) {
     assert.ok(!RULES.some((row) => row.rule.startsWith(retired)), `a retired rule ${retired} is still in the catalogue`);
   }

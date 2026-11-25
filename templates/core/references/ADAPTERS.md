@@ -16,14 +16,14 @@
    :entry-point :lifecycle ;; the other skills are reached through it, or called by name
    :handoff "the lifecycle skill asks permission before switching the research, the sketch or the lift skill on; the survey is the research's own first leg; the cascade runs its chain of skills in order"
    :project-core ".sdd-flow/"
-   :read-order [".sdd-flow/references/CLOJURE_NOTATION.md"
-                ".sdd-flow/references/EXAMPLES.md"
-                ".sdd-flow/FLOW_CONTRACT.md"
-                ".sdd-flow/templates/FLOW.md"
-                ".sdd-flow/references/ADAPTERS.md"]
+   :startup-read [".sdd-flow/references/CLOJURE_NOTATION.md"]
    :then (when (project-adapter-present? ".sdd-flow/project.md")
-           (:then (read! ".sdd-flow/references/PROJECT_ADAPTER.md")
-                  (read-last! ".sdd-flow/project.md")))
+           (:then (read-last! ".sdd-flow/project.md")))
+   :lazy-reads {:gated-flow [".sdd-flow/FLOW_CONTRACT.md" ".sdd-flow/templates/FLOW.md"]
+                :subsystems ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"
+                :artifact-fields ".sdd-flow/references/ARTIFACT_FIELDS.md"
+                :examples ".sdd-flow/references/EXAMPLES.md"
+                :adapter-authoring [".sdd-flow/references/PROJECT_ADAPTER.md" ".sdd-flow/references/ADAPTERS.md"]}
    :agent-docs #{"AGENTS.md" "CLAUDE.md"}
    :never "edit project agent docs during install, update, or uninstall"})
 ```
@@ -56,39 +56,29 @@
    :absent "every skill runs on framework defaults, byte for byte as before the seam existed"})
 ```
 
-# Codex
+# Antigravity
 
 ```clojure
-{:agent Codex
- :adapter #{".agents/skills/sdd-clojure-flow/SKILL.md"
-            ".agents/skills/sdd-deep-research/SKILL.md"
-            ".agents/skills/sdd-project-init/SKILL.md"
-            ".agents/skills/sdd-cascade/SKILL.md"
-            ".agents/skills/sdd-algorithm-sketch/SKILL.md"
-            ".agents/skills/sdd-algorithm-lift/SKILL.md"
-            ".agents/skills/sdd-code-survey/SKILL.md"
-            ".agents/skills/sdd-code-structure/SKILL.md"
-            ".agents/skills/sdd-code-translation/SKILL.md"
-            ".agents/skills/sdd-code-review/SKILL.md"
-            ".agents/skills/sdd-tool-skills/SKILL.md"}
- :interface #{".agents/skills/sdd-clojure-flow/agents/openai.yaml"
-              ".agents/skills/sdd-deep-research/agents/openai.yaml"
-              ".agents/skills/sdd-project-init/agents/openai.yaml"
-              ".agents/skills/sdd-cascade/agents/openai.yaml"
-              ".agents/skills/sdd-algorithm-sketch/agents/openai.yaml"
-              ".agents/skills/sdd-algorithm-lift/agents/openai.yaml"
-              ".agents/skills/sdd-code-survey/agents/openai.yaml"
-              ".agents/skills/sdd-code-structure/agents/openai.yaml"
-              ".agents/skills/sdd-code-translation/agents/openai.yaml"
-              ".agents/skills/sdd-code-review/agents/openai.yaml"
-              ".agents/skills/sdd-tool-skills/agents/openai.yaml"}
- :invocation {:implicit "skill auto-invocation by description"
-              :explicit #{"$sdd-clojure-flow" "$sdd-deep-research" "$sdd-project-init" "$sdd-cascade"
-                          "$sdd-algorithm-sketch" "$sdd-algorithm-lift"
-                          "$sdd-code-survey" "$sdd-code-structure" "$sdd-code-translation" "$sdd-code-review"
-                          "$sdd-tool-skills"}}
- :commands :not-required
- :choice-dialog "request_user_input when the turn lists it — Plan mode today — up to three questions per call; without it, the numbered questions in prose"}
+{:agent Antigravity
+ :paired {:when "installed alongside ClaudeCode (--tools antigravity,claude)"
+          :manifest ".agents/skills.json — points at .claude/skills so every framework skill and project skill is discovered once without duplicating files"}
+ :standalone {:when "installed alone (--tools antigravity)"
+              :skills #{".agents/skills/sdd-clojure-flow/SKILL.md"
+                        ".agents/skills/sdd-deep-research/SKILL.md"
+                        ".agents/skills/sdd-project-init/SKILL.md"
+                        ".agents/skills/sdd-cascade/SKILL.md"
+                        ".agents/skills/sdd-algorithm-sketch/SKILL.md"
+                        ".agents/skills/sdd-algorithm-lift/SKILL.md"
+                        ".agents/skills/sdd-code-survey/SKILL.md"
+                        ".agents/skills/sdd-code-structure/SKILL.md"
+                        ".agents/skills/sdd-code-translation/SKILL.md"
+                        ".agents/skills/sdd-code-review/SKILL.md"
+                        ".agents/skills/sdd-tool-skills/SKILL.md"}}
+ :rules "AGENTS.md and .agents/rules/*.md load automatically into <user_rules> by directory hierarchy — do not re-read AGENTS.md from disk when already injected"
+ :hooks ".agents/hooks.json — project-owned lifecycle hooks (e.g. PreToolUse)"
+ :invocation {:implicit "progressive-disclosure skill activation from name and description"
+              :explicit "naming the skill or workflow intent in prose (Claude .claude/commands/ files are not Antigravity UI slash commands)"}
+ :choice-dialog "ask_question — pass numbered questions with unnumbered options, recommended option first prefixed '(Recommended) <N><Letter> (<0-100>) — ...'; the UI adds numbering and 'Other'"}
 ```
 
 # Claude Code

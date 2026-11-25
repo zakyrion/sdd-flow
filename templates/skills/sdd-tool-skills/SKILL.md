@@ -29,8 +29,8 @@ description: Turn a project's own search tools into small generated skills, one 
               :remove "one generated skill deleted with its registry entry — /sdd-tools remove <skill>"
               :check "every registered skill's call run again; a failing one is marked :stale and shown to the owner"}
  :runs-in "this session"
- :writes #{".claude/skills/<generated>/SKILL.md when the project uses Claude Code"
-           ".agents/skills/<generated>/SKILL.md when the project uses Codex"
+ :writes #{".claude/skills/<generated>/SKILL.md when Claude Code is enabled (also discovered by Antigravity via .agents/skills.json)"
+           ".agents/skills/<generated>/SKILL.md when Antigravity is installed alone"
            ".sdd-flow/tool-skills.md — the registry"}
  :owned-by "the project — generated files stay out of sdd-flow's manifest; update and uninstall never touch them"}
 ```

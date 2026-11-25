@@ -7,6 +7,8 @@ description: Write the code from an agreed structure document alone, in a fresh 
 
 ```clojure
 {:requires [".sdd-flow/references/CLOJURE_NOTATION.md"]
+ :fields ".sdd-flow/references/ARTIFACT_FIELDS.md — read when writing or checking field keys"
+ :examples "examples.md beside this file — read before translating: a complete translation report and entry-point plot traps"
  :light "this file is the whole procedure — the glossary is the only other read"
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))
@@ -32,9 +34,12 @@ description: Write the code from an agreed structure document alone, in a fresh 
 (def launch  ;; what the owner's session does
   {:ask "one question, once: one agent or the parts the structure proposes, and which model — the owner's default first"
    :small "for a change of one paragraph the owner may keep the translation in this session; the rules below hold the same"
-   :prompt #{"the path of the structure document"
-             "the order: read .sdd-flow/references/CLOJURE_NOTATION.md and this skill's # Agent and # Translation, then the structure document whole and the files it writes"
-             "for a part: its name, and that it writes only its own files"}
+   :prompt {:brief "a five-line 5W mission brief {:who :what :when :where :why}"
+            :who "fresh translator for the whole structure or the named :part"
+            :what "read .sdd-flow/references/CLOJURE_NOTATION.md and this skill's # Agent and # Translation, translate STRUCTURE_<NAME>.md, run # Build checks, and return {:written :ran :added :missing}"
+            :when "the wave order — :wave-1 or after all :after parts report"
+            :where "exact path of STRUCTURE_<NAME>.md and the only files this agent may write"
+            :why "the one-line broader intent from # Subject :why"}
    :never-in-prompt "the session's findings, reasoning or answers — what the code needs belongs in the structure document"
    :parts {:waves "every part whose :after have all reported launches together; a part with an empty :after is in the first wave"
            :single-writer "in a wave of more than one part an agent writes its own files and nothing shared; its additions and gaps travel in its report, and the launcher writes them into # Added after the wave"}

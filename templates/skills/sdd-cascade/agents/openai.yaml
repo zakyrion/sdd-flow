@@ -1,4 +1,0 @@
-interface:
-  display_name: "SDD Cascade"
-  short_description: "Survey, algorithm, structure, code, review in a chain"
-  default_prompt: "Use $sdd-cascade to carry this large refactoring through survey, algorithm, structure, translation and review."

@@ -1,3 +1,4 @@
+import { lint } from "../src/analyzer.js";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
@@ -14,7 +15,7 @@ import {
   updateProject,
 } from "../src/core.js";
 
-for (const tools of [["codex"], ["claude"], ["codex", "claude"]]) {
+for (const tools of [["antigravity"], ["claude"], ["antigravity", "claude"]]) {
   test(`init creates exact managed shape for ${tools.join("+")}`, async () => {
     await withFixture(async (root) => {
       const result = await initProject(root, tools);
@@ -54,11 +55,11 @@ test("init fails loud on an unmanaged conflict and force overwrites it", async (
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, "user file\n");
     await assert.rejects(
-      initProject(root, ["codex"]),
+      initProject(root, ["antigravity"]),
       /refusing to overwrite existing files/,
     );
     assert.equal(await fs.readFile(target, "utf8"), "user file\n");
-    await initProject(root, ["codex"], { force: true });
+    await initProject(root, ["antigravity"], { force: true });
     assert.notEqual(await fs.readFile(target, "utf8"), "user file\n");
   });
 });
@@ -69,7 +70,7 @@ test("init refuses managed paths that traverse a symbolic link", async () => {
     await fs.mkdir(linkedDirectory);
     await fs.symlink(linkedDirectory, path.join(root, ".agents"));
     await assert.rejects(
-      initProject(root, ["codex"]),
+      initProject(root, ["antigravity"]),
       /managed path traverses a symbolic link/,
     );
     assert.deepEqual(await fs.readdir(linkedDirectory), []);
@@ -78,13 +79,13 @@ test("init refuses managed paths that traverse a symbolic link", async () => {
 
 test("update is idempotent and drift requires force", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["antigravity", "claude"]);
     const clean = await updateProject(root);
     assert.equal(clean.removed.length, 0);
 
     const target = path.join(
       root,
-      ".agents/skills/sdd-clojure-flow/SKILL.md",
+      ".claude/skills/sdd-clojure-flow/SKILL.md",
     );
     await fs.appendFile(target, "\nmodified by user\n");
     await assert.rejects(updateProject(root), /modified managed files/);
@@ -120,7 +121,7 @@ test("doctor passes clean install and reports drift", async () => {
 
 test("doctor reports a managed path that traverses a symbolic link", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex"]);
+    await initProject(root, ["antigravity"]);
     const relocated = path.join(root, "agents-relocated");
     await fs.rename(path.join(root, ".agents"), relocated);
     await fs.symlink(relocated, path.join(root, ".agents"));
@@ -135,10 +136,10 @@ test("doctor reports a managed path that traverses a symbolic link", async () =>
 
 test("doctor reports invalid manifest schema without continuing into it", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex"]);
+    await initProject(root, ["antigravity"]);
     await fs.writeFile(
       path.join(root, ".sdd-flow/manifest.json"),
-      '{"schemaVersion":1,"tools":["codex"],"managedFiles":[]}\n',
+      '{"schemaVersion":1,"tools":["antigravity"],"managedFiles":[]}\n',
     );
     const report = await doctorProject(root);
     assert.equal(report.ok, false);
@@ -150,7 +151,7 @@ test("doctor reports invalid manifest schema without continuing into it", async 
 
 test("uninstall preserves config, FLOWs, and user files", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["antigravity", "claude"]);
     await fs.writeFile(path.join(root, "Flows/FLOW_KEEP.md"), "user flow\n");
     await fs.writeFile(path.join(root, ".sdd-flow/user-note.txt"), "keep\n");
     await fs.writeFile(path.join(root, "USER.md"), "keep\n");
@@ -168,7 +169,7 @@ test("uninstall preserves config, FLOWs, and user files", async () => {
     assert.equal(await fs.readFile(path.join(root, "USER.md"), "utf8"), "keep\n");
     await fs.access(path.join(root, ".sdd-flow/config.json"));
     await assertMissing(path.join(root, ".sdd-flow/manifest.json"));
-    for (const managedPath of await desiredFilePaths(["codex", "claude"])) {
+    for (const managedPath of await desiredFilePaths(["antigravity", "claude"])) {
       await assertMissing(path.join(root, managedPath));
     }
   });
@@ -176,7 +177,7 @@ test("uninstall preserves config, FLOWs, and user files", async () => {
 
 test("uninstall fails atomically when a managed file was modified", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex"]);
+    await initProject(root, ["antigravity"]);
     const target = path.join(root, ".sdd-flow/FLOW_CONTRACT.md");
     await fs.appendFile(target, "\nuser change\n");
     await assert.rejects(
@@ -184,7 +185,7 @@ test("uninstall fails atomically when a managed file was modified", async () => 
       /nothing was removed/,
     );
     await fs.access(path.join(root, ".sdd-flow/manifest.json"));
-    for (const managedPath of await desiredFilePaths(["codex"])) {
+    for (const managedPath of await desiredFilePaths(["antigravity"])) {
       await fs.access(path.join(root, managedPath));
     }
   });
@@ -212,10 +213,10 @@ test("installed contract carries the post-mortem hardening content", async () =>
       "utf8",
     );
     assert.ok(template.includes("# Disproven"), "FLOW.md missing # Disproven");
-    const notation = await fs.readFile(
-      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
-      "utf8",
-    );
+    const notation =
+      (await fs.readFile(path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/ARTIFACT_FIELDS.md"), "utf8"));
     assert.ok(
       notation.includes("(def output-direction"),
       "CLOJURE_NOTATION.md missing the output-direction mirror",
@@ -286,10 +287,10 @@ test("installed contract carries prior-art research, rated options and provenanc
     assert.ok(template.includes("# Findings"), "FLOW.md missing # Findings");
     assert.ok(template.includes("# Attempted"), "FLOW.md missing # Attempted");
     assert.ok(template.includes(":verified-by"), "FLOW.md missing :verified-by");
-    const notation = await fs.readFile(
-      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
-      "utf8",
-    );
+    const notation =
+      (await fs.readFile(path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/ARTIFACT_FIELDS.md"), "utf8"));
     assert.ok(notation.includes(":name :number"), "CLOJURE_NOTATION.md missing the number form");
     const skill = await fs.readFile(
       path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
@@ -307,7 +308,7 @@ test("installed contract carries prior-art research, rated options and provenanc
 
 test("installed deep research skill carries its procedure", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["claude"]);
     const skill = await fs.readFile(
       path.join(root, ".claude/skills/sdd-deep-research/SKILL.md"),
       "utf8",
@@ -331,14 +332,17 @@ test("installed deep research skill carries its procedure", async () => {
     ]) {
       assert.ok(skill.includes(marker), `deep research SKILL.md missing ${marker}`);
     }
-    assert.equal(
-      skill,
-      await fs.readFile(
-        path.join(root, ".agents/skills/sdd-deep-research/SKILL.md"),
-        "utf8",
-      ),
-      "both adapters must install the same skill text",
-    );
+    await withFixture(async (soloRoot) => {
+      await initProject(soloRoot, ["antigravity"]);
+      assert.equal(
+        skill,
+        await fs.readFile(
+          path.join(soloRoot, ".agents/skills/sdd-deep-research/SKILL.md"),
+          "utf8",
+        ),
+        "standalone antigravity must install the same skill text",
+      );
+    });
 
     const command = await fs.readFile(
       path.join(root, ".claude/commands/sdd-research.md"),
@@ -404,10 +408,10 @@ test("installed research template carries every section", async () => {
 test("installed contract gates research in two passes", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
-    const contract = await fs.readFile(
-      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
-      "utf8",
-    );
+    const contract =
+      (await fs.readFile(path.join(root, ".sdd-flow/FLOW_CONTRACT.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"), "utf8"));
     for (const marker of [
       "(def research-passes",
       "(def deep-research",
@@ -437,16 +441,15 @@ test("installed contract gates research in two passes", async () => {
 
 test("uninstall leaves no deep research directories behind", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["antigravity", "claude"]);
     await fs.access(path.join(root, ".claude/skills/sdd-deep-research"));
-    await fs.access(path.join(root, ".agents/skills/sdd-deep-research/agents"));
+    await fs.access(path.join(root, ".agents/skills.json"));
 
     await uninstallProject(root);
 
     for (const stray of [
       ".claude/skills/sdd-deep-research",
-      ".agents/skills/sdd-deep-research/agents",
-      ".agents/skills/sdd-deep-research",
+      ".agents/skills.json",
       ".claude",
       ".agents",
     ]) {
@@ -458,7 +461,7 @@ test("uninstall leaves no deep research directories behind", async () => {
 
 test("installed cascade skill is a short composer of standalone skills", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["claude"]);
     const skill = await fs.readFile(
       path.join(root, ".claude/skills/sdd-cascade/SKILL.md"),
       "utf8",
@@ -487,37 +490,18 @@ test("installed cascade skill is a short composer of standalone skills", async (
       assert.ok(!skill.includes(retired), `cascade SKILL.md still carries ${retired}`);
     }
     assert.ok(skill.length <= 10 * 1024, `the composer must stay under 10 KB, it is ${skill.length} bytes`);
-    assert.equal(
-      skill,
-      await fs.readFile(
-        path.join(root, ".agents/skills/sdd-cascade/SKILL.md"),
-        "utf8",
-      ),
-      "both adapters must install the same skill text",
-    );
-
     const command = await fs.readFile(
       path.join(root, ".claude/commands/sdd-cascade.md"),
       "utf8",
     );
     assert.ok(command.includes(":command :sdd-cascade"));
     assert.ok(command.includes(".claude/skills/sdd-cascade/SKILL.md"));
-
-    const metadata = await fs.readFile(
-      path.join(root, ".agents/skills/sdd-cascade/agents/openai.yaml"),
-      "utf8",
-    );
-    const shortDescription = /short_description: "([^"]*)"/u.exec(metadata)?.[1] ?? "";
-    assert.ok(
-      shortDescription.length >= 25 && shortDescription.length <= 64,
-      `Codex short_description must be 25-64 characters, got ${shortDescription.length}`,
-    );
   });
 });
 
 test("the staged cascade's templates and cards are no longer installed", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["antigravity", "claude"]);
     for (const retired of [
       ".sdd-flow/templates/CONTEXT.md",
       ".sdd-flow/templates/S1.md",
@@ -533,10 +517,10 @@ test("the staged cascade's templates and cards are no longer installed", async (
 test("installed contract carries the cascade path", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
-    const contract = await fs.readFile(
-      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
-      "utf8",
-    );
+    const contract =
+      (await fs.readFile(path.join(root, ".sdd-flow/FLOW_CONTRACT.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"), "utf8"));
     for (const marker of [
       "(def path",
       ":not-cascade",
@@ -574,10 +558,10 @@ test("installed contract carries the cascade path", async () => {
     for (const field of [":amendment :a-1", ":defers", ":level", ":survey :algorithm :structure :code", ":asked", ":chosen :a", ":round 2", ":new-fact"]) {
       assert.ok(flowTemplate.includes(field), `FLOW.md template missing ${field}`);
     }
-    const notation = await fs.readFile(
-      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
-      "utf8",
-    );
+    const notation =
+      (await fs.readFile(path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/ARTIFACT_FIELDS.md"), "utf8"));
     assert.ok(notation.includes("(def cascade-fields"), "glossary missing the cascade fields");
     for (const reading of [":auto-decided", ":part", ":type \"the real type", ":trap", ":after", ":amendment", ":build", ":lives", ":translation-report", ":review-failure", ":branch", ":step-detail"]) {
       assert.ok(notation.includes(reading), `glossary missing the ${reading} reading`);
@@ -625,17 +609,14 @@ test("update removes what the staged cascade installed", async () => {
 
 test("uninstall leaves no cascade directories behind", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
-    await fs.access(path.join(root, ".claude/skills/sdd-cascade"));
-    await fs.access(path.join(root, ".agents/skills/sdd-cascade/agents"));
+    await initProject(root, ["antigravity"]);
+    await fs.access(path.join(root, ".agents/skills/sdd-cascade/SKILL.md"));
 
     await uninstallProject(root);
 
     for (const stray of [
-      ".claude/skills/sdd-cascade",
-      ".agents/skills/sdd-cascade/agents",
       ".agents/skills/sdd-cascade",
-      ".claude",
+      ".agents/skills",
       ".agents",
     ]) {
       await assertMissing(path.join(root, stray));
@@ -657,9 +638,15 @@ const ALGORITHM_SKILLS = [
       "# Discuss",
       "# Next",
       "# Other form",
+      "examples.md",
       "(def <Name>",
       ":continue-as-a-cascade",
-      "code written from this skill",
+      "no code is written from this skill",
+    ],
+    companionExamples: [
+      "# Example: a state machine",
+      "# Example: a data structure",
+      "# Traps",
     ],
   },
   {
@@ -677,10 +664,15 @@ const ALGORITHM_SKILLS = [
       "# Code map",
       "# Deliver",
       "# Other form",
+      "examples.md",
       "(def <Name>",
       ":axis [:bound :clean]",
       "the code respelled in Clojure",
       ":branch",
+    ],
+    companionExamples: [
+      "# Example: a bound lift with flags and code map",
+      "# Traps",
     ],
   },
   {
@@ -696,12 +688,14 @@ const ALGORITHM_SKILLS = [
   {
     skill: "sdd-code-structure",
     command: "sdd-structure",
-    markers: ["name: sdd-code-structure", "# Document", "# Structure", "# Parts", "# Contra", "# Tally", "# Gate", "(def laws", ":lives"],
+    markers: ["name: sdd-code-structure", "# Document", "# Structure", "# Parts", "# Contra", "# Tally", "# Gate", "examples.md", "(def laws", ":lives"],
+    companionExamples: ["# Example: a multi-file module", "# Traps"],
   },
   {
     skill: "sdd-code-translation",
     command: "sdd-translate",
-    markers: ["name: sdd-code-translation", "# Launch", "# Agent", "# Translation", "(def launch", "(def agent", ":single-writer", ":status :hypothesis", ":why-fresh"],
+    markers: ["name: sdd-code-translation", "# Launch", "# Agent", "# Translation", "examples.md", "(def launch", "(def agent", ":single-writer", ":status :hypothesis", ":why-fresh"],
+    companionExamples: ["# Example: a fresh-agent translation report", "# Traps"],
   },
   {
     skill: "sdd-code-review",
@@ -726,10 +720,10 @@ test("every skill that stops for the owner tells it as the owner's brief", async
   });
 });
 
-for (const { skill, command, markers } of ALGORITHM_SKILLS) {
+for (const { skill, command, markers, companionExamples } of ALGORITHM_SKILLS) {
   test(`installed ${skill} skill carries its procedure and reads the glossary alone`, async () => {
     await withFixture(async (root) => {
-      await initProject(root, ["codex", "claude"]);
+      await initProject(root, ["claude"]);
       const text = await fs.readFile(
         path.join(root, `.claude/skills/${skill}/SKILL.md`),
         "utf8",
@@ -742,12 +736,6 @@ for (const { skill, command, markers } of ALGORITHM_SKILLS) {
         `${skill} is a light skill — its # Load requires the glossary and nothing else`,
       );
       assert.ok(text.length <= 15 * 1024, `${skill} must stay under 15 KB, it is ${text.length} bytes`);
-      assert.equal(
-        text,
-        await fs.readFile(path.join(root, `.agents/skills/${skill}/SKILL.md`), "utf8"),
-        "both adapters must install the same skill text",
-      );
-
       const commandText = await fs.readFile(
         path.join(root, `.claude/commands/${command}.md`),
         "utf8",
@@ -755,20 +743,20 @@ for (const { skill, command, markers } of ALGORITHM_SKILLS) {
       assert.ok(commandText.includes(`:command :${command}`));
       assert.ok(commandText.includes(`.claude/skills/${skill}/SKILL.md`));
 
-      const metadata = await fs.readFile(
-        path.join(root, `.agents/skills/${skill}/agents/openai.yaml`),
-        "utf8",
-      );
-      const shortDescription = /short_description: "([^"]*)"/u.exec(metadata)?.[1] ?? "";
-      assert.ok(
-        shortDescription.length >= 25 && shortDescription.length <= 64,
-        `Codex short_description must be 25-64 characters, got ${shortDescription.length}`,
-      );
+      if (companionExamples) {
+        const examplesText = await fs.readFile(
+          path.join(root, `.claude/skills/${skill}/examples.md`),
+          "utf8",
+        );
+        for (const marker of companionExamples) {
+          assert.ok(examplesText.includes(marker), `${skill} examples.md missing ${marker}`);
+        }
+      }
 
-      const contract = await fs.readFile(path.join(root, ".sdd-flow/FLOW_CONTRACT.md"), "utf8");
+      const contract = await fs.readFile(path.join(root, ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"), "utf8");
       assert.ok(
         contract.includes(`(def ${skill.replace("sdd-", "")}`),
-        `FLOW_CONTRACT.md must mirror the policy of ${skill}`,
+        `SUBSYSTEM_CONTRACTS.md must mirror the policy of ${skill}`,
       );
       const lifecycle = await fs.readFile(
         path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
@@ -780,17 +768,14 @@ for (const { skill, command, markers } of ALGORITHM_SKILLS) {
 
   test(`uninstall leaves no ${skill} directories behind`, async () => {
     await withFixture(async (root) => {
-      await initProject(root, ["codex", "claude"]);
-      await fs.access(path.join(root, `.claude/skills/${skill}`));
-      await fs.access(path.join(root, `.agents/skills/${skill}/agents`));
+      await initProject(root, ["antigravity"]);
+      await fs.access(path.join(root, `.agents/skills/${skill}/SKILL.md`));
 
       await uninstallProject(root);
 
       for (const stray of [
-        `.claude/skills/${skill}`,
-        `.agents/skills/${skill}/agents`,
         `.agents/skills/${skill}`,
-        ".claude",
+        ".agents/skills",
         ".agents",
       ]) {
         await assertMissing(path.join(root, stray));
@@ -913,7 +898,7 @@ test("unlink removes marked blocks and leaves the document otherwise intact", as
 
 test("installed project-init skill carries the survey procedure", async () => {
   await withFixture(async (root) => {
-    await initProject(root, ["codex", "claude"]);
+    await initProject(root, ["antigravity", "claude"]);
     const skill = await fs.readFile(
       path.join(root, ".claude/skills/sdd-project-init/SKILL.md"),
       "utf8",
@@ -931,17 +916,17 @@ test("installed project-init skill carries the survey procedure", async () => {
     }
     await fs.access(path.join(root, ".claude/commands/sdd-project-init.md"));
     await fs.access(path.join(root, ".claude/commands/sdd-flow/promote.md"));
-    await fs.access(path.join(root, ".agents/skills/sdd-project-init/SKILL.md"));
+    await fs.access(path.join(root, ".agents/skills.json"));
   });
 });
 
 test("the contract carries the project seam and the path upward", async () => {
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
-    const contract = await fs.readFile(
-      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
-      "utf8",
-    );
+    const contract =
+      (await fs.readFile(path.join(root, ".sdd-flow/FLOW_CONTRACT.md"), "utf8")) +
+      "\n" +
+      (await fs.readFile(path.join(root, ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"), "utf8"));
     for (const marker of [
       "(def project-adapter",
       "(def coexistence",
@@ -999,3 +984,167 @@ async function assertDirectory(root, relative) {
 async function assertMissing(absolutePath) {
   await assert.rejects(fs.access(absolutePath), { code: "ENOENT" });
 }
+
+
+test("paired claude+antigravity deduplicates via .agents/skills.json while solo antigravity writes .agents/skills", async () => {
+  await withFixture(async (pairedRoot) => {
+    await initProject(pairedRoot, ["claude", "antigravity"]);
+    const skillsJson = JSON.parse(
+      await fs.readFile(path.join(pairedRoot, ".agents/skills.json"), "utf8"),
+    );
+    assert.deepEqual(skillsJson, { entries: [{ path: ".claude/skills" }] });
+    await assertMissing(path.join(pairedRoot, ".agents/skills"));
+  });
+
+  await withFixture(async (soloRoot) => {
+    await initProject(soloRoot, ["antigravity"]);
+    await fs.access(path.join(soloRoot, ".agents/skills/sdd-clojure-flow/SKILL.md"));
+    await assertMissing(path.join(soloRoot, ".agents/skills.json"));
+    await assertMissing(path.join(soloRoot, ".claude"));
+  });
+});
+
+test("codex is rejected and zero codex or openai.yaml artifacts remain in package sources", async () => {
+  await withFixture(async (root) => {
+    await assert.rejects(
+      initProject(root, ["codex"]),
+      /unsupported tools: codex/,
+    );
+  });
+
+  const pkgRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+  const banned = /\bcodex\b|openai\.yaml|request_user_input|\$sdd-/iu;
+  async function checkTree(rel) {
+    const abs = path.join(pkgRoot, rel);
+    const stat = await fs.stat(abs);
+    if (stat.isFile()) {
+      const content = await fs.readFile(abs, "utf8");
+      assert.doesNotMatch(content, banned, `banned Codex token found in ${rel}`);
+      return;
+    }
+    for (const entry of await fs.readdir(abs, { withFileTypes: true })) {
+      await checkTree(path.join(rel, entry.name));
+    }
+  }
+  for (const target of ["package.json", "README.md", "src", "templates", ".github"]) {
+    await checkTree(target);
+  }
+});
+
+
+test("cold-start # Load stays within 20 KB and every SKILL.md stays under 15 KB", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["antigravity", "claude"]);
+    const entrySkill = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-clojure-flow/SKILL.md"),
+      "utf8",
+    );
+    const coreNotation = await fs.readFile(
+      path.join(root, ".sdd-flow/references/CLOJURE_NOTATION.md"),
+      "utf8",
+    );
+    const startupBytes = Buffer.byteLength(entrySkill) + Buffer.byteLength(coreNotation);
+    assert.ok(
+      startupBytes <= 20 * 1024,
+      `sdd-clojure-flow startup load must stay <= 20 KB, got ${startupBytes} bytes`,
+    );
+
+    const coreContract = await fs.readFile(
+      path.join(root, ".sdd-flow/FLOW_CONTRACT.md"),
+      "utf8",
+    );
+    assert.ok(
+      Buffer.byteLength(coreContract) <= 25 * 1024,
+      `core FLOW_CONTRACT.md must stay <= 25 KB, got ${Buffer.byteLength(coreContract)} bytes`,
+    );
+
+    const skillsDir = path.join(root, ".claude/skills");
+    for (const entry of await fs.readdir(skillsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const skillBytes = Buffer.byteLength(
+        await fs.readFile(path.join(skillsDir, entry.name, "SKILL.md"), "utf8"),
+      );
+      assert.ok(
+        skillBytes <= 15 * 1024,
+        `${entry.name}/SKILL.md must stay <= 15 KB, got ${skillBytes} bytes`,
+      );
+    }
+  });
+});
+
+
+test("every canonical example document lints with zero errors and leaks no FantasyMayor symbols", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["antigravity", "claude"]);
+    const exampleTargets = [
+      ".sdd-flow/references/EXAMPLES.md",
+      ".claude/skills/sdd-algorithm-sketch/examples.md",
+      ".claude/skills/sdd-algorithm-lift/examples.md",
+      ".claude/skills/sdd-code-structure/examples.md",
+      ".claude/skills/sdd-code-translation/examples.md",
+    ];
+    for (const rel of exampleTargets) {
+      const result = await lint(path.join(root, rel));
+      const errors = result.diagnostics.filter((d) => d.severity === ":error");
+      assert.deepEqual(
+        errors,
+        [],
+        `${rel} has lint errors: ${JSON.stringify(errors)}`,
+      );
+    }
+  });
+
+  const pkgRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+  const leaked = /\b(?:BuildDistrict|DistrictBuilt|TurnsComponent|HexIdComponent|IModeSystem|AppStateRequestedEvent|EventRingSlot)\b|:one-frame-event/u;
+  async function checkNoLeaks(rel) {
+    const abs = path.join(pkgRoot, rel);
+    const stat = await fs.stat(abs);
+    if (stat.isFile()) {
+      const content = await fs.readFile(abs, "utf8");
+      assert.doesNotMatch(content, leaked, `project-specific leak in ${rel}`);
+      return;
+    }
+    for (const entry of await fs.readdir(abs, { withFileTypes: true })) {
+      await checkNoLeaks(path.join(rel, entry.name));
+    }
+  }
+  await checkNoLeaks("templates");
+  await checkNoLeaks("README.md");
+});
+
+test("installed contract, templates and skills carry the OPORD 5W hybrid (:why, :when, 5W translator brief)", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["antigravity", "claude"]);
+    const read = (rel) => fs.readFile(path.join(root, rel), "utf8");
+
+    const notation = await read(".sdd-flow/references/CLOJURE_NOTATION.md");
+    assert.ok(notation.includes(':why "broader intent'), "CLOJURE_NOTATION.md missing :why task field");
+    assert.ok(notation.includes(':when "optional runtime trigger'), "CLOJURE_NOTATION.md missing :when task field");
+
+    const fields = await read(".sdd-flow/references/ARTIFACT_FIELDS.md");
+    assert.ok(fields.includes(':why "the broader intent from FLOW.md restated in place'), "ARTIFACT_FIELDS.md missing :structure :why");
+
+    const contract = await read(".sdd-flow/FLOW_CONTRACT.md");
+    assert.ok(contract.includes("with :why beside the single local :goal"), "FLOW_CONTRACT.md missing gated :why rule");
+    assert.ok(contract.includes(":compass"), "FLOW_CONTRACT.md missing emergent-decision :why compass");
+
+    const flowTemplate = await read(".sdd-flow/templates/FLOW.md");
+    assert.ok(flowTemplate.includes(':why "broader intent'), "templates/FLOW.md missing :why");
+    assert.ok(flowTemplate.includes(":when ^:optional"), "templates/FLOW.md missing optional :when");
+
+    const entrySkill = await read(".claude/skills/sdd-clojure-flow/SKILL.md");
+    assert.ok(entrySkill.includes(":five-w"), "sdd-clojure-flow/SKILL.md missing :five-w check");
+    assert.ok(entrySkill.includes("put two :goal values in one task"), "sdd-clojure-flow/SKILL.md missing two-:goal ban");
+
+    const sketchSkill = await read(".claude/skills/sdd-algorithm-sketch/SKILL.md");
+    assert.ok(sketchSkill.includes(":compass"), "sdd-algorithm-sketch/SKILL.md missing # Contra :why compass");
+
+    const structSkill = await read(".claude/skills/sdd-code-structure/SKILL.md");
+    assert.ok(structSkill.includes(':why \\"the broader intent restated from FLOW.md\\"'), "sdd-code-structure/SKILL.md missing # Subject :why");
+
+    const transSkill = await read(".claude/skills/sdd-code-translation/SKILL.md");
+    for (const key of [":brief", ":who", ":what", ":when", ":where", ":why"]) {
+      assert.ok(transSkill.includes(key), `sdd-code-translation/SKILL.md missing 5W brief key ${key}`);
+    }
+  });
+});

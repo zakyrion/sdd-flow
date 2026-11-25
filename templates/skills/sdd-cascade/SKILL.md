@@ -7,7 +7,8 @@ description: Carry a large refactoring, or a new system whose algorithm must be 
 
 ```clojure
 {:requires [".sdd-flow/references/CLOJURE_NOTATION.md"
-            ".sdd-flow/FLOW_CONTRACT.md"]
+            ".sdd-flow/FLOW_CONTRACT.md"
+            ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"]
  :order :exact
  :authority "FLOW_CONTRACT.md holds the policy — (def cascade) (def cascade-mode) (def auto-decided) (def decision-register) (def tools-first); this file is the order of the chain; every step is its own skill with its own rules"
  :missing (:then (stop!)
@@ -93,7 +94,7 @@ description: Carry a large refactoring, or a new system whose algorithm must be 
 # Invoke
 
 ```clojure
-{:command "/sdd-cascade [task] — also $sdd-cascade"
+{:command "/sdd-cascade [task] — or invoke sdd-cascade by name"
  :discovery "Flows/<TASK>/ whose FLOW.md # Progress names an unfinished step; the task argument is needed only when several qualify"
  :no-task "no cascaded task in progress — offer to start one through the lifecycle, never start one here"
  :alone "every step has its own command — /sdd-survey, /sdd-sources, /sdd-sketch, /sdd-structure, /sdd-translate, /sdd-review — and runs without the cascade; /sdd-tools builds the tool skills the survey reaches for first"

@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
 
-**Spec-Driven Development for AI coding agents.** `sdd-flow` installs a workflow into your project that makes agents like **Claude Code** and **Codex** treat every engineering request as a contract: normalize the request into an explicit spec, ask about everything that is unclear, wait for your explicit *go*, research before planning, plan before touching a single file — and record all of it in a persistent FLOW document that survives across sessions.
+**Spec-Driven Development for AI coding agents.** `sdd-flow` installs a workflow into your project that makes agents like **Claude Code** and **Antigravity** treat every engineering request as a contract: normalize the request into an explicit spec, ask about everything that is unclear, wait for your explicit *go*, research before planning, plan before touching a single file — and record all of it in a persistent FLOW document that survives across sessions.
 
 > **You don't need to know Clojure.** The workflow writes specs in a tiny instruction notation that borrows Clojure's *syntax* because it is compact and unambiguous — nothing is ever executed, there is no language to install, and the agent both writes and reads it for you. You always answer in plain prose if you want to.
 
@@ -22,7 +22,7 @@ Anyone who works with coding agents keeps hitting the same failure modes:
 
 `sdd-flow` counters all of them with structure:
 
-1. **Normalization.** Every request becomes an explicit task map. Anything unknown becomes a literal `?` — and a `?` must be *asked about*, never guessed.
+1. **Normalization (5W hybrid).** Every request becomes an explicit task map that separates broader intent (`:why` — *in order to…*) from the single local objective (`:goal`), plus optional runtime triggers (`:when`). Anything unknown becomes a literal `?` — and a `?` must be *asked about*, never guessed.
 2. **Deliverable kinds.** Your words classify every request as *answer*, *plan*, or *mutation* — and the agent may never escalate the kind on its own. A question's deliverable is the answer itself, not the change it hints at.
 3. **Two gates and a checkpoint.** A *research go* lets the agent read code and write a plan — nothing else. A separate *implementation go*, given on a written plan, is required before any change. Between them, research runs in two passes: the agent comes back with findings and the questions they opened *before* any plan is written.
 4. **A persistent FLOW.** Every task lives in its own folder, `Flows/<TASK>/FLOW.md`: raw request, confirmed contract, research findings, plan, decisions, disproven hypotheses, attempted-and-dropped approaches, progress, acceptance checks. Any future session resumes from that file instead of from memory.
@@ -36,23 +36,25 @@ Anyone who works with coding agents keeps hitting the same failure modes:
 
 You write, in plain prose:
 
-> Add a "district built" completion event to the build action.
+> Add a "retry exhausted" notification to the job retry queue.
 
 Before doing anything, the agent shows you the normalized contract:
 
 ```clojure
-{:task :add-district-built-event
- :goal "signal event: district construction finished"
- :where Actions.BuildDistrict.Events
- :decided {:kind :one-frame-event}
- :skip "view spawning"
- :result DistrictBuiltEvent
+{:task :add-retry-exhausted-notice
+ :kind :mutation
+ :path {:proposed :direct :confidence 80}
+ :goal "emit a notification when a job exhausts its retry budget"
+ :where Jobs.RetryQueue
+ :decided {:delivery :bounded-ring-log}
+ :skip "dashboard badge"
+ :result RetryExhaustedNotice
  :off-limits ?}   ;; unknown -> the agent must ask, not guess
 ```
 
-Reading it is easy: `:key value` pairs are facts ("its goal is…"), bare symbols like `DistrictBuiltEvent` are literal code anchors, quoted strings are plain prose, and `?` marks a hole the agent is *not allowed* to fill on its own.
+Reading it is easy: `:key value` pairs are facts ("its goal is…"), bare symbols like `RetryExhaustedNotice` are literal code anchors, quoted strings are plain prose, and `?` marks a hole the agent is *not allowed* to fill on its own.
 
-Open questions come back to you in one batch — and if the discussion runs over several rounds, the agent keeps asking the pointed follow-ups rather than guessing; "enough" ends the questions and starts the work. You answer and say **go** — the agent researches the codebase, looks for how the same problem is already solved outside your project, and comes back with its findings and the sharper questions they opened. Only after you answer those does it write the plan into `Flows/ADD_DISTRICT_BUILT_EVENT/FLOW.md` and stop. Reaching outside is itself gated: a web search or another repository is named and confirmed before it happens, while documentation lookups stay open. Only a second, fresh **go** on that written plan opens implementation. When the acceptance checks pass, the task folder is archived to `Flows/Archive/` — a permanent, greppable history of what was decided and why.
+Open questions come back to you in one batch — and if the discussion runs over several rounds, the agent keeps asking the pointed follow-ups rather than guessing; "enough" ends the questions and starts the work. You answer and say **go** — the agent researches the codebase, looks for how the same problem is already solved outside your project, and comes back with its findings and the sharper questions they opened. Only after you answer those does it write the plan into Flows/ADD_RETRY_EXHAUSTED_NOTICE/FLOW.md and stop. Reaching outside is itself gated: a web search or another repository is named and confirmed before it happens, while documentation lookups stay open. Only a second, fresh **go** on that written plan opens implementation. When the acceptance checks pass, the task folder is archived to `Flows/Archive/` — a permanent, greppable history of what was decided and why.
 
 ## Install
 
@@ -67,10 +69,10 @@ npm install --global github:zakyrion/sdd-flow
 Then, inside any project you want the workflow in:
 
 ```bash
-sdd-flow init . --tools claude,codex
+sdd-flow init . --tools claude,antigravity
 ```
 
-Pick `claude`, `codex`, or both. One-off usage without a global install also works:
+Pick `claude`, `antigravity`, or both. One-off usage without a global install also works:
 
 ```bash
 npx --yes github:zakyrion/sdd-flow init . --tools claude
@@ -104,12 +106,12 @@ With `--tools claude`, your project gets eleven skills and fifteen slash command
 
 The skills also trigger implicitly: describe an engineering task in normal conversation and Claude Code picks the workflow up on its own.
 
-## Using it with Codex
+## Using it with Antigravity
 
-With `--tools codex`, your project gets the same skills in Codex's native format (`.agents/skills/`):
+With `--tools claude,antigravity`, `sdd-flow` writes `.agents/skills.json` pointing to `.claude/skills`, so Antigravity discovers all eleven framework skills — plus any project skills in `.claude/skills` — without duplicating files. With `--tools antigravity` alone, the eleven `SKILL.md` files are installed directly into `.agents/skills/`.
 
-- **Explicit**: `$sdd-clojure-flow add a completion event to the build action`, `$sdd-deep-research how should terrain be streamed here`, `$sdd-cascade`, `$sdd-code-survey`, `$sdd-tool-skills`, `$sdd-code-structure`, `$sdd-code-translation`, `$sdd-code-review`, `$sdd-algorithm-sketch how do we pick the next tile`, `$sdd-algorithm-lift clean the generated mesh builder`, or `$sdd-project-init`
-- **Implicit**: Codex selects the skill automatically when your task matches its description.
+- **Progressive disclosure**: Antigravity loads only skill names and descriptions at startup and reads a skill's body on demand.
+- **Choice dialog**: Every gate uses Antigravity's native `ask_question` dialog with numbered questions and rated options.
 
 ## What gets installed
 
@@ -143,15 +145,9 @@ your-project/
 │   ├── commands/sdd-flow/{start,resume,close,promote}.md
 │   ├── commands/sdd-{research,sources,cascade,survey,tools,sketch,structure,translate,review,lift}.md
 │   └── commands/sdd-project-init.md
-├── .agents/                        # only with --tools codex
-│   ├── skills/sdd-clojure-flow/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-deep-research/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-project-init/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-cascade/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-algorithm-sketch/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-algorithm-lift/{SKILL.md, agents/openai.yaml}
-│   ├── skills/sdd-code-{survey,structure,translation,review}/{SKILL.md, agents/openai.yaml}
-│   └── skills/sdd-tool-skills/{SKILL.md, agents/openai.yaml}
+├── .agents/                        # with --tools antigravity
+│   ├── skills.json                 #   paired with claude: points at .claude/skills (zero duplication)
+│   └── skills/sdd-*/SKILL.md       #   antigravity alone: installed directly into .agents/skills/
 └── Flows/                          # one folder per task
     ├── <TASK>/
     │   ├── FLOW.md                 #   every task — the contract, findings, the decision register
@@ -164,7 +160,7 @@ your-project/
 
 | Command | What it does |
 | --- | --- |
-| `sdd-flow init [dir] --tools codex,claude` | Install the shared contract and the selected adapters. |
+| `sdd-flow init [dir] --tools antigravity,claude` | Install the shared contract and the selected adapters. |
 | `sdd-flow update [dir]` | Regenerate managed files after upgrading the package. |
 | `sdd-flow doctor [dir]` | Report missing, modified, stale, or invalid managed files. |
 | `sdd-flow diff [dir] [--file path]` | Compare your copy of the canon against the installed version. |
@@ -180,7 +176,7 @@ your-project/
 
 sdd-flow is meant to be additive. A project that already has its own entry document, its own knowledge tools, its own acceptance commands and its own ceremonies keeps all of them — the framework adapts to those facts instead of asking the project to adapt to it.
 
-Run `/sdd-project-init` (or `$sdd-project-init`). It surveys what the project already has, shows you slot by slot what it found and where each fact came from, and waits. Only after you confirm does it write `.sdd-flow/project.md` — **your** file, absent from the manifest, untouched by `update` and `uninstall`.
+Run `/sdd-project-init`. It surveys what the project already has, shows you slot by slot what it found and where each fact came from, and waits. Only after you confirm does it write `.sdd-flow/project.md` — **your** file, absent from the manifest, untouched by `update` and `uninstall`.
 
 The adapter resolves the places the canon leaves deliberately abstract:
 
@@ -208,12 +204,12 @@ Full glossary: [`CLOJURE_NOTATION.md`](templates/core/references/CLOJURE_NOTATIO
 
 | Form | Read as | Example |
 | --- | --- | --- |
-| `{:key value}` | facts of one subject: "its key is value" | `{:task :add-event :where Actions.Events}` |
+| `{:key value}` | facts of one subject: "its key is value" | `{:task :add-notice :where Jobs.RetryQueue}` |
 | `[m1 m2]` | ordered list; in a batch, one map = one deliverable | `[{:task :a} {:task :b}]` |
-| `#{a b}` | unordered alternatives: "one of" | `#{codex claude}` |
-| `:keyword` | self-evident label / verdict / enum | `:one-frame-event` |
-| `BareSymbol` | literal code anchor, taken verbatim | `DistrictBuiltEvent` |
-| `"string"` | plain prose; all fuzziness lives inside quotes | `"spawn the district view"` |
+| `#{a b}` | unordered alternatives: "one of" | `#{antigravity claude}` |
+| `:keyword` | self-evident label / verdict / enum | `:bounded-ring-log` |
+| `BareSymbol` | literal code anchor, taken verbatim | `RetryExhaustedNotice` |
+| `"string"` | plain prose; all fuzziness lives inside quotes | `"forward to the alert channel"` |
 | `70` | a literal number; a confidence percentage is an integer 0-100 | `{:option "reactive system" :confidence 70}` |
 | `?` | deliberately unknown — ask, never invent | `{:off-limits ?}` |
 | `:by-<source>` | agent proposes from the named source, user can veto | `{:name :by-naming-policy}` |
@@ -222,7 +218,7 @@ Full glossary: [`CLOJURE_NOTATION.md`](templates/core/references/CLOJURE_NOTATIO
 | `(when c (:then a!))` | conditional actions, no fallback | — |
 | `(and …)` / `(or …)` | condition composition, conditions only | — |
 | `(:then a1! a2!)` | ordered actions; `!` marks a mutation | `(:then (refund!) (delete!))` |
-| `^:new` / `^:optional` / `^:risky` | decoration: must be created / nice-to-have / discuss first | `^:new DistrictBuiltEvent` |
+| `^:new` / `^:optional` / `^:risky` | decoration: must be created / nice-to-have / discuss first | `^:new RetryExhaustedNotice` |
 | `;;` | comment, usually the "why" | `;; cleanup would destroy it` |
 
 Why this instead of free-form Markdown specs? Three properties Markdown cannot give you: every form is **machine-parseable** (`doctor` verifies the installed docs), holes are **explicit** (`?` cannot be silently filled), and the reading is **deterministic** — one glossary, no tone to misread.
@@ -231,7 +227,7 @@ Why this instead of free-form Markdown specs? Three properties Markdown cannot g
 
 Some questions have no correct answer, only a pool of trade-offs: how to generate terrain, how to synchronize netcode, how to shape a service topology. Answering those from a model's own knowledge is guessing with good grammar, and taking the first article you find is barely better.
 
-`/sdd-research <question>` (or `$sdd-deep-research`) runs a different kind of pass:
+`/sdd-research <question>` runs a different kind of pass:
 
 - **Your conditions first.** Scale, platform, budget, team, deadline get written down before anything is read — an option is never right in general, only right inside a regime.
 - **The hunch goes on record before the search.** Specific enough to be provable wrong, so the search can kill it. A belief written afterwards always agrees with what was found.
@@ -268,9 +264,9 @@ Two things hold the chain together. The **decision register** — `# Decisions` 
 
 Two lighter tools stand beside the cascade — the first is also its algorithm step. Both run in your session and both end in one Clojure document, `ALGO_<NAME>.md`: a file from its first version, so it opens in a Clojure editor and survives a compacted context.
 
-`/sdd-sketch <what the algorithm is about>` (or `$sdd-algorithm-sketch`) works out a small algorithm before any code: what is made, by which rule, with which structures — a spine of one-phrase steps, a branch only where the algorithm really branches, and what a step reads and changes only where its phrase hides it. It is also the cascade's algorithm step. The agent tallies the draft by eye (a step that leaves no named state, a structure nobody uses), attacks it with a contra — why this will *not* work, with rated fixes — and amends the file as you talk. When you say the algorithm is agreed, it asks one question: keep the document, write the code, continue as a cascade, or derive another form. Code and cascade both go back through the lifecycle as an ordinary task map with the document named as a decision; the sketch itself never writes code, so it is not a way around your gates.
+`/sdd-sketch <what the algorithm is about>` works out a small algorithm before any code: what is made, by which rule, with which structures — a spine of one-phrase steps, a branch only where the algorithm really branches, and what a step reads and changes only where its phrase hides it. It is also the cascade's algorithm step. The agent tallies the draft by eye (a step that leaves no named state, a structure nobody uses), attacks it with a contra — why this will *not* work, with rated fixes — and amends the file as you talk. When you say the algorithm is agreed, it asks one question: keep the document, write the code, continue as a cascade, or derive another form. Code and cascade both go back through the lifecycle as an ordinary task map with the document named as a decision; the sketch itself never writes code, so it is not a way around your gates.
 
-`/sdd-lift [bound|clean] <what to lift>` (or `$sdd-algorithm-lift`) goes the other way: code that exists — machine-generated, tangled, or just foreign — and does not read. The agent reads it whole and lifts the algorithm it actually carries out, in the words of the task: not the code respelled in Clojure, no step per method. It is lifted *as it is*; bugs, inaccuracies and dangling tails are flagged in a list of their own, never repaired on the way up. **Bound** adds a code map beside the algorithm — every method accounted for, the step it serves restated in place — for when you want to see how the explanation meets the real code. **Clean** leaves the map out, for when the badly written code is exactly what you want to stop looking at. The algorithm reads the same in both. The priority is you as a reader: every value is one phrase, and a detail that does not fit goes into a note or stays out. The result is the document itself — it names the revision the code was read at and promises nothing after it.
+`/sdd-lift [bound|clean] <what to lift>` goes the other way: code that exists — machine-generated, tangled, or just foreign — and does not read. The agent reads it whole and lifts the algorithm it actually carries out, in the words of the task: not the code respelled in Clojure, no step per method. It is lifted *as it is*; bugs, inaccuracies and dangling tails are flagged in a list of their own, never repaired on the way up. **Bound** adds a code map beside the algorithm — every method accounted for, the step it serves restated in place — for when you want to see how the explanation meets the real code. **Clean** leaves the map out, for when the badly written code is exactly what you want to stop looking at. The algorithm reads the same in both. The priority is you as a reader: every value is one phrase, and a detail that does not fit goes into a note or stays out. The result is the document itself — it names the revision the code was read at and promises nothing after it.
 
 In both, Clojure stays the only source. Ask for another form — a UML activity diagram, a flowchart, a table of steps — and you get a view derived from the document; edit the view, and the agent carries the edit back into the Clojure and derives the view again.
 
@@ -292,7 +288,7 @@ In both, Clojure stays the only source. Ask for another form — a UML activity 
     (:archive "the task folder moves to Flows/Archive/"))
 ```
 
-If scope changes mid-flight, the agent records an amendment, stops, and asks for a fresh go. If a session dies, `/sdd-flow:resume` (or just asking Codex to resume) reconstructs everything from the FLOW file.
+If scope changes mid-flight, the agent records an amendment, stops, and asks for a fresh go. If a session dies, `/sdd-flow:resume` (or asking Antigravity to resume) reconstructs everything from the FLOW file.
 
 ## Development
 
@@ -302,7 +298,7 @@ cd sdd-flow
 npm test
 ```
 
-111 tests cover the Clojure reader, document validation, the form and register checks of lint, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
+120+ tests cover the Clojure reader, document validation, the form and register checks of lint, and the full init / update / doctor / uninstall lifecycle against disposable fixtures.
 
 ## License
 

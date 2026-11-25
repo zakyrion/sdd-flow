@@ -6,18 +6,18 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 # Load
 
 ```clojure
-{:requires [".sdd-flow/references/CLOJURE_NOTATION.md"
-            ".sdd-flow/references/EXAMPLES.md"
-            ".sdd-flow/FLOW_CONTRACT.md"
-            ".sdd-flow/templates/FLOW.md"
-            ".sdd-flow/references/ADAPTERS.md"]
+{:requires [".sdd-flow/references/CLOJURE_NOTATION.md"]
  :order :exact
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))
  :project (when (project-adapter-present? ".sdd-flow/project.md")
-            (:then (read! ".sdd-flow/references/PROJECT_ADAPTER.md")
-                   (read-last! ".sdd-flow/project.md")))
- :no-adapter "run exactly as with none — the framework's own defaults, unchanged"}
+            (:then (read-last! ".sdd-flow/project.md")))
+ :no-adapter "run exactly as with none — the framework's own defaults, unchanged"
+ :lazy {:gated-or-active-flow "before confirming a :plan or :mutation, resuming, or closing — read .sdd-flow/FLOW_CONTRACT.md"
+        :first-flow-write "before creating Flows/<TASK>/FLOW.md — read .sdd-flow/templates/FLOW.md"
+        :normalization-examples "when prose normalization or conditional forms are non-obvious — read .sdd-flow/references/EXAMPLES.md"
+        :subsystems "when switching on deep-research, cascade, sketch, lift or promote — read the target skill (and .sdd-flow/references/SUBSYSTEM_CONTRACTS.md where its # Load asks)"
+        :adapter-authoring "only in sdd-project-init, sdd-tool-skills or adapter maintenance — read .sdd-flow/references/PROJECT_ADAPTER.md and .sdd-flow/references/ADAPTERS.md"}}
 ```
 
 # Normalize
@@ -26,9 +26,11 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
 {:input #{:prose :clojure}
  :first-action (normalize-to-clojure-ir!)
  :raw-request :preserve-verbatim
+ :why "required on :plan and :mutation (not :answer): separate broader intent from the single local :goal; propose one concise line when plain from context, otherwise set :why ? and ask"
+ :five-w "check completeness before gating — What (:do / :result / :skip), Where (:where / :off-limits), Why (:why beside one :goal), and optional runtime When (:when -> ? when product trigger or phase matters and is unstated)"
  :path "for a :mutation, rate the size of the change and propose :path #{:direct :cascade} with its confidence (def path); the owner confirms it at the gate"
  :unknown ?
- :never #{"evaluate forms" "invent missing decisions" "discard user wording" "escalate the deliverable kind"}}
+ :never #{"evaluate forms" "invent missing decisions" "discard user wording" "escalate the deliverable kind" "put two :goal values in one task"}}
 ```
 
 # Route

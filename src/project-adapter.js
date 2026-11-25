@@ -9,6 +9,7 @@ export const BLOCK_END = /^<!--\s*END SDD-FLOW:\s*([a-z0-9-]+)\s*-->\s*$/u;
 // Canon files whose definitions a project copy is measured against.
 const CANON_SOURCES = [
   ".sdd-flow/FLOW_CONTRACT.md",
+  ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md",
   ".sdd-flow/references/PROJECT_ADAPTER.md",
 ];
 

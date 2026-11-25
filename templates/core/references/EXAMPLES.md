@@ -1,163 +1,179 @@
 # Prose normalization
 
 ```clojure
-{:input "Додай подію завершення будівництва району в Actions.BuildDistrictAction.Events"
- :normalized {:task :add-district-built-event
-              :goal "подія-сигнал про завершення будівництва району"
-              :where Actions.BuildDistrictAction.Events
+{:input "Add a retry-exhausted notification to Jobs.RetryQueue when all attempts fail"
+ :normalized {:task :add-retry-exhausted-notice
+              :kind :mutation
+              :path {:proposed :direct :confidence 80}
+              :why ?
+              :goal "emit a notification once a queued job exhausts its retry budget"
+              :when "when AttemptsLeft reaches 0"
+              :where Jobs.RetryQueue
               :off-limits ?
               :decided ?
               :skip ?
-              :result DistrictBuiltEvent}
+              :result RetryExhaustedNotice}
  :unknown ?
- :rule "missing information remains ?, never an invented decision"}
+ :rule "missing information (including unstated broader :why or off-limits) remains ?, never an invented decision"}
 ```
 
 ```clojure
-{:input "Зроби назву за naming policy"
+{:input "Pick the module name according to our naming policy"
  :normalized {:name :by-naming-policy}}
 ```
 
 # Answer-kind normalization
 
 ```clojure
-{:input "Яка структура папок і solutions правильна для мікросервісів?"
- :normalized {:task :ask-microservices-layout
+{:input "What folder and package layout works best for a multi-service monorepo?"
+ :normalized {:task :ask-monorepo-layout
               :kind :answer
-              :goal "правило + канонічна розкладка мікросервісного монорепо"
-              :result "відповідь; жодних змін на диску"}
+              :goal "state the rule and canonical folder layout for a multi-service monorepo"
+              :result "direct prose answer; zero file edits on disk"}
  :rule "the deliverable is the answer itself — the agent may not escalate :kind to :plan or :mutation"}
 ```
 
 # Batch and cross-reference
 
 ```clojure
-[{:task :add-event
-  :goal "подія-сигнал: район побудовано"
-  :where Actions.BuildDistrictAction.Events
-  :off-limits "AP spending"
-  :decided {:kind :one-frame-event}
-  :skip "view spawning"
-  :result DistrictBuiltEvent}
+{:why "give operators immediate visibility into dead-lettered jobs without coupling retry math to alert transport"
+ :tasks
+ [{:task :emit-exhausted-notice
+   :kind :mutation
+   :path :direct
+   :goal "publish a bounded log record when a job exhausts retries"
+   :when "on final failed attempt in Jobs.RetryQueue"
+   :where Jobs.RetryQueue
+   :off-limits "billing ledger"
+   :decided {:delivery :bounded-ring-log}
+   :skip "dashboard badge"
+   :result RetryExhaustedNotice}
 
- {:task :create-view-spawner
-  :listen :add-event
-  :goal "створити view побудованого району"
-  :where Presentation.Districts
-  :off-limits "district cost calculation"
-  :pattern PATTERN_REACTIVE_SYSTEM
-  :decided {:event DistrictBuiltEvent}
-  :skip "resource spending"
-  :result "(-> DistrictBuiltEvent district-prefab-on-hex)"}]
+  {:task :notify-alert-channel
+   :kind :mutation
+   :path :direct
+   :listen :emit-exhausted-notice
+   :goal "forward exhausted-job records to the alert sink"
+   :where Alerts.Dispatcher
+   :off-limits "retry backoff math"
+   :pattern WorkerSubscriberRecipe
+   :decided {:trigger RetryExhaustedNotice}
+   :skip "retry scheduling"
+   :result "(-> RetryExhaustedNotice alert-message-dispatched)"}]}
 ```
 
 # Conditional actions
 
 ```clojure
-(when (= TurnsComponent.Value 0)
-  (:then (build-district!)
-         (delete-build-action!)))
+(when (= AttemptsLeft 0)
+  (:then (publish-exhausted-notice!)
+         (close-job-entry!)))
 ```
 
 ```clojure
-(when (and (same-turn?)
-           (resources-spent?))
-  (:then (refund-ap!)
-         (refund-all-resources!)
-         (delete-build-action!)))
+(when (and (same-batch?)
+           (quota-reserved?))
+  (:then (release-quota!)
+         (restore-credits!)
+         (drop-job-entry!)))
 ```
 
 ```clojure
-(when (or (payer-disconnected?)
-          (hex-invalid?))
-  (:then (cancel-build!)))
+(when (or (worker-disconnected?)
+          (payload-corrupted?))
+  (:then (abort-job!)))
 ```
 
 ```clojure
 (cond
-  (same-turn?) (:then (refund-ap!)
-                      (refund-all-resources!)
-                      (delete-build-action!))
-  (later-turn?) (:then (refund-proportional-resources!)
-                       (delete-build-action!))
+  (same-batch?) (:then (release-quota!)
+                       (restore-credits!)
+                       (drop-job-entry!))
+  (later-batch?) (:then (refund-remaining-credits!)
+                        (drop-job-entry!))
   :else (:then (fail-loud!)))
 ```
 
-# Corrected DistrictBuild slice
+# Owner brief and rated options
 
 ```clojure
-[{:task :add-build-turns
-  :goal "кожен тип району будується визначену кількість ходів"
-  :where #{"Presentation.UI.DistrictBuild" "Flows.DistrictBuild" Domains}
-  :off-limits ?
-  :decided {:action-tag BuildDistrictActionTag
-            :turns TurnsComponent}
-  :skip ?
-  :do (-> DistrictBuildConfirmedEvent
-          BuildDistrictActionTag
-          TurnsComponent
-          (:each-turn (decrement-turns!))
-          (when (= TurnsComponent.Value 0)
-            (:then (build-district!)
-                   (delete-build-action!))))
-  :result "район завершується рівно через configured turns"}
-
- {:task :spend-build-resources
-  :goal "витратити ресурси власника під час старту будівництва"
-  :where #{"Presentation.UI.DistrictBuild" "Flows.DistrictBuild" Domains}
-  :off-limits ?
-  :decided {:payer "owner selected by DistrictBuildConfirmedEvent"
-            :location HexIdComponent}
-  :skip ?
-  :do (-> DistrictBuildConfirmedEvent
-          DistrictBuildCostConfig
-          (:then (spend-owner-resources!)
-                 (attach-hex-id!)))
-  :result "build action містить location, а configured resources витрачені"}]
+{:brief {:user-impact "failed jobs will surface once in the alert channel instead of failing silently"
+         :code-impact "RetryQueue writes one record on final failure, and Alerts.Dispatcher drains it"
+         :uncertainty "whether the alert sink should poll the ring or run inline inside RetryQueue"}
+ :register-entry
+ {:id 3
+  :asked "3. How should the alert sink receive retry-exhausted records?"
+  :status :open
+  :at "2026-11-25"
+  :options [{:id :a :option "poll from a dedicated subscriber over the ring log" :confidence 70}
+            {:id :b :option "call the sink directly inside RetryQueue — the simplest that works" :confidence 30}]}
+ :rule "the rating judges the option as a decision — never fact certainty; every set includes the simplest option that works; the owner answers «3A» or via ask_question / AskUserQuestion"}
 ```
 
-# Rated options
+# Decision revisit and auto-decided
 
 ```clojure
-{:id 3
- :asked "how should the district view be spawned?"
- :status :open
- :options [{:id :a :option "a reactive system on the built event" :confidence 70}
-           {:id :b :option "spawn inside the build action itself — the simplest that works" :confidence 30}]
- :told "3. How should the district view be spawned? A (70) — a reactive system on the built event. B (30) — inside the build action itself, the simplest."
- :rule "the rating judges the option as a decision — never the certainty of a fact; the owner answers with the question's number and the option's letter — «3A», or «3 — as you propose» for the top-rated"}
+[{:id 3
+  :asked "3. How should the alert sink receive retry-exhausted records?"
+  :status :confirmed
+  :at "2026-11-25"
+  :options [{:id :a :option "poll from a dedicated subscriber" :confidence 70}
+            {:id :b :option "call the sink inline — the simplest" :confidence 30}]
+  :chosen :a
+  :value "dedicated subscriber over the ring log"
+  :verified-by "«3A»"}
+ {:id 3
+  :round 2
+  :new-fact "RetryQueue runs inside a synchronous transaction where network calls are banned"
+  :asked "in question 3 you chose A — the survey confirmed inline network calls are banned; keep A?"
+  :status :confirmed
+  :at "2026-11-25"
+  :options [{:id :a :option "keep A — subscriber outside the transaction" :confidence 85}
+            {:id :b :option "queue raw payloads in a side table" :confidence 15}]
+  :chosen :a
+  :value "keep dedicated subscriber"
+  :verified-by "«3 — as you propose»"}
+ {:id 4
+  :auto-decided true
+  :status :auto
+  :confidence 75
+  :chosen :a
+  :options [{:id :a :option "cap the retry-notice ring at 128 entries" :confidence 75}
+            {:id :b :option "make ring capacity configurable per queue" :confidence 25}]
+  :because "only one queue exists today; extra indirection has no second consumer"}]
 ```
 
 # Recorded with provenance
 
 ```clojure
-{:finding :turns-decremented-in-one-place
- :at "2026-08-28"
- :fact "exactly one system decrements the turn counter"
- :verified-by "ran the turn loop and watched the component change; not inferred from the code"
- :consequence "a second decrement site would be a bug, not a design choice"}
+{:finding :attempts-decremented-in-one-place
+ :at "2026-11-25"
+ :fact "exactly one worker loop decrements the retry counter"
+ :verified-by "symbol reference query on RetryBudget.Decrement across the workspace — 1 call site"
+ :consequence "emitting the exhausted notice right after that decrement cannot miss or duplicate"}
 ```
 
 ```clojure
-{:approach "decrement the counter inside the UI confirmation handler"
+{:approach "decrement the retry counter inside the HTTP submission handler"
  :confidence 40
- :dropped-because "the handler never runs on a loaded save"
- :problems "two turns silently lost per reload; found only by replaying a save"
- :at "2026-08-28"}
+ :dropped-because "replayed jobs bypass the HTTP handler on restart"
+ :problems "two retries silently skipped after process recovery"
+ :verified-by "replayed a persisted batch in local runner and watched AttemptsLeft jump"
+ :at "2026-11-25"}
 ```
 
 # Weighed against sources
 
 ```clojure
 {:option "chunked streaming with a fixed LOD ring"
- :applies-when "an open world larger than memory, single-player latency budget"
- :known-uses "shipped in several open-world titles"
- :evidence "a measured comparison in one paper, plus two practitioner reports of the same result"
- :weakened-by "no source measured it on our platform"
+ :applies-when "a world larger than memory under a single-player latency budget"
+ :known-uses "shipped in several large-world titles"
+ :evidence "measured comparison in one paper, plus two practitioner reports of the same result"
+ :weakened-by "no source measured it on our target hardware"
  :confidence 70
- :grounded-in "read on the web, not run here"
+ :grounded-in "published benchmarks, not run in this repo"
  :cost-to-build "weeks"
- :cost-to-adopt "days, an engine plugin already does it"
+ :cost-to-adopt "days — an existing package already implements it"
  :reversibility :two-way}
 ```
 
@@ -165,21 +181,25 @@
 {:hunch "a quadtree will beat a fixed grid here"
  :confidence 60
  :grounded-in "agent knowledge only — nothing read yet"
- :at "2026-08-28"
+ :at "2026-11-25"
  :outcome :killed
- :deviation "the sources reframed the question as memory bandwidth, not lookup cost"}
+ :deviation "the sources reframed the bottleneck as memory bandwidth rather than lookup cost"}
 ```
 
 # FLOW lifecycle
 
 ```clojure
 (-> (:request "raw user input")
-    (:normalize "Clojure IR")
-    (:confirm "fresh user go")
-    (:research "verified facts")
+    (:normalize "Clojure IR with :kind and proposed :path")
+    (:confirm "fresh research go")
+    (:research-1 "tools-first survey -> findings")
+    (:confirm "findings gate — owner answers before any plan")
+    (:research-2 "follow-up pass when answers open new questions")
     (:plan "implementation task map")
     (:confirm "fresh implementation go")
-    (:execute "requested changes")
+    (cond
+      (= :cascade path) "survey -> optional sources -> algorithm -> structure -> fresh-agent translation -> review"
+      :else "execute confirmed direct scope")
     (:accept "all meters at target")
-    (:archive "completed FLOW"))
+    (:archive "completed FLOW moved to Flows/Archive/"))
 ```

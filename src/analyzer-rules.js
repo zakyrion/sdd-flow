@@ -27,4 +27,7 @@ export const RULES = [
   { rule: ":register/confirmed-unquoted", on: "any", severity: ":error", tally: "a register entry with :status :confirmed carries no non-empty string under :verified-by", from: "decision-register :answered", computed: true },
   { rule: ":register/revisit-shape", on: "any", severity: ":error", tally: "a map with an integer :id carries :round but no non-empty string under :new-fact, or no map in the same vector carries its :id at a lower round (no :round is round 1)", from: "decision-revisit :form", computed: true },
   { rule: ":gate/under-bar", on: "any", severity: ":warning", tally: "an auto-decided entry matching :escalate-top or :escalate-gap", from: "cascade-mode :escalate", computed: true },
+  { rule: ":tally/undeclared-data", on: "any", severity: ":error", tally: "an algorithm or structure references a data key in :reads, :writes, :in, :out or :fields that has no entry in its :data map", from: "sdd-algorithm-sketch / sdd-code-structure # Tally :undeclared", computed: true },
+  { rule: ":tally/orphan-data", on: "any", severity: ":error", tally: "an algorithm or structure declares a key in :data that no step or method touches", from: "sdd-algorithm-sketch / sdd-code-structure # Tally :orphan", computed: true },
+  { rule: ":provenance/missing-ground", on: "any", severity: ":error", tally: "a finding or an attempted-and-dropped approach carries no non-empty :verified-by or :source string", from: "FLOW_CONTRACT.md (def provenance)", computed: true },
 ];

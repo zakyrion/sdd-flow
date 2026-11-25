@@ -7,8 +7,10 @@ description: Survey a project that already has its own documents, tools, ceremon
 
 ```clojure
 {:requires [".sdd-flow/references/PROJECT_ADAPTER.md"
+            ".sdd-flow/references/ADAPTERS.md"
             ".sdd-flow/templates/PROJECT.md"
-            ".sdd-flow/FLOW_CONTRACT.md"]
+            ".sdd-flow/FLOW_CONTRACT.md"
+            ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"]
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))
  :authority "PROJECT_ADAPTER.md holds the contract — this file is the procedure"}

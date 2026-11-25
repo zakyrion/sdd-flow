@@ -7,6 +7,8 @@ description: Turn an agreed algorithm into the structure of the code — the ent
 
 ```clojure
 {:requires [".sdd-flow/references/CLOJURE_NOTATION.md"]
+ :fields ".sdd-flow/references/ARTIFACT_FIELDS.md — read when writing or checking field keys"
+ :examples "examples.md beside this file — read before drafting: a complete multi-file structure, # Parts, and lifetime trap pairs"
  :light "this file is the whole procedure — the glossary is the only other read; the keys are read by (def cascade-fields)"
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))
@@ -32,7 +34,7 @@ description: Turn an agreed algorithm into the structure of the code — the ent
 ```clojure
 {:reader "an agent in another session that sees nothing but this file and the files it writes"
  :sections ["# Subject" "# Structure" "# Build" "# Traps" "# Decisions" "# Parts" "# Contra" "# Added"]
- :subject "{:structure \"what it is of\" :from \"the algorithm document\" :touches #{\"the files written or changed\"}}"
+ :subject "{:structure \"what it is of\" :why \"the broader intent restated from FLOW.md\" :from \"the algorithm document\" :touches #{\"the files written or changed\"}}"
  :decisions "every decision of the register the code must honor, restated in place — the translator never reads the FLOW"
  :build "the language, how files import each other, the build and test commands exactly, where the conventions are stated — from the survey, never guessed"
  :traps "only the traps the translator would fall into, each {:trap :where :avoid :verified-by}"
@@ -100,6 +102,7 @@ description: Turn an agreed algorithm into the structure of the code — the ent
 ```clojure
 {:when "before the gate, and again when an amendment changes the structure"
  :what "why this structure will NOT carry the algorithm, and what to do about it"
+ :compass "weigh every fix against # Subject :why so a local structural shortcut never defeats the broader intent"
  :entry "{:id :c-1 :kills \"what it breaks\" :case \"a concrete input or line\" :fix [{:id :fix-a :is \"the option\" :cost \"what it costs\" :confidence 60}] :outcome \"once chosen\"}"
  :simplest "one fix is always the simplest structure that carries the algorithm; a layer with no second consumer is rated down"
  :empty-is-valid "empty is more honest than invented"}

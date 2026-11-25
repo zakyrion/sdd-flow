@@ -212,6 +212,6 @@ test("a legacy staged-cascade folder still reads by form alone", async () => {
 
 test("the catalogue holds only rules that need nothing but the form", () => {
   for (const row of RULES) {
-    assert.ok(/^:(reader|form|gate|register)\//u.test(row.rule), `${row.rule} is not a form rule`);
+    assert.ok(/^:(reader|form|gate|register|tally|provenance)\//u.test(row.rule), `${row.rule} is not a form rule`);
   }
 });

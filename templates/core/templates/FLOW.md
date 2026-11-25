@@ -10,8 +10,10 @@
 
 ```clojure
 {:task :task-id
- :goal "requested capability"
+ :why "broader intent this local task serves"
+ :goal "single local capability"
  :path #{:direct :cascade}
+ :when ^:optional "runtime trigger or phase"
  :where ?
  :off-limits ?
  :pattern ^:optional PatternName
@@ -92,6 +94,7 @@
   :confidence 70
   :dropped-because "what made it unusable"
   :problems "what it cost — what broke, and what it took to find out"
+  :verified-by "how the failure was observed"
   :at "YYYY-MM-DD"}]
 ```
 

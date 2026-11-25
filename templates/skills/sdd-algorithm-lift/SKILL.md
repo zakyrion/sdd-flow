@@ -7,6 +7,8 @@ description: Lift the algorithm out of existing code that does not read — mach
 
 ```clojure
 {:requires [".sdd-flow/references/CLOJURE_NOTATION.md"]
+ :fields ".sdd-flow/references/ARTIFACT_FIELDS.md — read when writing or checking field keys"
+ :examples "examples.md beside this file — read before lifting: a complete :bound lift with # Flags, # Code map, and fidelity trap pairs"
  :light "this file is the whole procedure — the glossary is the only other read"
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))

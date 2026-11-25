@@ -155,7 +155,7 @@ function checkForms(fences, templateMode, diagnostics) {
         if (node.type === "metadata") {
           checkMetadataNode(node, fence, diagnostics);
         } else if (node.type === "map") {
-          checkMapNode(node, fence, diagnostics);
+          checkMapNode(node, fence, templateMode, diagnostics);
         } else if (node.type === "list") {
           checkListNode(node, fence, diagnostics);
         } else if (node.type === "vector") {
@@ -211,7 +211,7 @@ function checkMetadataNode(node, fence, diagnostics) {
   }
 }
 
-function checkMapNode(node, fence, diagnostics) {
+function checkMapNode(node, fence, templateMode, diagnostics) {
   // ── duplicate keys, and the confidence range wherever a rating stands
   const seen = new Set();
   for (let index = 0; index + 1 < node.values.length; index += 2) {
@@ -240,6 +240,11 @@ function checkMapNode(node, fence, diagnostics) {
   }
 
   checkRegisterEntry(node, fence, diagnostics);
+  if (!templateMode) {
+    checkProvenanceEntry(node, fence, diagnostics);
+    checkAlgorithmTally(node, fence, diagnostics);
+    checkStructureTally(node, fence, diagnostics);
+  }
 
   // ── the two gate rules that need only this map, so the copies in FLOW.md
   //    # Decisions are checked beside the artifact that decided them
@@ -607,4 +612,190 @@ function render(diagnostics, textMode) {
       `{:rule ${diagnostic.rule} :severity ${diagnostic.severity} :file ${JSON.stringify(diagnostic.file)} :line ${diagnostic.line} :reason ${JSON.stringify(diagnostic.reason)}}`,
   );
   return `[${rows.join("\n ")}]`;
+}
+
+
+function isPlaceholderText(text) {
+  const clean = text.startsWith(":") ? text.slice(1) : text;
+  return clean.length > 1 && clean.startsWith("<") && clean.endsWith(">");
+}
+
+function checkProvenanceEntry(node, fence, diagnostics) {
+  const isFinding = fieldOf(node, ":finding") !== null && fieldOf(node, ":fact") !== null;
+  const isAttempt = fieldOf(node, ":approach") !== null && fieldOf(node, ":dropped-because") !== null;
+  if (!isFinding && !isAttempt) {
+    return;
+  }
+  const anchor = isFinding ? fieldOf(node, ":fact") : fieldOf(node, ":approach");
+  if (anchor && ((anchor.type === "symbol" && anchor.value === "?") || isPlaceholderText(textOf(anchor)))) {
+    return;
+  }
+  const verifiedBy = fieldOf(node, ":verified-by") ?? fieldOf(node, ":source");
+  if (!verifiedBy || verifiedBy.type !== "string" || verifiedBy.value.trim() === "") {
+    addDiagnostic(
+      diagnostics,
+      ":provenance/missing-ground",
+      fence.document.path,
+      lineOf(fence, node),
+      isFinding
+        ? "a finding carries no :verified-by or :source stating how it was established"
+        : "an attempted approach carries no :verified-by stating how its failure was observed",
+    );
+  }
+}
+
+function checkAlgorithmTally(node, fence, diagnostics) {
+  const dataNode = fieldOf(node, ":data");
+  const flowNode = fieldOf(node, ":flow");
+  if (
+    !dataNode ||
+    dataNode.type !== "map" ||
+    !flowNode ||
+    flowNode.type !== "list" ||
+    (!fieldOf(node, ":makes") && !fieldOf(node, ":criterion"))
+  ) {
+    return;
+  }
+
+  const declared = new Map();
+  for (let i = 0; i + 1 < dataNode.values.length; i += 2) {
+    const k = dataNode.values[i];
+    if (k.type !== "keyword") continue;
+    if (isPlaceholderText(k.value)) return;
+    declared.set(k.value, k);
+  }
+  if (declared.size === 0) {
+    return;
+  }
+
+  const used = new Set();
+  let sawStepDetail = false;
+  walkForm(flowNode, (sub) => {
+    if (sub.type !== "map") return;
+    for (const key of [":reads", ":writes"]) {
+      const col = fieldOf(sub, key);
+      if (!col || (col.type !== "set" && col.type !== "vector")) continue;
+      sawStepDetail = true;
+      for (const item of col.values) {
+        if (item.type !== "keyword" || item.value === ":none" || isPlaceholderText(item.value)) {
+          continue;
+        }
+        used.add(item.value);
+        if (!declared.has(item.value)) {
+          addDiagnostic(
+            diagnostics,
+            ":tally/undeclared-data",
+            fence.document.path,
+            lineOf(fence, item),
+            `${item.value} in ${key} has no entry in :data`,
+          );
+        }
+      }
+    }
+  });
+
+  if (sawStepDetail) {
+    for (const [keyName, keyNode] of declared) {
+      if (!used.has(keyName)) {
+        addDiagnostic(
+          diagnostics,
+          ":tally/orphan-data",
+          fence.document.path,
+          lineOf(fence, keyNode),
+          `${keyName} in :data is touched by no step's :reads or :writes`,
+        );
+      }
+    }
+  }
+}
+
+function checkStructureTally(node, fence, diagnostics) {
+  const prefixes = [];
+  for (let i = 0; i + 1 < node.values.length; i += 2) {
+    const k = node.values[i];
+    const v = node.values[i + 1];
+    if (k.type === "keyword" && k.value.endsWith("/data") && v.type === "map") {
+      const prefix = k.value.slice(0, -"/data".length);
+      if (isPlaceholderText(prefix)) continue;
+      if (fieldOf(node, `${prefix}/entry`) || fieldOf(node, `${prefix}/methods`)) {
+        prefixes.push({ prefix, dataNode: v });
+      }
+    }
+  }
+
+  for (const { prefix, dataNode } of prefixes) {
+    const declared = new Map();
+    for (let i = 0; i + 1 < dataNode.values.length; i += 2) {
+      const k = dataNode.values[i];
+      if (k.type !== "keyword") continue;
+      if (isPlaceholderText(k.value)) return;
+      declared.set(k.value, k);
+    }
+    if (declared.size === 0) continue;
+
+    const used = new Set();
+    const recordRef = (kwNode, role) => {
+      if (!kwNode || kwNode.type !== "keyword" || kwNode.value === ":none" || isPlaceholderText(kwNode.value)) {
+        return;
+      }
+      used.add(kwNode.value);
+      if (!declared.has(kwNode.value)) {
+        addDiagnostic(
+          diagnostics,
+          ":tally/undeclared-data",
+          fence.document.path,
+          lineOf(fence, kwNode),
+          `${kwNode.value} in ${role} has no entry in ${prefix}/data`,
+        );
+      }
+    };
+
+    const scanCallableMap = (callable) => {
+      if (!callable || callable.type !== "map") return;
+      for (const colKey of [":in", ":writes"]) {
+        const col = fieldOf(callable, colKey);
+        if (col && (col.type === "set" || col.type === "vector")) {
+          for (const item of col.values) recordRef(item, colKey);
+        }
+      }
+      recordRef(fieldOf(callable, ":out"), ":out");
+      const flow = fieldOf(callable, ":flow");
+      if (flow) {
+        walkForm(flow, (sub) => {
+          if (sub.type === "map") {
+            recordRef(fieldOf(sub, ":out"), ":out");
+          }
+        });
+      }
+    };
+
+    scanCallableMap(fieldOf(node, `${prefix}/entry`));
+    const methods = fieldOf(node, `${prefix}/methods`);
+    if (methods && methods.type === "map") {
+      for (let i = 1; i < methods.values.length; i += 2) {
+        scanCallableMap(methods.values[i]);
+      }
+    }
+    for (let i = 1; i < dataNode.values.length; i += 2) {
+      const entryMap = dataNode.values[i];
+      const fieldsMap = fieldOf(entryMap, ":fields");
+      if (fieldsMap && fieldsMap.type === "map") {
+        for (let j = 1; j < fieldsMap.values.length; j += 2) {
+          recordRef(fieldsMap.values[j], ":fields");
+        }
+      }
+    }
+
+    for (const [keyName, keyNode] of declared) {
+      if (!used.has(keyName)) {
+        addDiagnostic(
+          diagnostics,
+          ":tally/orphan-data",
+          fence.document.path,
+          lineOf(fence, keyNode),
+          `${keyName} in ${prefix}/data is referenced nowhere in ${prefix}/entry or ${prefix}/methods`,
+        );
+      }
+    }
+  }
 }

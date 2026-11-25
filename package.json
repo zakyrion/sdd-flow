@@ -1,8 +1,8 @@
 {
   "name": "sdd-flow",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
-  "description": "Spec-Driven Development workflow for AI coding agents (Claude Code and Codex): every request becomes an explicit contract with a gated Research -> Plan -> Execute lifecycle and a persistent FLOW document.",
+  "description": "Spec-Driven Development workflow for AI coding agents (Claude Code and Antigravity): every request becomes an explicit contract with a gated Research -> Plan -> Execute lifecycle and a persistent FLOW document.",
   "type": "module",
   "bin": {
     "sdd-flow": "./bin/sdd-flow.js"
@@ -33,7 +33,7 @@
   },
   "keywords": [
     "claude-code",
-    "codex",
+    "antigravity",
     "ai-agents",
     "agent-skills",
     "spec-driven-development",

@@ -7,6 +7,7 @@ description: Run a source-verified research pass on questions with no fast right
 
 ```clojure
 {:requires [".sdd-flow/FLOW_CONTRACT.md"
+            ".sdd-flow/references/SUBSYSTEM_CONTRACTS.md"
             ".sdd-flow/templates/RESEARCH.md"
             ".sdd-flow/references/CLOJURE_NOTATION.md"]
  :authority "FLOW_CONTRACT.md holds the policy — this file is the procedure"
