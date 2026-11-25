@@ -82,7 +82,7 @@ description: Write the code from an agreed structure document alone, in a fresh 
    :primitive "a mechanic repeated three or more times becomes a named primitive; fewer stay inline"
    :guards "a branch the findings proved impossible does not exist; a guard that must exist throws with the invariant's text; a silent return only for the entry point's exits"
    :lifetime "one place of release per structure, chosen by :lives; release never drives indentation"
-   :comments "only a why the code cannot show, and true for every caller"})
+   :comments "two-tier for RAG and symbol navigation: every declared type and public contract or entry-point method (except Dispose, Equals, one-line getters, and trivial interface overrides whose summary stands on the interface) carries a concise 1-2 sentence doc summary on the declaration stating its domain role, intent (# Subject :why), and contract (:does) — updated in the same diff, with no <param>/<returns> tag bloat; private methods and internal helpers carry a comment only for a non-obvious why or invariant the name and signature cannot show"})
 ```
 
 ```clojure

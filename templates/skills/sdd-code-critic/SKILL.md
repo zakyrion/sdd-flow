@@ -38,7 +38,7 @@ description: Audit written code in a fresh subagent against the 5W OPORD and neg
             :criteria "this skill's examples.md and .sdd-flow/rejections.md when present"}
    :checks #{"whether the code defeats :why with a local shortcut or touches :off-limits"
              "whether any changed block matches a :bad-code / :human-opinion pattern in .sdd-flow/rejections.md outside its :acceptable-when boundary"
-             "built-in code anti-patterns in examples.md — hidden spine steps, silent undeclared mutable fields, swallowed errors"}
+             "built-in code anti-patterns in examples.md — hidden spine steps, silent undeclared mutable fields, missing type/entry summaries or <param>/name-restatement doc bloat, swallowed errors"}
    :boundary "always check :acceptable-when before flagging a match — flag real defects, never nitpick valid simple code"
    :never #{"editing product source files from the critic"
             "passing raw session chat history to the critic subagent"}})

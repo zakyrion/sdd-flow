@@ -1165,6 +1165,10 @@ test("generator translation examples stay purely positive while sdd-code-critic 
     );
     assert.ok(!transExamples.includes("# Traps"), "generator translation examples must not contain # Traps");
     assert.ok(!transExamples.includes(":bad"), "generator translation examples must not contain :bad snippets");
+    const transSkillText = await fs.readFile(path.join(root, ".claude/skills/sdd-code-translation/SKILL.md"), "utf8");
+    assert.ok(transSkillText.includes("two-tier for RAG and symbol navigation"), "translation skill must carry two-tier RAG summary rule");
+    const criticExamplesText = await fs.readFile(path.join(root, ".claude/skills/sdd-code-critic/examples.md"), "utf8");
+    assert.ok(criticExamplesText.includes(":builtin-summary-drift"), "critic examples must carry :builtin-summary-drift");
 
     await fs.access(path.join(root, ".sdd-flow/templates/REJECTIONS.md"));
     const rejectionsPath = path.join(root, ".sdd-flow/rejections.md");

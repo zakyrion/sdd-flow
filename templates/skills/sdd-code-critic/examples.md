@@ -17,7 +17,13 @@
   :category :intent-drift
   :details [{:human-opinion "Local goal met by coupling two modules that OPORD :why explicitly intended to keep decoupled."
              :bad-code "RetryQueue imports SmtpAlertClient directly instead of publishing RetryExhaustedNotice"
-             :acceptable-when "OPORD :decided explicitly chose inline synchronous delivery"}]}]
+             :acceptable-when "OPORD :decided explicitly chose inline synchronous delivery"}]}
+
+ {:id :builtin-summary-drift
+  :category :doc-summary
+  :details [{:human-opinion "Either omitted the 1-2 sentence role+intent summary on a declared type / public entry point, or spammed <param>/<returns> tags and restated a trivial method's own name."
+             :bad-code "/// <summary>Evicts oldest when full.</summary>\n/// <param name=\"ring\">The ring.</param>"
+             :acceptable-when "concise 1-2 sentence role+intent summary on types and public contract entry points; no comment on self-evident private helpers or Dispose"}]}]
 ```
 
 # Example: operator rejection entry

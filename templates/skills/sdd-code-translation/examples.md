@@ -29,9 +29,11 @@
 # Example: a clean table-of-contents entry point
 
 ```clojure
-{:entry-point "RaiseRecord(payload: PayloadRecord): RingSlot"
+{:type-summary "Bounded per-type ring journal that lets decoupled subscribers replay recent domain records without per-event heap queues."
+ :entry-summary "Appends a raised payload into its type's bounded ring, evicting the oldest live slot when full."
+ :entry-point "RaiseRecord(payload: PayloadRecord): RingSlot"
  :plot-lines ["const ring = this.ensureRing(payload);"
               "this.evictOldestWhenFull(ring);"
               "return this.appendNewest(ring, payload);"]
- :why-clean "one spine step per line in exact call order, locals passed as explicit values, and zero steps nested inside another call's argument"}
+ :why-clean "type and entry point carry concise 1-2 sentence role+intent summaries from # Subject :why and :does (zero <param>/<returns> bloat), and the body keeps one spine step per line"}
 ```
