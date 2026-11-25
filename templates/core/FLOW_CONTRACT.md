@@ -16,6 +16,7 @@
    :missing-field "represent as ? and ask in one consolidated pass"
    :when :optional ;; runtime product trigger or phase; ? when relevant and unstated
    :pattern :optional
+   :exemplars :optional ;; positive source on code tasks (:patterns, :templates, {:live-code [...]}, :none)
    :accept :optional})
 ```
 
@@ -415,6 +416,7 @@
   {:result :required
    :accept :when-present
    :diagnostic :when-code-changed
+   :critic :when-code-changed
    :review :when-cascaded
    :runtime :when-only-user-can-verify
    :commit :only-when-requested

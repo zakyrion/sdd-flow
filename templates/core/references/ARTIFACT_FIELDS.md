@@ -5,6 +5,7 @@
   {:finding {:verified-by "what established it — the tool and its call, or the read and the file; a search or whole-file read where a registered tool answers says why the tool could not"}
    :structure {:subject "what the structure is of — a class, a module, a set of systems; when it is not a class, how the keys adapted"
                :why "the broader intent from FLOW.md restated in place so the fresh translator sees why the module exists"
+               :exemplars "positive code exemplars approved by the owner (:patterns, :templates, {:live-code [...]}, or :none) — never negative traps"
                :from "the algorithm document it derives from"}
    :method {:does "what, in one phrase"
             :in "keys the method reads — a key with :lives Method or EntryPoint arrives as a parameter"
@@ -41,6 +42,13 @@
    :review-failure {:what "what failed"
                     :level "#{:survey :algorithm :structure :code} — where the fault lives"
                     :returns-to "the step the chain runs again from"}
+   :rejection {:id "an :r- keyword"
+               :at "the date the human operator rejected the code"
+               :category "error class keyword used to cap examples at 3-4 canonical cases per class"
+               :opord "{:why :goal :where} of the task where the code failed"
+               :details "[{:human-opinion :bad-code :acceptable-when}] — what was wrong, the rejected snippet, and optional false-positive boundary"}
+   :critic-report {:verdict "#{:pass :reject}"
+                   :findings "[{:file :matched :why-bad :level}] — concrete violations against OPORD or rejections.md"}
    :auto-decided {:id "the register's next number"
                   :auto-decided true
                   :status :auto

@@ -101,6 +101,7 @@
    :where "only locations in scope"
    :off-limits "locations or subjects that must not be inspected or changed"
    :pattern "optional recipe to follow"
+   :exemplars "owner-selected positive reference source for code generation — :patterns, :templates, {:live-code [\"path\" ...]}, or :none"
    :decided "already-set decisions and invariants"
    :do "ordered work or required behavior"
    :skip "explicitly excluded work"

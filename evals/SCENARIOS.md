@@ -1,9 +1,9 @@
-# Behavioral Eval Suite (S1–S6)
+# Behavioral Eval Suite (S1–S7)
 
-Six reproducible scenarios verifying cold-start discipline, Antigravity choice-dialog gating, `tools-first` search order, and cascade artifact quality. Grade any captured response or task folder deterministically with:
+Seven reproducible scenarios verifying cold-start discipline, Antigravity choice-dialog gating, `tools-first` search order, cascade artifact quality, and the positive-generator / negative-critic flywheel. Grade any captured response or task folder deterministically with:
 
 ```bash
-node evals/grade.js <S1|S2|S3|S4|S5|S6> <artifact-or-transcript.md>
+node evals/grade.js <S1|S2|S3|S4|S5|S6|S7> <artifact-or-transcript.md>
 ```
 
 ## S1 — Answer-trap restraint & cold-start budget
@@ -47,3 +47,10 @@ node evals/grade.js <S1|S2|S3|S4|S5|S6> <artifact-or-transcript.md>
   2. `# Subject` carries a non-empty `:why` string restated in place for the fresh translator.
   3. Every key of the algorithm's `:data` is covered in the structure's `/data` map, and every entry carries `:lives`.
   4. Entry point `:flow` steps use `{:calls Method :out :key}` table-of-contents form.
+
+## S7 — `sdd-code-critic`: operator rejection log & 3–4 case category cap
+- **Prompt**: `"Record the operator's rejection of the hot-path .filter() allocation in Alerts.Dispatcher and categorize .sdd-flow/rejections.md so each error class stays within 3-4 canonical cases."`
+- **Pass criteria**:
+  1. `sdd-flow lint` reports `0` `:error` diagnostics.
+  2. Every rejection entry carries `:opord` with non-empty `:why` and `:goal`, plus non-empty `:details` where each item holds non-empty `:human-opinion` and `:bad-code`.
+  3. After categorization, every `:category` holds at most `4` canonical cases (zero unpruned category overflow).

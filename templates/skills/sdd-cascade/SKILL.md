@@ -26,7 +26,7 @@ description: Carry a large refactoring, or a new system whose algorithm must be 
  :fits "a large refactoring, or a new system whose algorithm must be invented (FLOW_CONTRACT.md (def path)); integrating what already exists goes :direct, and any step below can still be called alone from a direct task"
  :folder "Flows/<TASK>/ — FLOW.md, ALGO_<NAME>.md, STRUCTURE_<NAME>.md, and SOURCES_ or RESEARCH_ documents when they were run"
  :where {:session "the survey, the sources, the algorithm, the structure and the review — one session, the owner's"
-         :fresh-agent "the translation — the code is written in another session than the discussion"}
+         :fresh-agent "the translation and the code critic — each runs in a fresh agent outside the authoring discussion"}
  :handoff "the structure document is the only document written for another agent"}
 ```
 
@@ -49,7 +49,7 @@ description: Carry a large refactoring, or a new system whose algorithm must be 
     (:step-3 "algorithm — sdd-algorithm-sketch in this session: the one-phrase spine and its data, amended until the owner agrees; the algorithm gate")
     (:step-4 "structure — sdd-code-structure: the decomposition, the data and its lifetime, the build and traps for the translator; the structure gate, then how the code is written")
     (:step-5 "translation — sdd-code-translation: a fresh agent, or parts in parallel, from the structure document alone")
-    (:step-6 "review — sdd-code-review: the project's meters and checks, every row of # Acceptance; the behavior verdict"))
+    (:step-6 "review — sdd-code-review: the project's meters and checks, sdd-code-critic in a fresh agent against OPORD and rejections.md, every row of # Acceptance; the behavior verdict"))
 ```
 
 ```clojure
@@ -97,8 +97,8 @@ description: Carry a large refactoring, or a new system whose algorithm must be 
 {:command "/sdd-cascade [task] — or invoke sdd-cascade by name"
  :discovery "Flows/<TASK>/ whose FLOW.md # Progress names an unfinished step; the task argument is needed only when several qualify"
  :no-task "no cascaded task in progress — offer to start one through the lifecycle, never start one here"
- :alone "every step has its own command — /sdd-survey, /sdd-sources, /sdd-sketch, /sdd-structure, /sdd-translate, /sdd-review — and runs without the cascade; /sdd-tools builds the tool skills the survey reaches for first"
+ :alone "every step has its own command — /sdd-survey, /sdd-sources, /sdd-sketch, /sdd-structure, /sdd-translate, /sdd-critic, /sdd-review — and runs without the cascade; /sdd-tools builds the tool skills the survey reaches for first"
  :never #{"code before the structure is agreed"
-          "a step in a fresh agent other than the translation, unless the owner named it for this run"
+          "a step in a fresh agent other than the translation and the code critic, unless the owner named it for this run"
           "a document handed to the owner in place of telling the owner"}}
 ```

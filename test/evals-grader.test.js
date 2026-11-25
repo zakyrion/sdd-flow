@@ -97,3 +97,19 @@ test("eval grader S6 passes code-structure examples.md and catches missing # Sub
   assert.equal(noSubjectWhy.ok, false);
   assert.ok(noSubjectWhy.failures.some((m) => m.includes(":why")));
 });
+
+test("eval grader S7 passes sdd-code-critic examples.md and enforces 4-case category cap", async () => {
+  const criticEx = path.join(ROOT, "templates/skills/sdd-code-critic/examples.md");
+  const s7 = await gradeScenario("S7", criticEx, { categorized: true });
+  assert.equal(s7.ok, true, s7.failures.join("; "));
+
+  const entries = Array.from({ length: 5 }, (_, i) =>
+    `{:id :r-${i + 1} :at "2026-11-25" :category :alloc :opord {:why "w" :goal "g" :where "f"} :details [{:human-opinion "bad ${i}" :bad-code "x.filter()"}]}`,
+  ).join("\n ");
+  const overflow = await withTempDoc(
+    `# Entries\n\n\`\`\`clojure\n[${entries}]\n\`\`\`\n`,
+    (f) => gradeScenario("S7", f, { categorized: true }),
+  );
+  assert.equal(overflow.ok, false);
+  assert.ok(overflow.failures.some((m) => m.includes("> 4 canonical cap")));
+});

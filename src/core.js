@@ -55,6 +55,7 @@ const CORE_FILES = [
   ["templates/core/templates/FLOW.md", ".sdd-flow/templates/FLOW.md"],
   ["templates/core/templates/RESEARCH.md", ".sdd-flow/templates/RESEARCH.md"],
   ["templates/core/templates/PROJECT.md", ".sdd-flow/templates/PROJECT.md"],
+  ["templates/core/templates/REJECTIONS.md", ".sdd-flow/templates/REJECTIONS.md"],
 ];
 // The skills of the cascade's chain that are new in 0.5.0: each is standalone,
 // installed for both agents, and reached by its own command.
@@ -62,6 +63,7 @@ const CODE_SKILLS = [
   "sdd-code-survey",
   "sdd-code-structure",
   "sdd-code-translation",
+  "sdd-code-critic",
   "sdd-code-review",
   "sdd-tool-skills",
 ];
@@ -79,6 +81,7 @@ const CODE_COMMANDS = [
   "sdd-sources",
   "sdd-structure",
   "sdd-translate",
+  "sdd-critic",
   "sdd-review",
   "sdd-tools",
 ];

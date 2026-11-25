@@ -134,17 +134,32 @@
   {:is "the code written from the structure document alone, by a fresh agent — in another session than the discussion"
    :skill "sdd-code-translation — also reachable as /sdd-translate"
    :brief "a compact 5W mission brief {:who :what :when :where :why} in the launch prompt — carrying # Subject :why and wave/file boundaries, never raw session chat"
-   :reads "the structure document and the files it writes, whole — nothing of any conversation"
+   :reads "the structure document, the files it writes, and any positive :exemplars named by the owner (:patterns, :templates, or :live-code) — never rejections.md or negative traps"
    :parallel "an option: several agents for parts that write disjoint files, in waves"
    :returns "a short report — files written, the build and tests run with their readings, what the code added beyond the structure and why, what the structure lacked; never the document again"
    :never #{"a need the code discovers left out of the report" "code outside the files the structure names without saying so"}})
 ```
 
 ```clojure
+(def code-critic
+  {:is "an adversarial check run in a fresh subagent over the diff, the 5W OPORD, and the project's operator-rejection log — keeping negative examples out of the generator"
+   :skill "sdd-code-critic — also reachable as /sdd-critic"
+   :modes #{:audit :record :categorize}
+   :audit "runs in a fresh subagent before the human operator check in sdd-code-review: reads only the 5W OPORD, the diff, sdd-code-critic/examples.md, and .sdd-flow/rejections.md; returns {:verdict #{:pass :reject} :findings [...]}"
+   :record "whenever the critic passed code that the human operator then rejects, appends {:id :at :category :opord {:why :goal :where} :details [{:human-opinion :bad-code :acceptable-when}]} to .sdd-flow/rejections.md"
+   :categorize "clusters .sdd-flow/rejections.md by :category (when any category exceeds 4 entries or on /sdd-critic categorize), proposes deterministic lint promotion where possible, and narrows each semantic category to 3-4 canonical cases — never generic text compaction"
+   :log ".sdd-flow/rejections.md — owned by the project outside manifest.json; update and uninstall never touch it"
+   :never #{"feeding rejections.md or :bad code snippets into the generator"
+            "editing product source files from the critic"
+            "summarizing concrete code rejections into vague prose platitudes"}})
+
+```
+
+```clojure
 (def code-review
   {:is "the check that the change does what the task asked — by running the project's meters and checks, not by rereading the code as a stranger"
    :skill "sdd-code-review — also reachable as /sdd-review"
-   :runs "the adapter's meters and check tools, the build and tests the structure names, every row of # Acceptance, the translation report's additions and gaps"
+   :runs "the adapter's meters and check tools, the build and tests the structure names, sdd-code-critic (:audit in a fresh subagent before the human check, :record if the human rejects), every row of # Acceptance, the translation report's additions and gaps"
    :verdict "behavior — met, failed or pending; a failure names its level: :survey (a false fact), :algorithm (the wrong thing computed), :structure (it cannot carry the algorithm), :code (the translation slipped); the level is amended and the chain runs again from there"
    :runs-in "the current session"
    :never #{"a green that rests on a deferral" "a failure without a level"}})
@@ -157,7 +172,7 @@
   {:skill "sdd-cascade — the composer; also reachable as /sdd-cascade"
    :is "a sequence of standalone skills for a large refactoring or a new system whose algorithm must be invented (def path)"
    :chain (-> "sdd-code-survey" "sdd-deep-research in sources mode — the extended variant" "sdd-algorithm-sketch" "sdd-code-structure" "sdd-code-translation" "sdd-code-review")
-   :where "every step in the owner's session except the translation, which runs in a fresh agent — parallel agents for disjoint parts as an option; the owner may name another shape for a run"
+   :where "every step in the owner's session except the translation and the code critic, which run in fresh agents — parallel agents for disjoint parts as an option; the owner may name another shape for a run"
    :gates "three, each the owner's word: after the survey (the findings and their questions), after the algorithm (agreed), after the structure (the structure, and how the code is written); the review ends with the behavior verdict"
    :folder "Flows/<TASK>/ — FLOW.md, ALGO_<NAME>.md, STRUCTURE_<NAME>.md, and SOURCES_ or RESEARCH_ documents when they were run"
    :handoff "the structure document is the only document written for another agent; everything before it lives in the session, the FLOW and the algorithm document"

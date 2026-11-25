@@ -32,7 +32,8 @@ description: Check that a change does what the task asked by running the project
     (:step-2 "read every row of # Acceptance and write its :actual and :status from what ran")
     (:step-3 "read the translation report — what the code added beyond the structure and what it had to guess; each is accepted, or becomes a failure")
     (:step-4 "where a meter points into a file, read those lines — only those")
-    (:step-5 "ask the owner for the check only the owner can make — play the scene, try the screen — when the task names one"))
+    (:step-5 "run sdd-code-critic in :audit mode (fresh subagent over diff + 5W OPORD + .sdd-flow/rejections.md); a :reject becomes a failure before troubling the owner")
+    (:step-6 "ask the owner for the check only the owner can make — play the scene, try the screen — when the task names one; if the owner rejects code that :step-5 passed, run sdd-code-critic :record"))
 ```
 
 # Verdict

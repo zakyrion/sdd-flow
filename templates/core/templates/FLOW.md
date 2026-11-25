@@ -17,6 +17,7 @@
  :where ?
  :off-limits ?
  :pattern ^:optional PatternName
+ :exemplars ^:optional #{:patterns :templates :live-code :none}
  :decided ?
  :do ?
  :skip ?

@@ -10,6 +10,7 @@
               :when "when AttemptsLeft reaches 0"
               :where Jobs.RetryQueue
               :off-limits ?
+              :exemplars ?
               :decided ?
               :skip ?
               :result RetryExhaustedNotice}

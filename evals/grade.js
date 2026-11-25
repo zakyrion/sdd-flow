@@ -185,6 +185,55 @@ export async function gradeScenario(scenario, targetPath, options = {}) {
     return { ok: failures.length === 0, scenario, failures };
   }
 
+  if (scenario === "S7") {
+    const lintRes = await lint(targetPath);
+    const errors = lintRes.diagnostics.filter((d) => d.severity === ":error");
+    if (errors.length > 0) failures.push(`lint errors: ${errors.map((e) => e.rule).join(", ")}`);
+
+    let sawRejection = false;
+    const categoryCounts = new Map();
+    walk({ type: "vector", values: forms }, (n) => {
+      if (n.type !== "map") return;
+      const opord = field(n, ":opord");
+      const details = field(n, ":details");
+      if (!opord) return;
+      sawRejection = true;
+      const why = field(opord, ":why");
+      const goal = field(opord, ":goal");
+      if (!why || why.type !== "string" || why.value.trim() === "") {
+        failures.push("rejection :opord missing non-empty :why");
+      }
+      if (!goal || goal.type !== "string" || goal.value.trim() === "") {
+        failures.push("rejection :opord missing non-empty :goal");
+      }
+      if (!details || details.type !== "vector" || details.values.length === 0) {
+        failures.push("rejection missing non-empty :details vector");
+      } else {
+        for (const d of details.values) {
+          const ho = field(d, ":human-opinion");
+          const bc = field(d, ":bad-code");
+          if (!ho || ho.type !== "string" || ho.value.trim() === "") {
+            failures.push("rejection detail missing non-empty :human-opinion");
+          }
+          if (!bc || bc.type !== "string" || bc.value.trim() === "") {
+            failures.push("rejection detail missing non-empty :bad-code");
+          }
+        }
+      }
+      const cat = field(n, ":category");
+      if (cat?.type === "keyword") {
+        categoryCounts.set(cat.value, (categoryCounts.get(cat.value) ?? 0) + 1);
+      }
+    });
+    if (!sawRejection) failures.push("no operator rejection entry {:opord :details} found");
+    if (options.categorized) {
+      for (const [cat, count] of categoryCounts.entries()) {
+        if (count > 4) failures.push(`category ${cat} has ${count} entries (> 4 canonical cap)`);
+      }
+    }
+    return { ok: failures.length === 0, scenario, failures };
+  }
+
   throw new Error(`Unknown scenario: ${scenario}`);
 }
 
@@ -192,7 +241,7 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPat
 if (isMain) {
   const [scenario, target] = process.argv.slice(2);
   if (!scenario || !target) {
-    console.error("Usage: node evals/grade.js <S1|S2|S3|S4|S5|S6> <file.md>");
+    console.error("Usage: node evals/grade.js <S1|S2|S3|S4|S5|S6|S7> <file.md>");
     process.exit(1);
   }
   const res = await gradeScenario(scenario, path.resolve(target));

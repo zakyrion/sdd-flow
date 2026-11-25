@@ -695,7 +695,13 @@ const ALGORITHM_SKILLS = [
     skill: "sdd-code-translation",
     command: "sdd-translate",
     markers: ["name: sdd-code-translation", "# Launch", "# Agent", "# Translation", "examples.md", "(def launch", "(def agent", ":single-writer", ":status :hypothesis", ":why-fresh"],
-    companionExamples: ["# Example: a fresh-agent translation report", "# Traps"],
+    companionExamples: ["# Example: a fresh-agent translation report", "# Example: a clean table-of-contents entry point"],
+  },
+  {
+    skill: "sdd-code-critic",
+    command: "sdd-critic",
+    markers: ["name: sdd-code-critic", "# Audit", "# Verdict", "# Record", "# Categorize", "examples.md", "(def audit", "(def record-rejection", "(def categorize", ".sdd-flow/rejections.md"],
+    companionExamples: ["# Built-in code traps", "# Example: operator rejection entry", "# Example: categorized cluster and critic verdict"],
   },
   {
     skill: "sdd-code-review",
@@ -710,7 +716,7 @@ test("every skill that stops for the owner tells it as the owner's brief", async
   await withFixture(async (root) => {
     await initProject(root, ["claude"]);
     const read = (skill) => fs.readFile(path.join(root, `.claude/skills/${skill}/SKILL.md`), "utf8");
-    for (const skill of ["sdd-code-survey", "sdd-algorithm-sketch", "sdd-algorithm-lift", "sdd-code-structure", "sdd-tool-skills", "sdd-deep-research"]) {
+    for (const skill of ["sdd-code-survey", "sdd-algorithm-sketch", "sdd-algorithm-lift", "sdd-code-structure", "sdd-code-critic", "sdd-tool-skills", "sdd-deep-research"]) {
       const text = await read(skill);
       assert.ok(text.includes(":owner {:brief"), `${skill} carries no copy of the owner's brief`);
       assert.ok(text.includes("«1A, 2B, 3 — as you propose»"), `${skill} does not state the answer form`);
@@ -1082,6 +1088,7 @@ test("every canonical example document lints with zero errors and leaks no Fanta
       ".claude/skills/sdd-algorithm-lift/examples.md",
       ".claude/skills/sdd-code-structure/examples.md",
       ".claude/skills/sdd-code-translation/examples.md",
+      ".claude/skills/sdd-code-critic/examples.md",
     ];
     for (const rel of exampleTargets) {
       const result = await lint(path.join(root, rel));
@@ -1146,5 +1153,31 @@ test("installed contract, templates and skills carry the OPORD 5W hybrid (:why, 
     for (const key of [":brief", ":who", ":what", ":when", ":where", ":why"]) {
       assert.ok(transSkill.includes(key), `sdd-code-translation/SKILL.md missing 5W brief key ${key}`);
     }
+  });
+});
+
+test("generator translation examples stay purely positive while sdd-code-critic and project-owned rejections.md survive update and uninstall", async () => {
+  await withFixture(async (root) => {
+    await initProject(root, ["antigravity", "claude"]);
+    const transExamples = await fs.readFile(
+      path.join(root, ".claude/skills/sdd-code-translation/examples.md"),
+      "utf8",
+    );
+    assert.ok(!transExamples.includes("# Traps"), "generator translation examples must not contain # Traps");
+    assert.ok(!transExamples.includes(":bad"), "generator translation examples must not contain :bad snippets");
+
+    await fs.access(path.join(root, ".sdd-flow/templates/REJECTIONS.md"));
+    const rejectionsPath = path.join(root, ".sdd-flow/rejections.md");
+    const customLog = '# Entries\n\n```clojure\n[{:id :r-1 :at "2026-11-25" :category :leak :opord {:why "w" :goal "g" :where "x"} :details [{:human-opinion "leaked" :bad-code "static cache"}]}]\n```\n';
+    await fs.writeFile(rejectionsPath, customLog, "utf8");
+
+    const manifest = JSON.parse(await fs.readFile(path.join(root, ".sdd-flow/manifest.json"), "utf8"));
+    assert.ok(!Object.hasOwn(manifest.managedFiles, ".sdd-flow/rejections.md"));
+
+    await updateProject(root);
+    assert.equal(await fs.readFile(rejectionsPath, "utf8"), customLog);
+
+    await uninstallProject(root);
+    assert.equal(await fs.readFile(rejectionsPath, "utf8"), customLog);
   });
 });

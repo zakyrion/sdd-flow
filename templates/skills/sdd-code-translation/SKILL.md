@@ -8,7 +8,7 @@ description: Write the code from an agreed structure document alone, in a fresh 
 ```clojure
 {:requires [".sdd-flow/references/CLOJURE_NOTATION.md"]
  :fields ".sdd-flow/references/ARTIFACT_FIELDS.md — read when writing or checking field keys"
- :examples "examples.md beside this file — read before translating: a complete translation report and entry-point plot traps"
+ :examples "examples.md beside this file — read before translating: positive examples only (5W brief, clean entry-point plot, report); code traps live in sdd-code-critic"
  :light "this file is the whole procedure — the glossary is the only other read"
  :missing (:then (stop!)
                  (tell-user! "run sdd-flow doctor ."))
@@ -52,7 +52,7 @@ description: Write the code from an agreed structure document alone, in a fresh 
 
 ```clojure
 (def agent  ;; what the fresh agent does
-  {:reads "the structure document whole, and every file it writes or changes, whole — nothing else unless # Build or # Traps names it"
+  {:reads "the structure document whole, every file it writes or changes whole, and only positive :exemplars named by the owner (:patterns, :templates, or :live-code) — never .sdd-flow/rejections.md or negative code traps"
    :writes "only the files the structure names — for a part, only that part's files"
    :runs "the build and the tests # Build names, before it reports; it fixes what is its own translation's failure"
    :discovers "a need the structure lacks — a helper, a field, a type — is written, and reported under :added with why the structure lacked it; never invented silently"

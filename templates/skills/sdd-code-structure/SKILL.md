@@ -34,7 +34,7 @@ description: Turn an agreed algorithm into the structure of the code — the ent
 ```clojure
 {:reader "an agent in another session that sees nothing but this file and the files it writes"
  :sections ["# Subject" "# Structure" "# Build" "# Traps" "# Decisions" "# Parts" "# Contra" "# Added"]
- :subject "{:structure \"what it is of\" :why \"the broader intent restated from FLOW.md\" :from \"the algorithm document\" :touches #{\"the files written or changed\"}}"
+ :subject "{:structure \"what it is of\" :why \"the broader intent restated from FLOW.md\" :exemplars \"positive source when named\" :from \"the algorithm document\" :touches #{\"the files written or changed\"}}"
  :decisions "every decision of the register the code must honor, restated in place — the translator never reads the FLOW"
  :build "the language, how files import each other, the build and test commands exactly, where the conventions are stated — from the survey, never guessed"
  :traps "only the traps the translator would fall into, each {:trap :where :avoid :verified-by}"

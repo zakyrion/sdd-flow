@@ -28,6 +28,7 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
  :raw-request :preserve-verbatim
  :why "required on :plan and :mutation (not :answer): separate broader intent from the single local :goal; propose one concise line when plain from context, otherwise set :why ? and ask"
  :five-w "check completeness before gating — What (:do / :result / :skip), Where (:where / :off-limits), Why (:why beside one :goal), and optional runtime When (:when -> ? when product trigger or phase matters and is unstated)"
+ :exemplars "on tasks creating or changing code, ask or propose positive exemplar source — :patterns (recipes), :templates (skill positive examples), {:live-code [\"owner-named files\"]} (during migrations when recipes lag), or :none"
  :path "for a :mutation, rate the size of the change and propose :path #{:direct :cascade} with its confidence (def path); the owner confirms it at the gate"
  :unknown ?
  :never #{"evaluate forms" "invent missing decisions" "discard user wording" "escalate the deliverable kind" "put two :goal values in one task"}}
@@ -126,6 +127,7 @@ description: Normalize prose or Clojure engineering requests into canonical Cloj
          "/sdd-sources" "the primary source of every rule a design leans on, and whether a ready solution exists"
          "/sdd-structure" "the structure of the code for an agreed algorithm"
          "/sdd-translate" "the code from a structure document, in a fresh agent"
+         "/sdd-critic" "audit code in a fresh subagent against OPORD and .sdd-flow/rejections.md, record human rejections, or categorize error classes"
          "/sdd-review" "a change checked by the project's meters and checks"}
  :rule "each is reachable from a direct task too; the agent may propose one with a rating, the owner switches it on"}
 ```
